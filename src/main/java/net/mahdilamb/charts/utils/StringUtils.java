@@ -1,0 +1,153 @@
+package net.mahdilamb.charts.utils;
+
+import java.util.Arrays;
+import java.util.function.Consumer;
+import java.util.regex.Pattern;
+
+/**
+ * Utility class for working with strings
+ */
+public final class StringUtils {
+    private StringUtils() {
+
+    }
+
+    /**
+     * Floating point pattern that allows for strings that can be parsed by  {@link Double#parseDouble}, but excludes
+     * hexadecimal representation.
+     */
+    public final static String fpPatternWithoutHex = "[+-]?(?:NaN|Infinity|(?:\\d++(?:\\.\\d*+)?|\\.\\d++)(?:[eE][+-]?\\d++)?[fFdD]?)";
+    /**
+     * Floating point pattern that represents valid strings that can be parsed by {@link Double#parseDouble}.
+     * Adapted from Google Guava
+     */
+    public final static String fpPattern = fpPatternWithoutHex.substring(0, fpPatternWithoutHex.length() - 1) + "|0[xX](?:[0-9a-fA-F]++(?:\\.[0-9a-fA-F]*+)?|\\.[0-9a-fA-F]++)[pP][+-]?\\d++[fFdD]?)";
+    /**
+     * Regex pattern that matches integers
+     */
+    public final static String intPattern = "[+-]?(?:\\d++[Ll]?)";
+    /**
+     * Regex pattern that matches true or false, case-insensitive
+     */
+    public final static String boolPattern = "(?:[Tt][Rr][Uu][Ee]|[Ff][Aa][Ll][Ss][Ee]|[01])";
+    /**
+     * Regex pattern for a line with a terminator
+     * Copied from JDK
+     */
+    public static final String LINE_PATTERN = ".*(\r\n|[\n\r\u2028\u2029\u0085])|.+$";
+    /**
+     * The compiled pattern for {@link #fpPatternWithoutHex}
+     */
+    public final static Pattern FLOATING_POINT_PATTERN_WITHOUT_HEX = Pattern.compile(fpPatternWithoutHex);
+    /**
+     * The compiled pattern for {@link #fpPattern}
+     */
+    public final static Pattern FLOATING_POINT_PATTERN = Pattern.compile(fpPattern);
+    /**
+     * The compiled pattern for {@link #intPattern}
+     */
+    public final static Pattern INTEGER_PATTERN = Pattern.compile(intPattern);
+    /**
+     * The compiled pattern for {@link #boolPattern}
+     */
+    public final static Pattern BOOLEAN_PATTERN = Pattern.compile(boolPattern);
+
+    /**
+     * Return the last n characters of a string. The number is defined by the length of the output array
+     *
+     * @param out    the output array
+     * @param string the string
+     * @return the last n characters of a string.
+     * @throws IndexOutOfBoundsException if the length of the output array is longer than the input string (not fail-fast)
+     */
+    public static String getLastCharacters(final char[] out, final String string) {
+        int i = string.length();
+        int j = out.length;
+        while (i > 0 && j > 0) {
+            out[--j] = string.charAt(--i);
+        }
+        return new String(out);
+    }
+
+    /**
+     * Return the last n characters of a string (converted to lower case).
+     * The number is defined by the length of the output array
+     *
+     * @param out    the output array
+     * @param string the string
+     * @return the last n characters of a string.
+     * @throws IndexOutOfBoundsException if the length of the output array is longer than the input string (not fail-fast)
+     */
+    public static String getLastCharactersToLowerCase(final char[] out, final String string) {
+        int i = string.length();
+        int j = out.length;
+        while (i > 0 && j > 0) {
+            out[--j] = Character.toLowerCase(string.charAt(--i));
+        }
+        return new String(out);
+    }
+
+    /**
+     * Iterate over a line, separated by the provided separator
+     *
+     * @param line      the line to iterate over
+     * @param offset    the starting position
+     * @param sepChar   the cell separator e.g. comma or tab
+     * @param quoteChar the quote character
+     * @param func      the function to apply to the cell
+     * @return the ending position
+     */
+    public static int iterateLine(String line, int offset, char sepChar, char quoteChar, Consumer<String> func) {
+        int s = offset, e = offset;
+        char quote = 0;
+        while (e < line.length()) {
+            final char c = line.charAt(e++);
+            if (c == quoteChar) {
+                quote = quote != c ? c : 0;
+            }
+            if (c == sepChar && quote == 0) {
+                break;
+            }
+        }
+        int f;
+        if (e == line.length()) {
+            f = line.length() - 1;
+
+            //one column
+            if (s == 0) {
+                if (line.charAt(0) == line.charAt(f) && line.charAt(f) == quoteChar) {
+                    s = 1;
+                } else {
+                    f = line.length();
+                }
+            } else {
+                if (line.charAt(s) == line.charAt(f) && line.charAt(f) == quoteChar) {
+                    ++s;
+                    --f;
+                }
+            }
+        } else {
+            f = e - 2;
+            if (line.charAt(s) == line.charAt(f) && line.charAt(s) == quoteChar) {
+                ++s;
+            } else {
+                ++f;
+            }
+        }
+        func.accept(line.substring(s, f));
+        return e;
+    }
+
+    /**
+     * Repeat a character
+     *
+     * @param c the character to repeat
+     * @param n the number of times to repeat
+     * @return a string of a repeated character
+     */
+    public static String repeatCharacter(char c, int n) {
+        final char[] d = new char[n];
+        Arrays.fill(d, c);
+        return new String(d);
+    }
+}

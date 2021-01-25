@@ -1,0 +1,28 @@
+plugins {
+    id 'java'
+}
+
+group 'net.mahdilamb'
+version '0.1.0-SNAPSHOT'
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://oss.sonatype.org/content/repositories/snapshots/"
+    }
+
+}
+
+dependencies {
+    testImplementation("junit:junit:4.13")
+    compile 'net.mahdilamb:colormap:0.9.44'
+    compile project(':geom2d-core')
+    compile project(':statistics')
+    compile 'net.mahdilamb:utils-tuples:0.3.1'
+    compile 'net.mahdilamb:utils-functions:0.1.1-SNAPSHOT'
+
+}
+
+test {
+    useJUnit()
+}
