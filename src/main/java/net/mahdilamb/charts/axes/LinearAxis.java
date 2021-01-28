@@ -5,16 +5,17 @@ import java.util.PrimitiveIterator;
 /**
  * A linear axis where each tick increases linearly
  */
-public final class LinearAxis extends NumericAxis {
+public class LinearAxis extends NumericAxis {
+
     public LinearAxis(double min, double max) {
-        super(min, max);
+        super(min, max == min ? (max + 1e-9) : max);
     }
 
     @Override
     protected Iterable<Double> ticks(double min, double max, double spacing) {
         return () -> new PrimitiveIterator.OfDouble() {
-            private final double start = Math.max(min, getMinExtent());
-            private final double maxIter = ((Math.min(max, getMaxExtent()) - start) / spacing);
+            private final double start = Math.max(min, getLowerBound());
+            private final double maxIter = ((Math.min(max, getUpperBound()) - start) / spacing);
             private double i = 0;
 
             @Override

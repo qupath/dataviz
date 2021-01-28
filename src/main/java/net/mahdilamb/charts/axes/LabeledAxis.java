@@ -9,7 +9,7 @@ import java.util.PrimitiveIterator;
 /**
  * A labeled axis where is each label is associated with a tick mark
  */
-public final class LabeledAxis extends Axis {
+public class LabeledAxis extends Axis {
     final boolean useArray;
     final String[] labelsArray;
     final List<String> labelsList;
@@ -30,8 +30,8 @@ public final class LabeledAxis extends Axis {
     @Override
     public Iterable<Double> ticks(double min, double max, double spacing) {
         return () -> new PrimitiveIterator.OfDouble() {
-            private final double start = Math.ceil(Math.max(min, getMinExtent()));
-            private final double stop = Math.floor(Math.min(max, getMaxExtent()));
+            private final double start = Math.ceil(Math.max(min, getLowerBound()));
+            private final double stop = Math.floor(Math.min(max, getUpperBound()));
             private double i = start;
 
             @Override
@@ -46,8 +46,4 @@ public final class LabeledAxis extends Axis {
         };
     }
 
-    @Override
-    protected void layout(Orientation orientation) {
-        //TODO
-    }
 }

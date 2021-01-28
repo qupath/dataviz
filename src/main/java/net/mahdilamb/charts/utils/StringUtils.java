@@ -1,5 +1,7 @@
 package net.mahdilamb.charts.utils;
 
+import net.mahdilamb.utils.functions.CharacterPredicate;
+
 import java.util.Arrays;
 import java.util.function.Consumer;
 import java.util.regex.Pattern;
@@ -149,5 +151,50 @@ public final class StringUtils {
         final char[] d = new char[n];
         Arrays.fill(d, c);
         return new String(d);
+    }
+
+    /**
+     * Create a string with each word beginning with an upper case letter, the rest are lower case
+     *
+     * @param source the source string
+     * @return the source string to title case
+     */
+    public static String toTitleCase(final String source) {
+        return toTitleCase(source, Character::isWhitespace);
+    }
+
+    /**
+     * Create a string with each word beginning with an upper case letter, the rest are lower case
+     *
+     * @param source the source string
+     * @return the source string to title case
+     */
+    public static String snakeToTitleCase(final String source) {
+        return toTitleCase(source, c -> c == '_');
+    }
+
+    /**
+     * Create a string with each word beginning with an upper case letter, the rest are lower case
+     *
+     * @param source            the source string
+     * @param wordSeparatorTest the test for if this is a wordSeparator
+     * @return the source string to title case
+     */
+    private static String toTitleCase(final String source, CharacterPredicate wordSeparatorTest) {
+        final char[] out = new char[source.length()];
+        int i = 0;
+        boolean title = true;
+        while (i < out.length) {
+            char c = source.charAt(i++);
+            if (wordSeparatorTest.test(c)) {
+                out[i - 1] = ' ';
+                title = true;
+                continue;
+            }
+            out[i - 1] = title ? Character.toTitleCase(c) : Character.toLowerCase(c);
+            title = false;
+
+        }
+        return new String(out);
     }
 }

@@ -1,7 +1,7 @@
 package net.mahdilamb.charts.axes;
 
 import net.mahdilamb.charts.Axis;
-import net.mahdilamb.charts.styles.Orientation;
+//TODO 10x-9 formatting
 
 /**
  * A numeric axis
@@ -23,8 +23,4 @@ public abstract class NumericAxis extends Axis {
         return String.format("%" + getDecimalFormat() + "f", val);
     }
 
-    @Override
-    protected void layout(Orientation orientation) {
-        //TODO
-    }
 }

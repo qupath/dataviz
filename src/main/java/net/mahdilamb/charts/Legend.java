@@ -1,23 +1,16 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.styles.Orientation;
-import net.mahdilamb.charts.styles.Side;
-import net.mahdilamb.charts.styles.Stroke;
-import net.mahdilamb.charts.styles.Title;
+import net.mahdilamb.charts.styles.Marker;
+import net.mahdilamb.charts.styles.Text;
 
-public final class Legend {
-    private final Chart<?> chart;
-    double borderPadding = 0, width, height, hGap = 2, vGap = 2, yOffset;
-    private Title title;
-    private boolean isFloating = false, visible = true;
-    private Side side = Side.LEFT;
-    private Orientation layoutOrientation = Orientation.VERTICAL;
-    private Stroke border;
+import java.util.Objects;
+
+public final class Legend extends Key {
+    double width, height, hGap = 2, vGap = 2, yOffset;
 
 
-    Legend(Chart<?> chart) {
-        this.chart = chart;
-
+    Legend(Chart<?, ?> chart) {
+        super(chart);
     }
 
     /**
@@ -34,57 +27,42 @@ public final class Legend {
         return vGap;
     }
 
-    /**
-     * @return the border of the legend
-     */
-    public Stroke getBorder() {
-        return border;
-    }
-
-    /**
-     * @return the padding between the content and the border
-     */
-    public double getBorderPadding() {
-        return borderPadding;
-    }
-
-    /**
-     * @return the title of the legend. May be {@code null}
-     */
-    public Title getTitle() {
-        return title;
-    }
-
-    public void setTitle(String title) {
-        this.title.setTitle(title);
-        chart.layout();
-    }
-
-    /**
-     * @return the side of the chart this legend is on.
-     */
-    public Side getSide() {
-        return side;
-    }
-
-    /**
-     * @return whether the legend takes up space in the layout or appears over the plot are
-     */
-    public boolean isFloating() {
-        return isFloating;
-    }
-
-    public boolean isVisible() {
-        return visible;
-    }
 
     void layout(double yOffset) {
         if (title != null && title.isVisible()) {
 
         }
-        for (final LegendItem legendItem : chart.plot.getLegendItems()) {
+        for (final LegendItem legendItem : ((PlotImpl<?>) chart.plot).getLegendItems()) {
 
         }
         //TODO
+    }
+
+    /**
+     * An item in the legend
+     */
+    public static class LegendItem {
+        private final Marker marker;
+        private final Text label;
+
+        public LegendItem(Text label, Marker marker) {
+            this.label = Objects.requireNonNull(label);
+            this.marker = marker;
+        }
+
+        /**
+         * @return the label of this legend item
+         */
+        public Text getLabel() {
+            return label;
+        }
+
+        /**
+         * @return the marker associated with this legend item
+         */
+        public Marker getMarker() {
+            return marker;
+        }
+
     }
 }

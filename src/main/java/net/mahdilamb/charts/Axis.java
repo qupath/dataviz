@@ -1,14 +1,33 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.styles.Orientation;
-import net.mahdilamb.charts.styles.Text;
+import net.mahdilamb.charts.axes.LinearAxis;
 import net.mahdilamb.charts.styles.Title;
 
 public abstract class Axis {
+    /**
+     * Create a new linear axis with the given initial min and max
+     *
+     * @param min the initial min of the range
+     * @param max the initial max of the range
+     * @return a linear axis
+     */
+    public static Axis linear(double min, double max) {
+        return new LinearAxis(min, max);
+    }
+
+    /**
+     * Create a new linear axis that defaults to the data range
+     *
+     * @return a linear axis
+     */
+    public static Axis linear() {
+        return new LinearAxis(Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
+    }
+
     double minExtent, maxExtent, currentMin, currentMax;
     Title title;
 
-    Chart<?> chart;
+    Chart<?,?> chart;
 
     protected Axis(double min, double max) {
         currentMin = this.minExtent = min;
@@ -19,14 +38,14 @@ public abstract class Axis {
     /**
      * @return the minimum possible value in this axis
      */
-    protected double getMinExtent() {
+    protected double getLowerBound() {
         return minExtent;
     }
 
     /**
      * @return the maximum possible value in this axis.
      */
-    protected double getMaxExtent() {
+    protected double getUpperBound() {
         return maxExtent;
     }
 
@@ -51,13 +70,5 @@ public abstract class Axis {
      */
     protected abstract Iterable<Double> ticks(double min, double max, double spacing);
 
-    protected abstract void layout(Orientation orientation);
-
-    protected double getTextHeight(Text text){
-        return chart.getTextHeight(text);
-    }
-    protected double getTextWidth(Text text){
-        return chart.getTextWidth(text);
-    }
 
 }
