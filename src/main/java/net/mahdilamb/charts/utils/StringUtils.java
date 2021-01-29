@@ -13,6 +13,7 @@ public final class StringUtils {
     private StringUtils() {
 
     }
+    public static final String EMPTY_STRING = "";
 
     /**
      * Floating point pattern that allows for strings that can be parsed by  {@link Double#parseDouble}, but excludes

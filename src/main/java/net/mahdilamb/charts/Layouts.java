@@ -1,8 +1,8 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.axes.LabeledAxis;
-import net.mahdilamb.charts.plots.*;
-import net.mahdilamb.charts.series.PlotSeries;
+import net.mahdilamb.charts.layouts.*;
+import net.mahdilamb.charts.plots.PlotSeries;
 
 import java.util.Objects;
 

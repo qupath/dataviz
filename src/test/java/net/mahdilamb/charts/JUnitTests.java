@@ -1,6 +1,6 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.styles.MarkerShape;
+import net.mahdilamb.charts.graphics.MarkerShape;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

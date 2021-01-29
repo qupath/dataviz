@@ -1,10 +1,10 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.datasets.StringSeries;
+import net.mahdilamb.charts.series.StringSeries;
 import org.junit.Test;
 
-import static net.mahdilamb.charts.datasets.StringRepetition.group;
-import static net.mahdilamb.charts.datasets.StringRepetition.repeat;
+import static net.mahdilamb.charts.series.StringRepetition.group;
+import static net.mahdilamb.charts.series.StringRepetition.repeat;
 import static org.junit.Assert.assertEquals;
 
 public class RepeatsTest {

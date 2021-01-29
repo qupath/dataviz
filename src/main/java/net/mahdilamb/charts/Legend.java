@@ -1,7 +1,6 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.styles.Marker;
-import net.mahdilamb.charts.styles.Text;
+import net.mahdilamb.charts.graphics.Marker;
 
 import java.util.Objects;
 

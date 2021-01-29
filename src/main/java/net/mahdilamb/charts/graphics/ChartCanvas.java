@@ -1,0 +1,276 @@
+package net.mahdilamb.charts.graphics;
+
+import net.mahdilamb.charts.Text;
+import net.mahdilamb.colormap.Color;
+
+/**
+ * Interface for the canvas element in a chart
+ */
+public interface ChartCanvas {
+    /**
+     * Called before the canvas is laid out
+     */
+    void reset();
+
+    /**
+     * Method which is called when drawing is complete
+     */
+    void done();
+
+    /**
+     * Draw a stroked rectangle
+     *
+     * @param x      top-left x
+     * @param y      top-left y
+     * @param width  width of the rectangle
+     * @param height height of the rectangle
+     */
+    void strokeRect(double x, double y, double width, double height);
+
+    /**
+     * Draw a filled rectangle
+     *
+     * @param x      top-left x
+     * @param y      top-left y
+     * @param width  width of the rectangle
+     * @param height height of the rectangle
+     */
+    void fillRect(double x, double y, double width, double height);
+
+    /**
+     * Draw a stroked rectangle
+     *
+     * @param x         top-left x
+     * @param y         top-left y
+     * @param width     width of the rectangle
+     * @param height    height of the rectangle
+     * @param arcWidth  the arc width of the rounded rectangle
+     * @param arcHeight the arc height of the rounded rectangle
+     */
+    void strokeRoundRect(double x, double y, double width, double height, double arcWidth, double arcHeight);
+
+    /**
+     * Draw a filled rectangle
+     *
+     * @param x         top-left x
+     * @param y         top-left y
+     * @param width     width of the rectangle
+     * @param height    height of the rectangle
+     * @param arcWidth  the arc width of the rounded rectangle
+     * @param arcHeight the arc height of the rounded rectangle
+     */
+    void fillRoundRect(double x, double y, double width, double height, double arcWidth, double arcHeight);
+
+    /**
+     * Draw a stroked ellipse
+     *
+     * @param x      top-left x
+     * @param y      top-left y
+     * @param width  width of the ellipse
+     * @param height height of the ellipse
+     */
+    void strokeOval(double x, double y, double width, double height);
+
+    /**
+     * Draw a filled ellipse
+     *
+     * @param x      top-left x
+     * @param y      top-left y
+     * @param width  width of the ellipse
+     * @param height height of the ellipse
+     */
+    void fillOval(double x, double y, double width, double height);
+
+    /**
+     * Draw a line
+     *
+     * @param x0 the starting x
+     * @param y0 the starting y
+     * @param x1 the ending x
+     * @param y1 the ending y
+     */
+    void strokeLine(double x0, double y0, double x1, double y1);
+
+
+    /**
+     * Set the fill
+     *
+     * @param fill the fill to set
+     */
+    void setFill(Fill fill);
+
+    /**
+     * Set the fill to a single color
+     *
+     * @param color the color to set the fill
+     */
+    default void setFill(Color color) {
+        setFill(new Fill(color));
+    }
+
+    /**
+     * Set the fill to a single color
+     *
+     * @param colorName the name of the color
+     */
+    default void setFill(final String colorName) {
+        setFill(Color.get(colorName));
+    }
+
+    /**
+     * Set the stroke
+     *
+     * @param stroke the stroke
+     */
+    void setStroke(Stroke stroke);
+
+    /**
+     * Begin a path
+     */
+    void beginPath();
+
+    /**
+     * Move the "cursor" of the path
+     *
+     * @param endX the x to move to
+     * @param endY the y to move to
+     */
+    void moveTo(double endX, double endY);
+
+    /**
+     * Draw a line to the given point
+     *
+     * @param endX the end x
+     * @param endY the end y
+     */
+    void lineTo(double endX, double endY);
+
+    /**
+     * Draw a quadratic bezier to the end point
+     *
+     * @param cpX  control point x
+     * @param cpY  control point y
+     * @param endX end x
+     * @param endY end y
+     */
+    void quadTo(double cpX, double cpY, double endX, double endY);
+
+    /**
+     * Draw a cubic bezier to the end point
+     *
+     * @param cp1X control point 1 x
+     * @param cp1Y control point 1 y
+     * @param cp2X control point 2 x
+     * @param cp2Y control point 2 y
+     * @param endX end x
+     * @param endY end y
+     */
+    void curveTo(double cp1X, double cp1Y, double cp2X, double cp2Y, double endX, double endY);
+
+    /**
+     * Closes the current path
+     */
+    void closePath();
+
+    /**
+     * Fills the current path
+     */
+    void fill();
+
+    /**
+     * Strokes the current path
+     */
+    void stroke();
+
+    /**
+     * Draw the outline of a polygon
+     *
+     * @param xPoints   the x points
+     * @param yPoints   the y points
+     * @param numPoints the number of points to draw
+     */
+    default void strokePolygon(double[] xPoints, double[] yPoints, int numPoints) {
+        //TODO replace this by using drawline
+        beginPath();
+        moveTo(xPoints[0], yPoints[0]);
+        if (numPoints > 0) {
+            for (int i = 1; i < numPoints; i++) {
+                lineTo(xPoints[i], yPoints[i]);
+            }
+        }
+        lineTo(xPoints[0], yPoints[0]);
+        closePath();
+        stroke();
+    }
+
+    /**
+     * Draw a polyline
+     *
+     * @param xPoints   the x points
+     * @param yPoints   the y points
+     * @param numPoints the number of points to draw
+     */
+    default void strokePolyline(double[] xPoints, double[] yPoints, int numPoints) {
+        //TODO replace this by using drawline
+        beginPath();
+        moveTo(xPoints[0], yPoints[0]);
+        if (numPoints > 0) {
+            for (int i = 1; i < numPoints; i++) {
+                lineTo(xPoints[i], yPoints[i]);
+            }
+        }
+        stroke();
+    }
+
+    /**
+     * Draw a filled polygon
+     *
+     * @param xPoints   the x points
+     * @param yPoints   the y points
+     * @param numPoints the number of points to draw
+     */
+    default void fillPolygon(double[] xPoints, double[] yPoints, int numPoints) {
+        beginPath();
+        moveTo(xPoints[0], yPoints[0]);
+        if (numPoints > 0) {
+            for (int i = 1; i < numPoints; i++) {
+                lineTo(xPoints[i], yPoints[i]);
+            }
+        }
+        closePath();
+        fill();
+    }
+
+    /**
+     * Draw the given text at the default position (i.e. x minus baseline)
+     *
+     * @param text the text to draw
+     * @param x    the x position
+     * @param y    the y position
+     */
+    void fillText(String text, double x, double y);
+
+    /**
+     * Set the font of the canvas
+     *
+     * @param font the font
+     */
+    void setFont(final Font font);
+
+    /**
+     * Add a fill text at the position based on the top-left corner of the bounds (left-aligned), top-middle (center-aligned)
+     * or top-right if right-aligned
+     *
+     * @param text the text to place
+     * @param x    the x position
+     * @param y    the y position
+     * @implNote when implemented, this should update the metrics in the text object. As a result, not new Text should
+     * be generated during chart layout
+     */
+    void fillText(Text text, double x, double y);
+
+    void setClip(ClipShape shape, double x, double y, double width, double height);
+
+    void clearClip();
+
+}

@@ -1,6 +1,6 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.datasets.Dataset;
+import net.mahdilamb.charts.series.Dataset;
 import org.junit.Test;
 
 import java.io.File;
@@ -16,6 +16,6 @@ public class DatasetTests {
                         .setMarker('^')
                         .setColor("red")
         );
-        System.out.println(Dataset.from(new File("D:\\mahdi\\Desktop\\train.csv")));
+        System.out.println((Dataset.from(new File("D:\\mahdi\\Desktop\\train.csv")).get("MSZoning")));
     }
 }

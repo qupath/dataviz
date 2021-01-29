@@ -15,7 +15,7 @@ repositories {
 
 dependencies {
     testImplementation("junit:junit:4.13")
-    compile 'net.mahdilamb:colormap:0.9.44'
+    compile 'net.mahdilamb:colormap:0.9.45'
     compile project(':geom2d-core')
     compile project(':statistics')
     compile 'net.mahdilamb:utils-tuples:0.3.1'
@@ -25,4 +25,9 @@ dependencies {
 
 test {
     useJUnit()
+}
+
+task swingTest(type: JavaExec, dependsOn: ['testClasses']) {
+    classpath sourceSets.test.runtimeClasspath
+    main = "net.mahdilamb.charts.SwingTest"
 }

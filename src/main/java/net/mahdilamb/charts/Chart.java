@@ -1,19 +1,20 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.datasets.DataSeries;
-import net.mahdilamb.charts.datasets.DataType;
-import net.mahdilamb.charts.datasets.Dataset;
-import net.mahdilamb.charts.datasets.NumericSeries;
-import net.mahdilamb.charts.plots.Plot;
-import net.mahdilamb.charts.plots.XYPlot;
-import net.mahdilamb.charts.series.PlotSeries;
-import net.mahdilamb.charts.series.Scatter;
-import net.mahdilamb.charts.styles.Text;
-import net.mahdilamb.charts.styles.Title;
+import net.mahdilamb.charts.graphics.*;
+import net.mahdilamb.charts.io.SVGFile;
+import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.plots.PlotSeries;
+import net.mahdilamb.charts.plots.Scatter;
+import net.mahdilamb.charts.series.DataSeries;
+import net.mahdilamb.charts.series.DataType;
+import net.mahdilamb.charts.series.Dataset;
+import net.mahdilamb.charts.series.NumericSeries;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
+import java.io.File;
 import java.util.Iterator;
 
 public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
@@ -41,31 +42,10 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
     public static Scatter scatter(Dataset dataset, String x, String y) {
         final DataSeries<?> xSeries = dataset.get(x);
         final DataSeries<?> ySeries = dataset.get(y);
-        if (xSeries.getType() instanceof DataType.Numeric && ySeries.getType() instanceof DataType.Numeric) {
+        if (DataType.isNumeric(xSeries.getType()) && DataType.isNumeric(ySeries.getType())) {
             return new PlotSeriesImpl.AbstractScatter.FromIterable((NumericSeries<?>) xSeries, (NumericSeries<?>) ySeries);
         }
         throw new UnsupportedOperationException("Both series must be numeric");
-    }
-
-    protected static abstract class TextImpl {
-        double width, height;
-
-        boolean isSet = false;
-
-        protected final void updateSize(double width, double height) {
-            this.width = width;
-            this.height = height;
-            isSet = true;
-        }
-
-        protected abstract void calculateSize();
-
-    }
-
-    protected static abstract class ImageImpl {
-        byte[] bytes;
-
-        abstract byte[] calculateBytes();
     }
 
     Title title;
@@ -73,14 +53,14 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
     Legend legend;
     final Colormap colormap = new Plotly();
     Iterator<Float> colormapIt;
-
+    Color backgroundColor = Color.WHITE;
 
     double width, height;
     double titleWidth, titleHeight;
+    boolean firstPass = false;
 
     protected Chart(String title, double width, double height, P plot) {
-        this.title = new Title();
-        this.title.setTitle(title);//TODO
+        //this.title.setTitle(title);//TODO
         this.plot = plot;
         this.width = width;
         this.height = height;
@@ -99,54 +79,104 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         return legend;
     }
 
+    public ColorBar getColorBars() {
+        //TODO
+        return null;
+    }
+
     public P getPlot() {
         return plot;
     }
 
-    protected void layout() {
-        titleWidth = 0;
-        titleHeight = 0;
-        legend.yOffset = 0;
-        double legendY = 0, plotX = 0, plotY = 0, legendWidth = 0, legendHeight = 0;
-        if (title != null && title.isVisible()) {
-            titleWidth = getTextWidth(title);
-            titleHeight = getTextHeight(title);
-            legendY += titleHeight;
-            plotY = legendY;
-        }
-        if (legend.isVisible() && !legend.isFloating()) {
-            legend.layout(legendY);
-            switch (legend.getSide()) {
-                case TOP:
-                    plotY += legend.height;
-                    break;
-                case LEFT:
-                    plotX += legend.width;
-                    break;
-                case RIGHT:
-                    legendWidth = legend.width;
-                    break;
-                case BOTTOM:
-                    legendHeight = legend.height;
-                    break;
-            }
-        }
-        ((PlotImpl<?>) plot).layout(plotX, plotY, width - legendWidth - plotX, height - legendHeight - plotY);
-        draw();
+
+    final void layout(ChartCanvas canvas) {
+        canvas.reset();
+        canvas.setClip(ClipShape.ELLIPSE, 10, 10, 150, 150);
+        canvas.setStroke(new Stroke(Color.get("aqua"), 2));
+        canvas.strokeOval(0, 0, 10, 10);
+        canvas.setFill("orange");
+        canvas.fillOval(5, 5, 10, 10);
+        canvas.setFill(new Fill(Fill.GradientType.LINEAR, Colormaps.get("viridis"), 0, 0, 200, 200));
+        canvas.strokeLine(0, 0, 20, 20);
+        canvas.strokeRoundRect(30, 30, 50, 50, 5, 5);
+        canvas.beginPath();
+        canvas.moveTo(20, 20);
+        canvas.curveTo(10, 10, 30, 30, 50, 50);
+        canvas.quadTo(0.5, 0.5, 45, 213);
+        canvas.closePath();
+        canvas.fill();
+        canvas.fillPolygon(new double[]{50, 100, 0}, new double[]{0, 100, 100}, 3);
+        canvas.clearClip();
+        canvas.strokePolyline(new double[]{100, 150, 150, 25}, new double[]{100, 25, 75, 0}, 4);
+        canvas.done();
+
     }
 
+    protected final void layout() {
+        layout(getCanvas());
+        firstPass = true;
+    }
 
-    protected abstract double getTextWidth(Text text);
+    protected abstract ChartCanvas getCanvas();
 
-    protected abstract double getTextHeight(Text text);
-
-    protected abstract void draw();
 
     static Color getNextColor(Chart<?, ?> chart) {
         if (chart.colormapIt == null || !chart.colormapIt.hasNext()) {
             chart.colormapIt = chart.colormap.iterator();
         }
-        return (Color) chart.colormap.get(chart.colormapIt.next());
+        return chart.colormap.get(chart.colormapIt.next());
     }
 
+    /**
+     * @return the width of the chart
+     */
+    public final double getWidth() {
+        return width;
+    }
+
+    /**
+     * @return the height of the chart
+     */
+    public final double getHeight() {
+        return height;
+    }
+
+    /**
+     * Save this chart as an svg
+     *
+     * @param file the output file
+     */
+    public void saveAsSVG(File file) {
+        SVGFile.to(file, this);
+    }
+
+    public void setBackgroundColor(String name) {
+        setBackgroundColor(Color.get(name));
+    }
+
+    public void setBackgroundColor(Color color) {
+        this.backgroundColor = color;
+        layout();
+    }
+
+    public Color getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    protected static boolean isSet(Text text) {
+        return text.set;
+    }
+
+    protected static void setMetrics(Text text, double width, double height, double baselineOffset) {
+        text.setMetrics(width, height, baselineOffset);
+
+    }
+
+    protected static double getAdjustedY(Text text, double y) {
+        return text.getAdjustedY(y);
+    }
+
+    protected static double getAdjustedX(Text text, double x) {
+        return text.getAdjustedX(x);
+    }
 }

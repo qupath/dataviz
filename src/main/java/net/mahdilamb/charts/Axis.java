@@ -1,7 +1,6 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.axes.LinearAxis;
-import net.mahdilamb.charts.styles.Title;
 
 public abstract class Axis {
     /**

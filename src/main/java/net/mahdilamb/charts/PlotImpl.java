@@ -1,9 +1,7 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.plots.Plot;
-import net.mahdilamb.charts.series.PlotSeries;
-import net.mahdilamb.charts.styles.Orientation;
-import net.mahdilamb.charts.styles.Text;
+import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.plots.PlotSeries;
 
 abstract class PlotImpl<S extends PlotSeries<S>> implements Plot<S> {
     double minorTickSpacing, majorTickSpacing;
@@ -42,14 +40,6 @@ abstract class PlotImpl<S extends PlotSeries<S>> implements Plot<S> {
     protected abstract Iterable<Legend.LegendItem> getLegendItems();
 
     protected abstract void layoutAxes();
-
-    protected double getTextHeight(Text text) {
-        return chart.getTextHeight(text);
-    }
-
-    protected double getTextWidth(Text text) {
-        return chart.getTextWidth(text);
-    }
 
     @Override
     public S get(int series) {

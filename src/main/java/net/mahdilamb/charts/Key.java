@@ -1,9 +1,8 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.styles.Orientation;
-import net.mahdilamb.charts.styles.Side;
-import net.mahdilamb.charts.styles.Stroke;
-import net.mahdilamb.charts.styles.Title;
+import net.mahdilamb.charts.graphics.Orientation;
+import net.mahdilamb.charts.graphics.Side;
+import net.mahdilamb.charts.graphics.Stroke;
 
 /**
  * A class representing meta information for the chart (e.g. Legend and Colorbar)

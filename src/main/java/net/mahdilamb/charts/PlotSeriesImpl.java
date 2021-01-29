@@ -1,9 +1,9 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.plots.Plot;
-import net.mahdilamb.charts.series.*;
-import net.mahdilamb.charts.styles.MarkerMode;
-import net.mahdilamb.charts.styles.MarkerShape;
+import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.plots.*;
+import net.mahdilamb.charts.graphics.MarkerMode;
+import net.mahdilamb.charts.graphics.MarkerShape;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
@@ -125,7 +125,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
     public S setColors(String... colorNames) {
         final List<Color> colors = prepareColorList(colorNames.length);
         for (final String string : colorNames) {
-            colors.add((Color) Color.get(string));
+            colors.add(Color.get(string));
         }
         return (S) this;
     }
@@ -135,7 +135,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
     public S setColors(Iterable<String> colorNames) {
         final List<Color> colors = prepareColorList(-1);
         for (final String string : colorNames) {
-            colors.add((Color) Color.get(string));
+            colors.add(Color.get(string));
         }
         return (S) this;
     }
@@ -196,7 +196,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
 
         @Override
         public Scatter setXMarginal(MarginalMode marginal) {
-            if (this.xMarginal != marginal){
+            if (this.xMarginal != marginal) {
                 needsUpdating = true;
             }
             this.xMarginal = marginal;
@@ -205,7 +205,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
 
         @Override
         public Scatter setYMarginal(MarginalMode marginal) {
-            if (this.yMarginal != marginal){
+            if (this.yMarginal != marginal) {
                 needsUpdating = true;
             }
             this.yMarginal = marginal;
@@ -263,7 +263,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
 
         @Override
         protected void layoutData(Layouts.RectangularPlot<Scatter> plot) {
-//TODO
+            //TODO
         }
 
         @Override

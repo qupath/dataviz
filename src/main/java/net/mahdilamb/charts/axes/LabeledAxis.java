@@ -1,6 +1,5 @@
 package net.mahdilamb.charts.axes;
 
-import net.mahdilamb.charts.styles.Orientation;
 import net.mahdilamb.charts.Axis;
 
 import java.util.List;
