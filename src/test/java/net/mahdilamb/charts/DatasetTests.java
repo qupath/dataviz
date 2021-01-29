@@ -12,7 +12,7 @@ public class DatasetTests {
         final Dataset iris = Dataset.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("iris.csv")).getFile()));
         System.out.println(iris);
         System.out.println(
-                Chart.scatter(iris, "sepal_length", "sepal_width")
+                PlotFactory.scatter(iris, "sepal_length", "sepal_width")
                         .setMarker('^')
                         .setColor("red")
         );

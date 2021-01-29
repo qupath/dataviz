@@ -1,21 +1,12 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.ChartCanvas;
-import net.mahdilamb.charts.graphics.Fill;
-import net.mahdilamb.charts.graphics.Font;
-import net.mahdilamb.charts.graphics.Stroke;
+import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGFile;
 import net.mahdilamb.charts.layouts.Plot;
 import net.mahdilamb.charts.plots.PlotSeries;
-import net.mahdilamb.charts.plots.Scatter;
-import net.mahdilamb.charts.series.DataSeries;
-import net.mahdilamb.charts.series.DataType;
-import net.mahdilamb.charts.series.Dataset;
-import net.mahdilamb.charts.series.NumericSeries;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
-import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
@@ -24,132 +15,64 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
-    /**
-     * Create a scatter series from an array of x and y data
-     *
-     * @param x the x data
-     * @param y the y data
-     * @return the scatter series
-     */
-    public static Scatter scatter(double[] x, double[] y) {
-        return new PlotSeriesImpl.AbstractScatter.FromArray(x, y);
-    }
 
     /**
-     * Create a scatter series from a dataset
-     *
-     * @param dataset the dataset
-     * @param x       the name of the series containing the x data
-     * @param y       the name of the series containing the y data
-     * @return the scatter series
-     * @throws UnsupportedOperationException of either series is not numeric
-     * @throws NullPointerException          if the series cannot be found
+     * The default chart theme
      */
-    public static Scatter scatter(Dataset dataset, String x, String y) {
-        final DataSeries<?> xSeries = dataset.get(x);
-        final DataSeries<?> ySeries = dataset.get(y);
-        if (DataType.isNumeric(xSeries.getType()) && DataType.isNumeric(ySeries.getType())) {
-            return new PlotSeriesImpl.AbstractScatter.FromIterable((NumericSeries<?>) xSeries, (NumericSeries<?>) ySeries);
-        }
-        throw new UnsupportedOperationException("Both series must be numeric");
-    }
+    public static final Theme DEFAULT_THEME = new ThemeImpl(new Plotly(), Color.WHITE, Color.LIGHT_GRAY, Color.BLACK, 2, 2);
 
-    Title title;
+    Theme theme = Theme.DEFAULT;
+    Iterator<Float> colormapIt = theme.getDefaultColormap().iterator();
+
+    final Title title = new Title(null, Font.DEFAULT_FONT, Alignment.CENTER);
     P plot;
-    Legend legend;
-    final Colormap colormap = new Plotly();
-    Iterator<Float> colormapIt;
-    Color backgroundColor = Color.WHITE;
-
+    Legend legend = new Legend(this);
+    ColorBar colorBar = new ColorBar(this);
     double width, height;
-    double titleWidth, titleHeight;
 
     protected Chart(String title, double width, double height, P plot) {
-        //this.title.setTitle(title);//TODO
+        this.title.setTitle(title);
         this.plot = plot;
         this.width = width;
         this.height = height;
-
     }
 
-    public Title getTitle() {
+    /**
+     * @return the title of the chart
+     */
+    public final Title getTitle() {
         return title;
     }
 
-    public void setTitle(String title) {
-        this.title.setTitle(title);
+    /**
+     * Set the title of the chart
+     *
+     * @param text the title of the chart
+     */
+    public final void setTitle(String text) {
+        this.title.setTitle(text);
         layout();
     }
 
-    public Legend getLegend() {
+    /**
+     * @return the legend of the chart.
+     */
+    public final Legend getLegend() {
         return legend;
     }
 
-    public ColorBar getColorBars() {
-        //TODO
-        return null;
+    /**
+     * @return the color bar area of the chart
+     */
+    public final ColorBar getColorBars() {
+        return colorBar;
     }
 
-    public P getPlot() {
+    /**
+     * @return the plot area of the chart
+     */
+    public final P getPlot() {
         return plot;
-    }
-
-    final void layout(ChartCanvas<?> canvas) {
-        canvas.reset();
-        // canvas.setClip(ClipShape.ELLIPSE, 10, 10, 150, 150);
-        canvas.setStroke(new Stroke(Color.get("aqua"), 2));
-        canvas.strokeOval(0, 0, 10, 10);
-        canvas.setFill("orange");
-        canvas.fillOval(5, 5, 10, 10);
-        canvas.setFill(new Fill(Fill.GradientType.LINEAR, Colormaps.buildSequential().addColor(Color.salmon,Color.WHITE).build(), 0, 0, 200, 200));
-        canvas.strokeLine(0, 0, 20, 20);
-        canvas.strokeRoundRect(30, 30, 50, 50, 5, 5);
-        canvas.beginPath();
-        canvas.moveTo(20, 20);
-        canvas.curveTo(10, 10, 30, 30, 50, 50);
-        canvas.quadTo(0.5, 0.5, 45, 213);
-        canvas.closePath();
-        canvas.fill();
-        canvas.fillPolygon(new double[]{50, 100, 0}, new double[]{0, 100, 100}, 3);
-        canvas.clearClip();
-
-        canvas.strokePolyline(new double[]{100, 150, 150, 25}, new double[]{100, 25, 75, 0}, 4);
-        canvas.done();
-
-    }
-
-    protected final void layout() {
-        layout(getCanvas());
-    }
-
-    protected abstract ChartCanvas<?> getCanvas();
-
-    /**
-     * Get the baseline offset of a font
-     *
-     * @param font the font
-     * @return the baseline offset
-     */
-    protected abstract double getTextBaselineOffset(final Font font);
-
-    /**
-     * @param font the font
-     * @param text the text
-     * @return the width of the text with the given font
-     */
-    protected abstract double getTextWidth(final Font font, String text);
-
-    protected abstract double getImageWidth(Object image);
-
-    protected abstract double getImageHeight(Object image);
-
-    protected abstract byte[] bytesFromImage(Object image);
-
-    static Color getNextColor(Chart<?, ?> chart) {
-        if (chart.colormapIt == null || !chart.colormapIt.hasNext()) {
-            chart.colormapIt = chart.colormap.iterator();
-        }
-        return chart.colormap.get(chart.colormapIt.next());
     }
 
     /**
@@ -256,7 +179,7 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
      *
      * @param colorName the name of the color
      */
-    public void setBackgroundColor(String colorName) {
+    public final void setBackgroundColor(String colorName) {
         setBackgroundColor(Color.get(colorName));
     }
 
@@ -265,16 +188,114 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
      *
      * @param color the color to set
      */
-    public void setBackgroundColor(Color color) {
-        this.backgroundColor = color;
+    public final void setBackgroundColor(Color color) {
+        getTheme().background = color;
+        backgroundChanged();
         layout();
     }
 
     /**
      * @return the background color of this chart
      */
-    public Color getBackgroundColor() {
-        return backgroundColor;
+    public final Color getBackgroundColor() {
+        return theme.getBackgroundColor();
+    }
+
+    /**
+     * Method called when the background has changed
+     */
+    protected abstract void backgroundChanged();
+
+    private ThemeImpl getTheme() {
+        //If theme is default or not Impl, get a copy
+        if (theme == Theme.DEFAULT || !(theme instanceof ThemeImpl)) {
+            theme = new ThemeImpl(theme);
+        }
+        return ((ThemeImpl) theme);
+    }
+
+    /**
+     * Layout the chart
+     *
+     * @param canvas the canvas to layout on
+     */
+    final void layout(ChartCanvas<?> canvas) {
+        canvas.reset();
+        // canvas.setClip(ClipShape.ELLIPSE, 10, 10, 150, 150);
+        canvas.setStroke(new Stroke(Color.get("aqua"), 2));
+        canvas.strokeOval(0, 0, 10, 10);
+        canvas.setFill("orange");
+        canvas.fillOval(5, 5, 10, 10);
+        canvas.setFill(new Fill(Fill.GradientType.LINEAR, Colormaps.buildSequential().addColor(Color.salmon, Color.WHITE).build(), 0, 0, 200, 200));
+        canvas.strokeLine(0, 0, 20, 20);
+        canvas.strokeRoundRect(30, 30, 50, 50, 5, 5);
+        canvas.beginPath();
+        canvas.moveTo(20, 20);
+        canvas.curveTo(10, 10, 30, 30, 50, 50);
+        canvas.quadTo(0.5, 0.5, 45, 213);
+        canvas.closePath();
+        canvas.fill();
+        canvas.fillPolygon(new double[]{50, 100, 0}, new double[]{0, 100, 100}, 3);
+        canvas.clearClip();
+
+        canvas.strokePolyline(new double[]{100, 150, 150, 25}, new double[]{100, 25, 75, 0}, 4);
+        canvas.done();
+
+    }
+
+    /**
+     * Layout the chart locally
+     */
+    protected final void layout() {
+        layout(getCanvas());
+    }
+
+    /**
+     * @return the canvas of the chart
+     */
+    protected abstract ChartCanvas<?> getCanvas();
+
+    /**
+     * Get the baseline offset of a font
+     *
+     * @param font the font
+     * @return the baseline offset
+     */
+    protected abstract double getTextBaselineOffset(final Font font);
+
+    /**
+     * @param font the font
+     * @param text the text
+     * @return the width of the text with the given font
+     */
+    protected abstract double getTextWidth(final Font font, String text);
+
+    /**
+     * @param image the image to get the width of
+     * @return the width of an image
+     * @apiNote Note that this is unsafe and should not be exposed. This is just used for the chart exporter
+     */
+    protected abstract double getImageWidth(Object image) throws ClassCastException;
+
+    /**
+     * @param image the image to get the height
+     * @return the height of an image
+     * @apiNote Note that this is unsafe and should not be exposed. This is just used for the chart exporter
+     */
+    protected abstract double getImageHeight(Object image) throws ClassCastException;
+
+    /**
+     * @param image the image to get the bytes of
+     * @return the image as a byte array of PNG encoding bytes
+     * @apiNote Note that this is unsafe and should not be exposed. This is just used for the chart exporter
+     */
+    protected abstract byte[] bytesFromImage(Object image) throws ClassCastException;
+
+    protected static Color getNextColor(Chart<?, ?> chart) {
+        if (chart.colormapIt == null || !chart.colormapIt.hasNext()) {
+            chart.colormapIt = chart.theme.getDefaultColormap().iterator();
+        }
+        return chart.theme.getDefaultColormap().get(chart.colormapIt.next());
     }
 
 }

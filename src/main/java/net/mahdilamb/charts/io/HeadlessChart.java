@@ -283,18 +283,23 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
     }
 
     @Override
-    protected double getImageWidth(Object image) {
+    protected double getImageWidth(Object image) throws ClassCastException {
         return canvas.getImageWidth((BufferedImage) image);
     }
 
     @Override
-    protected double getImageHeight(Object image) {
+    protected double getImageHeight(Object image) throws ClassCastException {
         return canvas.getImageHeight((BufferedImage) image);
     }
 
     @Override
-    protected byte[] bytesFromImage(Object image) {
+    protected byte[] bytesFromImage(Object image) throws ClassCastException {
         return canvas.bytesFromImage((BufferedImage) image);
+    }
+
+    @Override
+    protected void backgroundChanged() {
+        //Not required
     }
 
 

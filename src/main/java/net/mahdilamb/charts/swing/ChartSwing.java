@@ -127,7 +127,7 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
         }
 
         @Override
-        public synchronized void paint(Graphics g) {
+        public void paint(Graphics g) {
             try {
                 super.paint(g);
                 for (final Consumer<Graphics2D> command : queue) {
@@ -328,6 +328,7 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
                         g.setClip(ellipse);
                         break;
                     case RECTANGLE:
+                        //use the rect so we can keep double precision
                         rect.setRect(x, y, width, height);
                         g.setClip(rect);
                         break;
@@ -396,17 +397,17 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
     }
 
     @Override
-    protected double getImageWidth(Object image) {
+    protected double getImageWidth(Object image) throws ClassCastException {
         return canvas.getImageWidth((BufferedImage) image);
     }
 
     @Override
-    protected double getImageHeight(Object image) {
+    protected double getImageHeight(Object image) throws ClassCastException {
         return canvas.getImageHeight((BufferedImage) image);
     }
 
     @Override
-    protected byte[] bytesFromImage(Object image) {
+    protected byte[] bytesFromImage(Object image) throws ClassCastException {
         return canvas.bytesFromImage((BufferedImage) image);
     }
 
@@ -423,6 +424,11 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
                 }
             });
         }
+    }
+
+    @Override
+    protected void backgroundChanged() {
+        //Not required
     }
 
 

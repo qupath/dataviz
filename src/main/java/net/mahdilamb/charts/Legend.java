@@ -42,9 +42,9 @@ public final class Legend extends Key {
      */
     public static class LegendItem {
         private final Marker marker;
-        private final Text label;
+        private final Title label;
 
-        public LegendItem(Text label, Marker marker) {
+        public LegendItem(Title label, Marker marker) {
             this.label = Objects.requireNonNull(label);
             this.marker = marker;
         }
@@ -52,7 +52,7 @@ public final class Legend extends Key {
         /**
          * @return the label of this legend item
          */
-        public Text getLabel() {
+        public Title getLabel() {
             return label;
         }
 

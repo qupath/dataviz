@@ -33,7 +33,7 @@ public class SVGFile extends ChartExporter {
         Stroke stroke;
 
         private static final StringBuilder pathD = new StringBuilder();
-        private Font font = new Font(12, Font.Family.SANS_SERIF);
+        private Font font = new Font(Font.Family.SANS_SERIF, 12);
 
 
         SVGWriter(File output, Chart<?, ?> chart) {
@@ -132,7 +132,7 @@ public class SVGFile extends ChartExporter {
 
         @Override
         public void drawImage(Object o, double x, double y) {
-            out.append(imageToString(imageToBytesUnsafe(o, chart), x, y, getImageWidthUnsafe(o, chart), getImageHeightUnsafe(o, chart), indent));
+            out.append(imageToString(imageToBytes(o, chart), x, y, getImageWidth(o, chart), getImageHeight(o, chart), indent));
         }
 
         @Override

@@ -10,7 +10,13 @@ import java.util.Objects;
  * The constants are a compromise between the SVG specification
  * and the AWT constants
  */
-public final class Font {
+public class Font {
+
+    /**
+     * A default 12-point san-serif font. Note that attempts to modify this font will thrown an error.
+     * Please use the {@link #copy} to derive fonts
+     */
+    public static final Font DEFAULT_FONT = new UnmodifiableFont(Family.SANS_SERIF, 12, Weight.NORMAL, Style.NORMAL);
 
     /**
      * The font family
@@ -37,19 +43,19 @@ public final class Font {
         BOLD
     }
 
-    private volatile double size;
-    private volatile Family family;
-    private volatile Style style;
-    private volatile Weight weight;
+    private double size;
+    private Family family;
+    private Style style;
+    private Weight weight;
 
     /**
      * Create a font with the given characteristics
      *
-     * @param size   font size
      * @param family font family
+     * @param size   font size
      * @param style  font style
      */
-    public Font(final double size, final Family family, final Weight weight, final Style style) {
+    public Font(final Family family, final double size, final Weight weight, final Style style) {
         this.size = size;
         this.family = family;
         this.style = style;
@@ -59,11 +65,11 @@ public final class Font {
     /**
      * Create a font with the given characteristics and other attributes as Normal
      *
-     * @param size   font size
      * @param family font family
+     * @param size   font size
      */
-    public Font(final double size, final Family family) {
-        this(size, family, Weight.NORMAL, Style.NORMAL);
+    public Font(final Family family, final double size) {
+        this(family, size, Weight.NORMAL, Style.NORMAL);
     }
 
     /**
@@ -71,7 +77,7 @@ public final class Font {
      *
      * @param other font to create a copy of
      */
-    public Font(final Font other) {
+    private Font(final Font other) {
         this.size = other.size;
         this.family = other.family;
         this.style = other.style;
@@ -107,12 +113,21 @@ public final class Font {
     }
 
     /**
+     *
+     * @return a copy of this font
+     */
+    public Font copy(){
+        return new Font(this);
+    }
+
+
+    /**
      * Modify the font size
      *
      * @param size font size
      * @return a new font with current characteristics, but modified size
      */
-    public final Font modify(final double size) {
+    public Font modify(final double size) {
         this.size = size;
         return this;
 
@@ -124,7 +139,7 @@ public final class Font {
      * @param family font family
      * @return a new font with current characteristics, but modified family
      */
-    public final Font modify(final Family family) {
+    public Font modify(final Family family) {
         this.family = family;
         return this;
 
@@ -136,7 +151,7 @@ public final class Font {
      * @param style font style
      * @return a new font with current characteristics, but modified style
      */
-    public final Font modify(final Style style) {
+    public Font modify(final Style style) {
         this.style = style;
         return this;
 
@@ -148,11 +163,9 @@ public final class Font {
      * @param weight font weight
      * @return a new font with current characteristics, but modified weight
      */
-    public final Font modify(final Weight weight) {
-
+    public Font modify(final Weight weight) {
         this.weight = weight;
         return this;
-
     }
 
 
@@ -176,6 +189,33 @@ public final class Font {
     @Override
     public final int hashCode() {
         return Objects.hash(size, family, style, weight);
+    }
+
+    private static final class UnmodifiableFont extends Font {
+        UnmodifiableFont(Family family, double size, Weight weight, Style style) {
+            super(family, size, weight, style);
+        }
+
+        @Override
+        public Font modify(double size) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Font modify(Family family) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Font modify(Style style) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public Font modify(Weight weight) {
+            throw new UnsupportedOperationException();
+        }
+
     }
 
 }

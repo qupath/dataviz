@@ -15,10 +15,42 @@ import java.io.File;
 import java.io.IOException;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
-import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 public class ImageExporter extends ChartExporter {
 
+    /**
+     * Create a PNG version of a chart
+     *
+     * @param file  the output file
+     * @param chart the chart
+     * @throws IOException thrown if the file cannot be written to
+     */
+    public static void toPNG(File file, Chart<?, ?> chart) throws IOException {
+        ImageIO.write(toBufferedImage(java.awt.image.BufferedImage.TYPE_INT_ARGB, chart), "png", file);
+
+    }
+
+    /**
+     * Create a JPEG version of a chart
+     *
+     * @param file  the output file
+     * @param chart the chart
+     * @throws IOException thrown if the file cannot be written to
+     */
+    public static void toJPEG(File file, Chart<?, ?> chart) throws IOException {
+        ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "jpeg", file);
+    }
+
+    /**
+     * Create a BMP version of a chart
+     *
+     * @param file  the output file
+     * @param chart the chart
+     * @throws IOException thrown if the file cannot be written to
+     */
+    public static void toBMP(File file, Chart<?, ?> chart) throws IOException {
+        ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "bmp", file);
+    }
 
     private static final class ImageExporterCanvas extends Component implements ChartCanvas<java.awt.image.BufferedImage> {
 
@@ -205,7 +237,6 @@ public class ImageExporter extends ChartExporter {
         }
 
 
-
         @Override
         public void setClip(ClipShape shape, double x, double y, double width, double height) {
             switch (shape) {
@@ -234,28 +265,10 @@ public class ImageExporter extends ChartExporter {
 
     }
 
-    public static BufferedImage toBufferedImage(int encoding, final Chart<?, ?> chart) {
+    private static BufferedImage toBufferedImage(int encoding, final Chart<?, ?> chart) {
         final BufferedImage image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), encoding);
-
         layoutChart(new ImageExporterCanvas(encoding != BufferedImage.TYPE_INT_ARGB, chart, (Graphics2D) image.getGraphics()), chart);
         return image;
     }
-
-    public static void toPNG(File file, Chart<?, ?> chart) throws IOException {
-
-        ImageIO.write(toBufferedImage(java.awt.image.BufferedImage.TYPE_INT_ARGB, chart), "png", file);
-
-    }
-
-    public static void toJPEG(File file, Chart<?, ?> chart) throws IOException {
-        ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "jpeg", file);
-
-    }
-
-    public static void toBMP(File file, Chart<?, ?> chart) throws IOException {
-        ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "bmp", file);
-
-    }
-
 
 }

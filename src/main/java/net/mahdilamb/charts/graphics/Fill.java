@@ -10,11 +10,17 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 /**
- * A fill - currently only supports a single fill color or linear gradient
+ * A fill - supports a single fill color, linear or radial gradient
  */
-public final class Fill {
-    public static final Fill BLACK_FILL = new Fill(Color.BLACK);
+public class Fill {
+    /**
+     * A default black fill
+     */
+    public static final Fill BLACK_FILL = new UnmodifiableFill(Color.BLACK);
 
+    /**
+     * Enum for the types of gradients
+     */
     public enum GradientType {
         /**
          * A linear gradient
@@ -61,7 +67,7 @@ public final class Fill {
          * @param other the gradient to copy from
          */
         public Gradient(final Gradient other) {
-            colorMap = new TreeMap<>(other.colorMap);
+            colorMap = other.colorMap;
             this.startX = other.startX;
             this.startY = other.startY;
             this.endX = other.endX;
@@ -123,13 +129,22 @@ public final class Fill {
         this.fill = color;
     }
 
-
+    /**
+     * Create a linear/radial gradient fill
+     *
+     * @param gradientType the type of the gradient
+     * @param colorMap     the source colormap
+     * @param startX       the starting x (absolute value)
+     * @param startY       the starting y (absolute value)
+     * @param endX         the end x (absolute value)
+     * @param endY         the end y (absolute value
+     */
     public Fill(final GradientType gradientType, final Colormap colorMap, double startX, double startY, double endX, double endY) {
         this.fill = new Gradient(gradientType, colorMap, startX, startY, endX, endY);
     }
 
     /**
-     * Construct a linear gradient fill
+     * Construct a linear/radial gradient fill
      *
      * @param gradientType the type of the gradient (either linear or radial)
      * @param colorMap     the colormap source of gradient fill
@@ -145,12 +160,9 @@ public final class Fill {
      *
      * @param other copy this fill
      */
-    public Fill(final Fill other) {
-        if (other.isGradient()) {
-            this.fill = new Gradient(other.getGradient());
-        } else {
-            this.fill = new Color(other.getColor());
-        }
+    private Fill(final Fill other) {
+        this.fill = other.fill;
+
     }
 
     /**
@@ -175,10 +187,10 @@ public final class Fill {
     }
 
     /**
-     * @return if the fill is null
+     * @return a shallow copy of this fill
      */
-    public static boolean isNull(Fill fill) {
-        return Objects.isNull(fill) || Objects.isNull(fill.fill);
+    public Fill copy() {
+        return new Fill(this);
     }
 
     @Override
@@ -192,6 +204,14 @@ public final class Fill {
             return String.format("Fill {color: %s}", getColor());
         }
     }
+
+    /**
+     * @return if the fill is null
+     */
+    public static boolean isNull(Fill fill) {
+        return Objects.isNull(fill) || Objects.isNull(fill.fill);
+    }
+
 
     /**
      * Create a linear gradient
@@ -227,6 +247,22 @@ public final class Fill {
     @Override
     public final int hashCode() {
         return Objects.hash(fill);
+    }
+
+    private static final class UnmodifiableFill extends Fill {
+
+        public UnmodifiableFill(Color color) {
+            super(color);
+        }
+
+        public UnmodifiableFill(GradientType gradientType, Colormap colorMap, double startX, double startY, double endX, double endY) {
+            super(gradientType, colorMap, startX, startY, endX, endY);
+        }
+
+        public UnmodifiableFill(GradientType gradientType, Colormap colorMap, Point start, Point end) {
+            super(gradientType, colorMap, start, end);
+        }
+
     }
 
 }

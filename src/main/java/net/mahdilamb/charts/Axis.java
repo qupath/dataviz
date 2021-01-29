@@ -25,7 +25,6 @@ public abstract class Axis {
 
     double minExtent, maxExtent, currentMin, currentMax;
     Title title;
-
     Chart<?,?> chart;
 
     protected Axis(double min, double max) {

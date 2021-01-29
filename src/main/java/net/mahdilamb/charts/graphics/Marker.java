@@ -9,17 +9,17 @@ public interface Marker {
     /**
      * @return the face color
      */
-    Color getFillColor();
+    Color getColor();
 
     /**
      * @return the edge color
      */
-    Color getStrokeColor();
+    Color getEdgeColor();
 
     /**
      * @return the width of the stroke
      */
-    double getStrokeWidth();
+    double getEdgeWidth();
 
     /**
      * @return the size of the marker
@@ -29,5 +29,5 @@ public interface Marker {
     /**
      * @return the type of the marker
      */
-    MarkerShape getType();
+    MarkerShape getShape();
 }
