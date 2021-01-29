@@ -1,5 +1,6 @@
 package net.mahdilamb.charts.swing;
 
+import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Fill;
 import net.mahdilamb.geom2d.geometries.Geometries;
 import net.mahdilamb.geom2d.geometries.Point;
@@ -10,6 +11,7 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.Map;
 
 public final class SwingUtils {
@@ -87,7 +89,7 @@ public final class SwingUtils {
     }
 
 
-    static Color convert(ChartSwing.ModifiableAWTColor dest, net.mahdilamb.colormap.Color source) {
+    static Color convert(SwingChart.ModifiableAWTColor dest, net.mahdilamb.colormap.Color source) {
         dest.r = source.red();
         dest.g = source.green();
         dest.b = source.blue();
@@ -142,5 +144,110 @@ public final class SwingUtils {
         return new Font(family, style, convert(font.getSize()));
     }
 
+    public static double getTextWidth(final FontMetrics fontMetrics, String text) {
+        double maxWidth = 0;
+        int i = 0;
+        int lineStart = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i++);
+            if (c == '\n') {
+                maxWidth = Math.max(fontMetrics.stringWidth(text.substring(lineStart, i)), maxWidth);
+                lineStart = i;
+            }
+        }
+        if (lineStart < text.length()) {
+            maxWidth = Math.max(fontMetrics.stringWidth(text.substring(lineStart)), maxWidth);
 
+        }
+        return maxWidth;
+    }
+
+    public static void drawMultilineTextLeft(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
+        drawMultilineText(g, text, x, y, lineSpacing, width, 0);
+
+    }
+
+    public static void drawMultilineTextCenter(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
+        drawMultilineText(g, text, x, y, lineSpacing, width, .5);
+    }
+
+    private static void drawMultilineText(final Graphics2D g, String text, double x, double y, double lineSpacing, double width, double frac) {
+        int lineHeight = g.getFontMetrics().getHeight();
+        int currentY = 0;
+        int i = 0;
+        int wordStart = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i++);
+            if (c == '\n') {
+                final String line = text.substring(wordStart, i);
+                double pad = frac == 0 ? 0 : ((g.getFontMetrics().stringWidth(line) - width) * frac);
+                g.drawString(line, SwingUtils.convert(x - pad), currentY + SwingUtils.convert(y));
+                currentY += lineHeight * lineSpacing;
+                wordStart = i;
+            }
+        }
+        if (wordStart < text.length()) {
+            final String line = text.substring(wordStart);
+            double pad = frac == 0 ? 0 : ((g.getFontMetrics().stringWidth(line) - width) * frac);
+            g.drawString(line, SwingUtils.convert(x - pad), currentY + SwingUtils.convert(y));
+        }
+    }
+
+    public static void drawMultilineTextRight(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
+        drawMultilineText(g, text, x, y, lineSpacing, width, 1);
+    }
+
+    public static double[] ensureCapacity(double[] source, int capacity) {
+        if (capacity >= source.length) {
+            return Arrays.copyOf(source, capacity);
+        }
+        return source;
+    }
+
+    /**
+     * Gets the line offsets of a title based on the alignment and the max width
+     *
+     * @param fontMetrics the font metrics to use
+     * @param title       the source title
+     * @param width       the desired width
+     * @return an array of sets. The length may exceed the number of lines. All excess elements are filled with NaN
+     */
+    public static double[] getLineOffsets(final FontMetrics fontMetrics, final Title title, double width) {
+        int i = 0;
+        int wordStart = 0;
+        final double frac;
+        double[] out = new double[4];
+        int j = 0;
+
+        switch (title.getAlignment()) {
+            case LEFT:
+                frac = 0;
+                break;
+            case CENTER:
+                frac = 0.5;
+                break;
+            case RIGHT:
+                frac = 1;
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+        final String text = title.getText();
+        while (i < text.length()) {
+            char c = text.charAt(i++);
+            if (c == '\n') {
+                final String line = text.substring(wordStart, i);
+                out = ensureCapacity(out, j+1);
+                out[j++] = frac == 0 ? 0 : ((fontMetrics.stringWidth(line) - width) * frac);
+                wordStart = i;
+            }
+        }
+        if (wordStart < text.length()) {
+            final String line = text.substring(wordStart);
+            out = ensureCapacity(out, j+1);
+            out[j++] = frac == 0 ? 0 : ((fontMetrics.stringWidth(line) - width) * frac);
+        }
+        Arrays.fill(out, j , out.length, Double.NaN);
+        return out;
+    }
 }

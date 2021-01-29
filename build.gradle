@@ -35,5 +35,5 @@ test {
 
 task swingTest(type: JavaExec, dependsOn: ['testClasses']) {
     classpath sourceSets.test.runtimeClasspath
-    main = "net.mahdilamb.charts.SwingTest"
+    main = "net.mahdilamb.charts.tests.SwingTest"
 }

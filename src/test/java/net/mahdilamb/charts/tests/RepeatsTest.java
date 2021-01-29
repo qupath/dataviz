@@ -1,4 +1,4 @@
-package net.mahdilamb.charts;
+package net.mahdilamb.charts.tests;
 
 import net.mahdilamb.charts.series.StringSeries;
 import org.junit.Test;

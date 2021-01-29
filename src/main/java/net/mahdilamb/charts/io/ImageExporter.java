@@ -65,6 +65,7 @@ public class ImageExporter extends ChartExporter {
         private Fill currentFill = Fill.BLACK_FILL;
         private Stroke currentStroke = Stroke.BLACK_STROKE;
         boolean usingFill = true;
+        private final AffineTransform affineTransform = new AffineTransform();
 
         public ImageExporterCanvas(boolean fillWhite, Chart<?, ?> chart, Graphics2D graphics) {
             this.g = graphics;
@@ -228,7 +229,18 @@ public class ImageExporter extends ChartExporter {
         @Override
         public void fillText(String text, double x, double y) {
             switchToFilled();
+            SwingUtils.drawMultilineTextLeft(g, text, x, y, 1, SwingUtils.getTextWidth(g.getFontMetrics(), text));
+        }
+
+        @Override
+        public void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
+            affineTransform.setToIdentity();
+            affineTransform.rotate(Math.toRadians(rotationDegrees), pivotX, pivotY);
+            g.setTransform(affineTransform);
             g.drawString(text, convert(x), convert(y));
+
+            affineTransform.setToIdentity();
+            g.setTransform(affineTransform);
         }
 
         @Override

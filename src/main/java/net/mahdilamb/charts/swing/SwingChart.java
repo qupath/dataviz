@@ -1,10 +1,12 @@
 package net.mahdilamb.charts.swing;
 
 import net.mahdilamb.charts.Chart;
+import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.layouts.XYMarginalPlot;
 import net.mahdilamb.charts.plots.PlotSeries;
 import net.mahdilamb.colormap.Colors;
 
@@ -21,82 +23,161 @@ import java.util.function.Consumer;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
-public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Chart<P, S> {
+public final class SwingChart<P extends Plot<S>, S extends PlotSeries<S>> extends Chart<P, S> {
+    /**
+     * Convert a series to a chart
+     *
+     * @param title  the title of the chart
+     * @param width  the width of the chart
+     * @param height the height of the chart
+     * @param series the series
+     * @param <S>    the type of the series
+     * @return the series in its plot
+     */
+    private static <S extends PlotSeries<S>> SwingChart<XYMarginalPlot<S>, S> chart(final String title, double width, double height, final S series) {
+        return new SwingChart<>(title, width, height, toPlot(series, 0, 10, 0, 10));
+    }
+    //todo show-editable. Save as images
 
-    static final class ModifiableAWTColor extends Color {
-        float r, g, b, a;
+    /**
+     * Show a plot series
+     *
+     * @param title  the title of the chart
+     * @param width  the width of the chart
+     * @param height the height of the chart
+     * @param series the series
+     * @param <S>    the type of the series
+     */
+    public static <S extends PlotSeries<S>> void show(final String title, double width, double height, final S series) {
+        final JFrame frame = new JFrame();
+        frame.setLayout(new BorderLayout());
+        chart(title, width, height, series).addTo(frame.getContentPane(), BorderLayout.CENTER);
+        frame.setSize((int) Math.ceil(width), (int) Math.ceil(height));
+        frame.setVisible(true);
+        frame.setTitle(title);
 
-        @Override
-        public int getRed() {
-            return Colors.floatTo8Bit(r);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+    }
+
+    /**
+     * Add this chart to an existing container
+     *
+     * @param parent   the container
+     * @param position the position to add this chart to
+     */
+    public void addTo(Container parent, String position) {
+        parent.add(canvas, position);
+        layout();
+    }
+
+    private final ChartPane canvas = new ChartPane(this);
+
+    private SwingChart(String title, double width, double height, P plot) {
+        super(title, width, height, plot);
+        canvas.setSize((int) Math.ceil(width), (int) Math.ceil(height));
+    }
+
+    @Override
+    protected ChartCanvas<BufferedImage> getCanvas() {
+        return canvas;
+    }
+
+    /**
+     * Calculate the height of wrapped text
+     *
+     * @param fontMetrics the font metrics to use
+     * @param text        the text to display
+     * @param maxWidth    the maximum width of the text
+     * @param lineSpacing the line spacing
+     * @return the height of wrapped text
+     */
+    public static double getTextHeight(final FontMetrics fontMetrics, final String text, double maxWidth, double lineSpacing) {
+        int lineCount = 0;
+        int i = 0;
+        int wordStart = 0;
+        double currentWidth = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i++);
+            if (Character.isWhitespace(c) && i != 0) {
+                final String word = text.substring(wordStart, i);
+                currentWidth += fontMetrics.stringWidth(word);
+                if (currentWidth > maxWidth) {
+                    ++lineCount;
+                    currentWidth = 0;
+                }
+                wordStart = i;
+            }
         }
-
-        @Override
-        public int getGreen() {
-            return Colors.floatTo8Bit(g);
+        if (currentWidth > 0) {
+            ++lineCount;
         }
+        return lineSpacing * lineCount * fontMetrics.getHeight();
+    }
 
-        @Override
-        public int getBlue() {
-            return Colors.floatTo8Bit(b);
+    @Override
+    protected double getTextHeight(Title title, double maxWidth, double lineSpacing) {
+        if (title.getText() == null || title.getText().length() == 0) {
+            return 0;
         }
+        return getTextHeight(canvas.getFontMetrics(SwingUtils.convert(title.getFont())), title.getText(), maxWidth, lineSpacing);
+    }
 
-        @Override
-        public int getAlpha() {
-            return Colors.floatTo8Bit(a);
-        }
+    @Override
+    protected double getTextBaselineOffset(Font font) {
+        return canvas.getTextBaselineOffset(font);
+    }
 
-        @Override
-        public int getRGB() {
-            return Colors.RGBAToInteger(r, g, b, a);
-        }
 
-        @Override
-        public float[] getRGBComponents(float[] compArray) {
-            compArray = compArray == null ? new float[4] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            compArray[3] = a;
-            return compArray;
-        }
+    @Override
+    protected double getTextWidth(Font font, String text) {
+        return canvas.getTextWidth(font, text);
+    }
 
-        @Override
-        public float[] getRGBColorComponents(float[] compArray) {
-            compArray = compArray == null ? new float[3] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            return compArray;
-        }
+    @Override
+    protected double getImageWidth(Object image) throws ClassCastException {
+        return canvas.getImageWidth((BufferedImage) image);
+    }
 
-        @Override
-        public float[] getComponents(float[] compArray) {
-            compArray = compArray == null ? new float[4] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            compArray[3] = a;
-            return compArray;
-        }
+    @Override
+    protected double getImageHeight(Object image) throws ClassCastException {
+        return canvas.getImageHeight((BufferedImage) image);
+    }
 
-        @Override
-        public float[] getColorComponents(float[] compArray) {
-            compArray = compArray == null ? new float[3] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            return compArray;
-        }
+    @Override
+    protected byte[] bytesFromImage(Object image) throws ClassCastException {
+        return canvas.bytesFromImage((BufferedImage) image);
+    }
 
-        ModifiableAWTColor(float r, float g, float b, float a) {
-            super(r, g, b, a);
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
+    @Override
+    public void saveAsSVG(File file) throws IOException {
+        if (SwingUtilities.isEventDispatchThread()) {
+            super.saveAsSVG(file);
+        } else {
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    super.saveAsSVG(file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
+
+    @Override
+    protected void backgroundChanged() {
+        //Not required
+    }
+
+    @Override
+    protected double getLineHeight(Title title) {
+        return canvas.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
+    }
+
+    @Override
+    protected double[] getTextLineOffsets(Title title, double maxWidth) {
+        return canvas.getLineOffsets(title, maxWidth);
+    }
+
 
     private static final class ChartPane extends JPanel implements ChartCanvas<BufferedImage> {
         private static final class ModifiableBasicStroke extends BasicStroke {
@@ -120,6 +201,7 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
         private final ModifiableAWTColor strokeColor = new ModifiableAWTColor(0, 0, 0, 1);
         private final ModifiableAWTColor fillColor = new ModifiableAWTColor(0, 0, 0, 1);
         private final Path2D path = new Path2D.Double();
+        private final AffineTransform affineTransform = new AffineTransform();
         boolean usingFill = true;
 
         ChartPane(Chart<?, ?> chart) {
@@ -310,7 +392,22 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
 
         @Override
         public void fillText(String text, double x, double y) {
-            switchToFilled().add(g -> g.drawString(text, SwingUtils.convert(x), SwingUtils.convert(y)));
+            switchToFilled().add(g -> SwingUtils.drawMultilineTextLeft(g, text, x, y, 1, SwingUtils.getTextWidth(g.getFontMetrics(), text)));
+        }
+
+        @Override
+        public void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
+            switchToFilled().add(g -> {
+                affineTransform.setToIdentity();
+                affineTransform.rotate(Math.toRadians(rotationDegrees), pivotX, pivotY);
+                g.setTransform(affineTransform);
+                g.drawString(text, convert(x), convert(y));
+
+                affineTransform.setToIdentity();
+                g.setTransform(affineTransform);
+
+            });
+
         }
 
         @Override
@@ -366,75 +463,91 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
             return fontMetrics.getAscent();
         }
 
+        double[] getLineOffsets(final Title title, double maxWidth) {
+            return SwingUtils.getLineOffsets(getFontMetrics(SwingUtils.convert(title.getFont())), title, maxWidth);
+
+        }
+
         private double getTextWidth(Font font, String text) {
-            final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(font));
-            return fontMetrics.stringWidth(text);
-        }
+            return SwingUtils.getTextWidth(getFontMetrics(SwingUtils.convert(font)), text);
 
-
-    }
-
-    private final ChartPane canvas = new ChartPane(this);
-
-    public ChartSwing(String title, double width, double height, P plot) {
-        super(title, width, height, plot);
-        canvas.setSize((int) Math.ceil(width), (int) Math.ceil(height));
-    }
-
-    @Override
-    protected ChartCanvas<BufferedImage> getCanvas() {
-        return canvas;
-    }
-
-    @Override
-    protected double getTextBaselineOffset(Font font) {
-        return canvas.getTextBaselineOffset(font);
-    }
-
-    @Override
-    protected double getTextWidth(Font font, String text) {
-        return canvas.getTextWidth(font, text);
-    }
-
-    @Override
-    protected double getImageWidth(Object image) throws ClassCastException {
-        return canvas.getImageWidth((BufferedImage) image);
-    }
-
-    @Override
-    protected double getImageHeight(Object image) throws ClassCastException {
-        return canvas.getImageHeight((BufferedImage) image);
-    }
-
-    @Override
-    protected byte[] bytesFromImage(Object image) throws ClassCastException {
-        return canvas.bytesFromImage((BufferedImage) image);
-    }
-
-    @Override
-    public void saveAsSVG(File file) throws IOException {
-        if (SwingUtilities.isEventDispatchThread()) {
-            super.saveAsSVG(file);
-        } else {
-            SwingUtilities.invokeLater(() -> {
-                try {
-                    super.saveAsSVG(file);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
         }
     }
 
-    @Override
-    protected void backgroundChanged() {
-        //Not required
+    static final class ModifiableAWTColor extends Color {
+        float r, g, b, a;
+
+        @Override
+        public int getRed() {
+            return Colors.floatTo8Bit(r);
+        }
+
+        @Override
+        public int getGreen() {
+            return Colors.floatTo8Bit(g);
+        }
+
+        @Override
+        public int getBlue() {
+            return Colors.floatTo8Bit(b);
+        }
+
+        @Override
+        public int getAlpha() {
+            return Colors.floatTo8Bit(a);
+        }
+
+        @Override
+        public int getRGB() {
+            return Colors.RGBAToInteger(r, g, b, a);
+        }
+
+        @Override
+        public float[] getRGBComponents(float[] compArray) {
+            compArray = compArray == null ? new float[4] : compArray;
+            compArray[0] = r;
+            compArray[1] = g;
+            compArray[2] = b;
+            compArray[3] = a;
+            return compArray;
+        }
+
+        @Override
+        public float[] getRGBColorComponents(float[] compArray) {
+            compArray = compArray == null ? new float[3] : compArray;
+            compArray[0] = r;
+            compArray[1] = g;
+            compArray[2] = b;
+            return compArray;
+        }
+
+        @Override
+        public float[] getComponents(float[] compArray) {
+            compArray = compArray == null ? new float[4] : compArray;
+            compArray[0] = r;
+            compArray[1] = g;
+            compArray[2] = b;
+            compArray[3] = a;
+            return compArray;
+        }
+
+        @Override
+        public float[] getColorComponents(float[] compArray) {
+            compArray = compArray == null ? new float[3] : compArray;
+            compArray[0] = r;
+            compArray[1] = g;
+            compArray[2] = b;
+            return compArray;
+        }
+
+        ModifiableAWTColor(float r, float g, float b, float a) {
+            super(r, g, b, a);
+            this.r = r;
+            this.g = g;
+            this.b = b;
+            this.a = a;
+        }
     }
 
 
-    public void addTo(Container parent, String position) {
-        parent.add(canvas, position);
-        layout();
-
-    }
 }

@@ -48,6 +48,8 @@ public interface Scatter extends PlotSeries<Scatter>, PlotWithLegend<Scatter>, P
 
     Scatter setYMarginal(MarginalMode marginal);
 
+    Scatter setGroups(Iterable<String> groupings);
+
     //TODO error bars
     //TODO trendline
     //TODO cluster

@@ -149,7 +149,32 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
         }
 
     }
+    static final class OfNonNaNLongArray extends DataSeriesImpl<Long> implements LongSeries {
+        final long[] data;
 
+
+        /**
+         * Create an abstract named series
+         *
+         * @param name the name of the series
+         */
+        OfNonNaNLongArray(String name, long[] data) {
+            super(name);
+            this.data = data;
+            this.end = data.length;
+        }
+
+        @Override
+        public long getLong(int index) {
+            return data[index];
+        }
+
+        @Override
+        public boolean isNaN(int index) {
+            return false;
+        }
+
+    }
     /**
      * Default implementation of a series backed by a collection of objects
      */

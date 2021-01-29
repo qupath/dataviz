@@ -5,7 +5,11 @@ import net.mahdilamb.charts.series.DataSeries;
 import net.mahdilamb.charts.series.DataType;
 import net.mahdilamb.charts.series.Dataset;
 import net.mahdilamb.charts.series.NumericSeries;
+import net.mahdilamb.colormap.Colormap;
 
+import static net.mahdilamb.charts.plots.PlotSeries.DEFAULT_SEQUENTIAL_COLORMAP;
+
+//TODO make series using Pattern matching in datasets e.g. for doing replicates
 public final class PlotFactory {
     private PlotFactory() {
 
@@ -40,4 +44,13 @@ public final class PlotFactory {
         }
         throw new UnsupportedOperationException("Both series must be numeric");
     }
+
+    public static Scatter scatter(Dataset dataset, String x, String y, String colorBy, Colormap colormap) {
+        return scatter(dataset, x, y).setColors(colormap, dataset.getDoubleSeries(colorBy));
+    }
+
+    public static Scatter scatter(Dataset dataset, String x, String y, String colorBy) {
+        return scatter(dataset, x, y, colorBy, DEFAULT_SEQUENTIAL_COLORMAP);
+    }
+
 }

@@ -6,6 +6,7 @@ import net.mahdilamb.charts.layouts.Plot;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.function.IntToDoubleFunction;
 
 /**
@@ -83,6 +84,22 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
         }
         return map;
     }
+
+    /*todo
+    default LongSeries asFactors() {
+        final Map<T, Integer> factors = new TreeMap<>();
+        int i = 0;
+        for (final T s : this) {
+            if (!factors.containsKey(s)) {
+                factors.put(s, i++);
+            }
+        }
+        final long[] out = new long[size()];
+        for (int j = 0; j < size(); ++j) {
+            out[j] = factors.get(get(j));
+        }
+        return new DataSeriesImpl.OfNonNaNLongArray(getName() + " [factorized]", out);
+    }*/
 
     /**
      * Create a string series from an array of strings

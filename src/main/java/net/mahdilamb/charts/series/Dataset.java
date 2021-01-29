@@ -155,6 +155,15 @@ public interface Dataset extends Iterable<DataSeries<?>> {
         return (DoubleSeries) series;
     }
 
+    default StringSeries getStringSeries(final String seriesName) throws DataSeriesCastException {
+        final DataSeries<?> series = get(seriesName);
+        if (series.getType() != DataType.STRING) {
+            //TODO return a view into the original series
+            throw new DataSeriesCastException();
+        }
+        return (StringSeries) series;
+    }
+
     default LongSeries getLongSeries(final String seriesName) throws DataSeriesCastException {
         final DataSeries<?> series = get(seriesName);
         if (series.getType() != DataType.LONG) {

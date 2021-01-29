@@ -1,16 +1,15 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.layouts.Plot;
-import net.mahdilamb.charts.plots.*;
+import net.mahdilamb.charts.graphics.Marker;
 import net.mahdilamb.charts.graphics.MarkerMode;
 import net.mahdilamb.charts.graphics.MarkerShape;
+import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.plots.*;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * Implementations of series
@@ -18,7 +17,9 @@ import java.util.Objects;
  * @param <P> the type of the plot
  * @param <S> the type of the series
  */
+//TODO make not impl
 abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implements PlotSeries<S>, PlotWithColorBar<S>, PlotWithLegend<S> {
+
     private enum ColorMode {
         SINGLETON,
         ITERABLE,
@@ -31,10 +32,14 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
      * Series display
      */
     boolean showInLegend = true, showInColorBars = false;
+    Legend.LegendItem legendItem;
+    ColorBar.ColorBarItem colorBarItem;
+    String name;
+
     /**
      * Edge options
      */
-    Color edgeColor = (Color) Color.BLACK;
+    Color edgeColor = Color.BLACK;
     boolean showEdges = false;
     double edgeSize = 2;
 
@@ -50,6 +55,22 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
     double minScale, maxScale;
 
     protected abstract void layoutData(P plot);
+
+    protected abstract Key.KeyItem getLegendItem();
+
+    /**
+     * Called before the series is added to a plot
+     *
+     * @return the series
+     */
+    protected abstract S prepare();
+
+    @Override
+    @SuppressWarnings("unchecked")
+    public S setName(String name) {
+        this.name = name;
+        return (S) this;
+    }
 
     @Override
     @SuppressWarnings("unchecked")
@@ -189,10 +210,21 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
     }
 
     static abstract class AbstractScatter extends PlotSeriesImpl<Layouts.RectangularPlot<Scatter>, Scatter> implements Scatter {
-        double markerSize = 10;
-        MarkerShape shape = MarkerShape.POINT;
         MarkerMode mode = MarkerMode.MARKER_ONLY;
         MarginalMode xMarginal = MarginalMode.NONE, yMarginal = MarginalMode.NONE;
+        MarkerImpl marker = new MarkerImpl(MarkerShape.POINT, 10, null, 0, null);
+        Iterable<String> groups;
+        Set<String> groupNames;
+        Key.KeyItem legendItem;
+
+
+        @Override
+        public Scatter setGroups(Iterable<String> groupings) {
+
+            this.groups = groupings;
+
+            return this;
+        }
 
         @Override
         public Scatter setXMarginal(MarginalMode marginal) {
@@ -213,12 +245,40 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
 
         @Override
+        protected Scatter prepare() {
+            //Prepare legend items
+            if (groups == null) {
+                legendItem = new Legend.LegendItem(name, marker);
+            } else {
+                groupNames = new LinkedHashSet<>();
+                for (final String s : groups) {
+                    groupNames.add(s);
+                }
+                final Legend.LegendItem[] legendItems = new Legend.LegendItem[groupNames.size()];
+                int i = 0;
+                for (final String g : groupNames) {
+                    legendItems[i++] = new Legend.LegendItem(g, marker);
+                }
+                legendItem = new Legend.GroupedLegendItem(name, legendItems);
+            }
+            //prepare colorbar items
+            //prepare data items
+            //TODO
+            return this;
+        }
+
+        @Override
         public Scatter setMarkerMode(MarkerMode mode) {
             if (mode != this.mode) {
                 needsUpdating = true;
             }
             this.mode = mode;
             return this;
+        }
+
+        @Override
+        protected Key.KeyItem getLegendItem() {
+            return legendItem;
         }
 
         static final class FromArray extends AbstractScatter {
@@ -238,8 +298,8 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
             private final Iterable<? extends Number> y;
 
             FromIterable(Iterable<? extends Number> x, Iterable<? extends Number> y) {
-                this.x = x;
-                this.y = y;
+                this.x = Objects.requireNonNull(x);
+                this.y = Objects.requireNonNull(y);
             }
         }
 
@@ -247,17 +307,17 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         public String toString() {
             //TODO
             return "Scatter series {" +
-                    "marker: " + StringUtils.snakeToTitleCase(shape.name()) +
-                    ", markerSize: " + markerSize +
+                    "marker: " + StringUtils.snakeToTitleCase(marker.markerShape.name()) +
+                    ", markerSize: " + marker.size +
                     '}';
         }
 
         @Override
         public Scatter setMarkerSize(double size) {
-            if (size != markerSize) {
+            if (size != marker.size) {
                 needsUpdating = true;
             }
-            markerSize = size;
+            marker.size = size;
             return this;
         }
 
@@ -268,10 +328,10 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
 
         @Override
         public Scatter setMarker(MarkerShape marker) {
-            if (marker != shape) {
+            if (marker != this.marker.markerShape) {
                 needsUpdating = true;
             }
-            shape = Objects.requireNonNull(marker);
+            this.marker.markerShape = Objects.requireNonNull(marker);
             return this;
         }
     }
@@ -426,6 +486,46 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         @Override
         protected void layoutData(Layouts.PiePlot<Pie> plot) {
             //TODO
+        }
+    }
+
+    static final class MarkerImpl implements Marker {
+        Color face, edge;
+        double size, edgeWidth;
+        MarkerShape markerShape;
+
+        MarkerImpl(MarkerShape markerShape, double size, Color face, double edgeWidth, Color edge) {
+            this.edge = edge;
+            this.edgeWidth = edgeWidth;
+            this.markerShape = markerShape;
+            this.face = face;
+            this.size = size;
+        }
+
+
+        @Override
+        public Color getColor() {
+            return face;
+        }
+
+        @Override
+        public Color getEdgeColor() {
+            return edge;
+        }
+
+        @Override
+        public double getEdgeWidth() {
+            return edgeWidth;
+        }
+
+        @Override
+        public double getSize() {
+            return size;
+        }
+
+        @Override
+        public MarkerShape getShape() {
+            return markerShape;
         }
     }
 }

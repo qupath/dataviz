@@ -248,7 +248,24 @@ public final class SVGUtils {
         );
 
     }
+    public static String rotatedTextToString(final String text, double x, double y,double rotationDegrees, double pivotX,double pivotY, net.mahdilamb.charts.graphics.Font font, SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
+        return String.format(
+                "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s transform=\"rotate(%s,%s,%s)\">%s</text>%n",
+                indent.toString(),
+                convertToString(x),
+                convertToString(y),
+                convertToString(font.getFamily()),
+                convertToString(font.getSize()),
+                convertToString(font.getWeight()),
+                convertToString(font.getStyle()),
+                convertToString(defs, fill, stroke),
+                convertToString(rotationDegrees),
+                convertToString(pivotX),
+                convertToString(pivotY),
+                text
+        );
 
+    }
     public static String imageToString(final byte[] bytes, double x, double y, double width, double height, StringBuilder indent) {
         return String.format("%s<image x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" xlink:href=\"data:image/png;base64,%s\" />%n",
                 indent,

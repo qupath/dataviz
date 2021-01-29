@@ -1,20 +1,19 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.Orientation;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Side;
 import net.mahdilamb.charts.graphics.Stroke;
 
 /**
  * A class representing meta information for the chart (e.g. Legend and Colorbar)
  */
-class Key {
+abstract class Key {
     final Chart<?, ?> chart;
     Title title;
     boolean isFloating = false, visible = true;
     double borderPadding = 0;
     Side side = Side.LEFT;
-    Orientation layoutOrientation = Orientation.VERTICAL;
-    Stroke border;
+    Stroke border = Stroke.BLACK_STROKE;
 
     Key(Chart<?, ?> chart) {
         this.chart = chart;
@@ -63,5 +62,25 @@ class Key {
 
     public boolean isVisible() {
         return visible;
+    }
+
+
+    protected abstract void layout(ChartCanvas<?> canvas, double x, double y, double width, double height);
+
+    static abstract class KeyItem {
+        /**
+         * Lays out the key item and returns the height of the item
+         *
+         * @param canvas the canvas to draw on
+         * @param x      the x position
+         * @param y      the y position
+         * @param width  the width to draw
+         * @param height the height to draw
+         * @return the height of the item
+         */
+        protected abstract double layout(ChartCanvas<?> canvas, double x, double y, double width, double height);
+
+        protected abstract double getItemWidth(final Chart<?, ?> chart);
+
     }
 }

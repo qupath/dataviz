@@ -6,6 +6,8 @@ import net.mahdilamb.colormap.Color;
  * Interface for the canvas element in a chart
  */
 public interface ChartCanvas<IMAGE> {
+    //TODO reset a specific rectangle region
+
     /**
      * Called before the canvas is laid out
      */
@@ -189,17 +191,12 @@ public interface ChartCanvas<IMAGE> {
      * @param numPoints the number of points to draw
      */
     default void strokePolygon(double[] xPoints, double[] yPoints, int numPoints) {
-        //TODO replace this by using drawline
-        beginPath();
-        moveTo(xPoints[0], yPoints[0]);
-        if (numPoints > 0) {
-            for (int i = 1; i < numPoints; i++) {
-                lineTo(xPoints[i], yPoints[i]);
-            }
+        for (int i = 0, j = 1; j < numPoints; ++i, ++j) {
+            strokeLine(xPoints[i], yPoints[i], xPoints[j], yPoints[j]);
         }
-        lineTo(xPoints[0], yPoints[0]);
-        closePath();
-        stroke();
+        int j = numPoints - 1;
+        strokeLine(xPoints[0], yPoints[0], xPoints[j], yPoints[j]);
+
     }
 
     /**
@@ -210,15 +207,9 @@ public interface ChartCanvas<IMAGE> {
      * @param numPoints the number of points to draw
      */
     default void strokePolyline(double[] xPoints, double[] yPoints, int numPoints) {
-        //TODO replace this by using drawline
-        beginPath();
-        moveTo(xPoints[0], yPoints[0]);
-        if (numPoints > 0) {
-            for (int i = 1; i < numPoints; i++) {
-                lineTo(xPoints[i], yPoints[i]);
-            }
+        for (int i = 0, j = 1; j < numPoints; ++i, ++j) {
+            strokeLine(xPoints[i], yPoints[i], xPoints[j], yPoints[j]);
         }
-        stroke();
     }
 
     /**
@@ -248,6 +239,8 @@ public interface ChartCanvas<IMAGE> {
      * @param y    the y position
      */
     void fillText(String text, double x, double y);
+
+    void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY);
 
     /**
      * Set the font of the canvas

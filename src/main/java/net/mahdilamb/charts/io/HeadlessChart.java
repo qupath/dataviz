@@ -1,11 +1,13 @@
 package net.mahdilamb.charts.io;
 
 import net.mahdilamb.charts.Chart;
+import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.layouts.Plot;
 import net.mahdilamb.charts.plots.PlotSeries;
+import net.mahdilamb.charts.swing.SwingChart;
 import net.mahdilamb.charts.swing.SwingUtils;
 
 import java.awt.*;
@@ -17,7 +19,6 @@ import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 //TODO come back to this
 public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends Chart<P, S> {
-
 
     private static final class HeadlessChartCanvas<P extends Plot<S>, S extends PlotSeries<S>> extends Component implements ChartCanvas<BufferedImage> {
 
@@ -33,6 +34,7 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
         boolean usingFill = true;
         private BufferedImage image;
         private boolean supportTransparency;
+        private final AffineTransform affineTransform = new AffineTransform();
 
         HeadlessChartCanvas() {
 
@@ -202,7 +204,18 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
         @Override
         public void fillText(String text, double x, double y) {
             switchToFilled();
+            SwingUtils.drawMultilineTextLeft(g, text, x, y, 1, SwingUtils.getTextWidth(g.getFontMetrics(), text));
+        }
+
+        @Override
+        public void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
+            affineTransform.setToIdentity();
+            affineTransform.rotate(Math.toRadians(rotationDegrees), pivotX, pivotY);
+            g.setTransform(affineTransform);
             g.drawString(text, convert(x), convert(y));
+
+            affineTransform.setToIdentity();
+            g.setTransform(affineTransform);
         }
 
         @Override
@@ -216,8 +229,8 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
         }
 
         private double getTextWidth(Font font, String text) {
-            final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(font));
-            return fontMetrics.stringWidth(text);
+            return SwingUtils.getTextWidth(getFontMetrics(SwingUtils.convert(font)), text);
+
         }
 
         @Override
@@ -273,6 +286,14 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
     }
 
     @Override
+    protected double getTextHeight(Title title, double maxWidth, double lineSpacing) {
+        if (title.getText() == null || title.getText().length() == 0) {
+            return 0;
+        }
+        return SwingChart.getTextHeight(canvas.getFontMetrics(SwingUtils.convert(title.getFont())), title.getText(), maxWidth, lineSpacing);
+    }
+
+    @Override
     protected double getTextBaselineOffset(Font font) {
         return canvas.getTextBaselineOffset(font);
     }
@@ -300,6 +321,17 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
     @Override
     protected void backgroundChanged() {
         //Not required
+    }
+
+    @Override
+    protected double getLineHeight(Title title) {
+        return canvas.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
+
+    }
+
+    @Override
+    protected double[] getTextLineOffsets(Title title, double maxWidth) {
+        return SwingUtils.getLineOffsets(canvas.g.getFontMetrics(), title, maxWidth);
     }
 
 

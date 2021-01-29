@@ -7,6 +7,7 @@ import java.util.PrimitiveIterator;
  */
 public interface LongSeries extends NumericSeries<Long> {
 
+
     /**
      * Get the data element at the index
      *
@@ -45,4 +46,7 @@ public interface LongSeries extends NumericSeries<Long> {
         };
     }
 
+    static LongSeries zeros(final String name, int size) {
+        return new DataSeriesImpl.OfNonNaNLongArray(name, new long[size]);
+    }
 }

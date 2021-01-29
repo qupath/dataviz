@@ -1,13 +1,14 @@
 package net.mahdilamb.charts;
 
+import net.mahdilamb.charts.axes.LinearAxis;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGFile;
 import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.layouts.XYMarginalPlot;
 import net.mahdilamb.charts.plots.PlotSeries;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
-import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
 import java.io.File;
@@ -24,18 +25,21 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
     Theme theme = Theme.DEFAULT;
     Iterator<Float> colormapIt = theme.getDefaultColormap().iterator();
 
-    final Title title = new Title(null, Font.DEFAULT_FONT, Alignment.CENTER);
+    final Title title;
     P plot;
-    Legend legend = new Legend(this);
-    ColorBar colorBar = new ColorBar(this);
+    final Legend legend;
+    final ColorBar colorBar;
     double width, height;
 
     protected Chart(String title, double width, double height, P plot) {
-        this.title.setTitle(title);
+        this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()), Alignment.CENTER);
         this.plot = plot;
         this.width = width;
         this.height = height;
+        this.legend = new Legend(this);
+        this.colorBar = new ColorBar(this);
     }
+
 
     /**
      * @return the title of the chart
@@ -214,6 +218,32 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         return ((ThemeImpl) theme);
     }
 
+    private double drawLineByLine(ChartCanvas<?> canvas, Title title, double x, double y) {
+        int i = 0;
+        int lineI = 0;
+        int wordStart = 0;
+        double lineOffset = 0;
+        while (i < title.text.length()) {
+
+            char c = title.text.charAt(i++);
+            if (c == '\n') {
+                lineOffset = title.lineOffsets[lineI];
+                if (Double.isNaN(lineOffset)) {
+                    break;
+                }
+                final String line = title.text.substring(wordStart, i);
+                canvas.fillText(line, (x) - lineOffset, y + title.baselineOffset + (title.lineHeight * lineI++));
+                wordStart = i;
+
+            }
+        }
+        if (wordStart < title.text.length()) {
+            canvas.fillText(title.text.substring(wordStart), (x) - title.lineOffsets[lineI], y + title.baselineOffset + (title.lineHeight * lineI++));
+        }
+        return lineI * title.lineHeight;
+    }
+
+
     /**
      * Layout the chart
      *
@@ -221,27 +251,46 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
      */
     final void layout(ChartCanvas<?> canvas) {
         canvas.reset();
-        // canvas.setClip(ClipShape.ELLIPSE, 10, 10, 150, 150);
-        canvas.setStroke(new Stroke(Color.get("aqua"), 2));
-        canvas.strokeOval(0, 0, 10, 10);
-        canvas.setFill("orange");
-        canvas.fillOval(5, 5, 10, 10);
-        canvas.setFill(new Fill(Fill.GradientType.LINEAR, Colormaps.buildSequential().addColor(Color.salmon, Color.WHITE).build(), 0, 0, 200, 200));
-        canvas.strokeLine(0, 0, 20, 20);
-        canvas.strokeRoundRect(30, 30, 50, 50, 5, 5);
-        canvas.beginPath();
-        canvas.moveTo(20, 20);
-        canvas.curveTo(10, 10, 30, 30, 50, 50);
-        canvas.quadTo(0.5, 0.5, 45, 213);
-        canvas.closePath();
-        canvas.fill();
-        canvas.fillPolygon(new double[]{50, 100, 0}, new double[]{0, 100, 100}, 3);
-        canvas.clearClip();
 
-        canvas.strokePolyline(new double[]{100, 150, 150, 25}, new double[]{100, 25, 75, 0}, 4);
+        double titleHeight = 0;
+        //layout title
+        if (title.isVisible()) {
+            //TODO padding,
+            canvas.setFont(title.getFont());
+            title.setMetrics(t -> t.setMetrics(getTextWidth(t.getFont(), t.getText()), getTextHeight(t, width, 1), getLineHeight(t), getTextBaselineOffset(t.getFont()), getTextLineOffsets(t, t.width)));
+            titleHeight = drawLineByLine(canvas, title, width * .5, 0);
+        }
+
+        //layout "keys"
+        boolean usingTop = isUsing(legend, colorBar, Side.TOP),
+                usingLeft = isUsing(legend, colorBar, Side.LEFT),
+                usingBottom = isUsing(legend, colorBar, Side.BOTTOM),
+                usingRight = isUsing(legend, colorBar, Side.RIGHT);
+        if (usingTop) {
+            if (legend.side == Side.TOP) {
+                // legend.layout(canvas, 0, titleHeight, width, USE_PREFERRED_HEIGHT);
+            }
+        }
+        //layout plot
+        canvas.fillRotatedText("hi", 20, 20, 90, 20, 20);
         canvas.done();
-
     }
+
+    private static boolean isUsing(final Key a, final Key b, final Side q) {
+        boolean aSide = !a.isFloating() && a.isVisible() && a.side == q;
+        boolean bSide = !b.isFloating() && b.isVisible() && b.side == q;
+        return aSide | bSide;
+    }
+
+    /**
+     * Get the height of a line
+     *
+     * @param title the text
+     * @return the height of a line of the given texty
+     */
+    protected abstract double getLineHeight(Title title);
+
+    protected abstract double[] getTextLineOffsets(Title title, double maxWidth);
 
     /**
      * Layout the chart locally
@@ -254,6 +303,8 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
      * @return the canvas of the chart
      */
     protected abstract ChartCanvas<?> getCanvas();
+
+    protected abstract double getTextHeight(final Title title, double maxWidth, double lineSpacing);
 
     /**
      * Get the baseline offset of a font
@@ -298,4 +349,13 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         return chart.theme.getDefaultColormap().get(chart.colormapIt.next());
     }
 
+    protected static final double USE_PREFERRED_HEIGHT = -1;
+    protected static final double USE_PREFERRED_WIDTH = -1;
+
+
+    @SuppressWarnings("unchecked")
+    protected static <S extends PlotSeries<S>> XYMarginalPlot<S> toPlot(S series, double xMin, double xMax, double yMin, double yMax) {
+        return new Layouts.RectangularPlot<>(new LinearAxis(xMin, xMax), new LinearAxis(yMin, yMax), ((PlotSeriesImpl<XYMarginalPlot<S>, S>) series).prepare());
+
+    }
 }

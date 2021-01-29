@@ -2,8 +2,11 @@ package net.mahdilamb.charts.plots;
 
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.reference.sequential.Viridis;
 
 public interface PlotSeries<S extends PlotSeries<S>> {
+    Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
+
     /**
      * Set the face color of all the scatter markers
      *
@@ -83,6 +86,6 @@ public interface PlotSeries<S extends PlotSeries<S>> {
         return setEdgeColor(Color.get(color));
     }
 
-
+    S setName(final String name);
 
 }

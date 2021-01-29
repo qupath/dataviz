@@ -1,5 +1,6 @@
 package net.mahdilamb.charts;
 
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.colormap.Colormap;
 
 /**
@@ -10,7 +11,12 @@ public final class ColorBar extends Key {
         super(chart);
     }
 
-    private static final class ColorBarItem {
+    @Override
+    protected void layout(ChartCanvas<?> canvas, double x, double y, double width, double height) {
+        //todo
+    }
+
+    static final class ColorBarItem {
         double scaleMin, scaleMax;
         Colormap colormap;
         boolean showText;

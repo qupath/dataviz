@@ -3,25 +3,34 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.Alignment;
 import net.mahdilamb.charts.graphics.Font;
 
+import java.util.function.Consumer;
+
 /**
  * A title is text that takes up space in a layout
  */
+//TODO line spacing
+//TODO auto-wrapping
 public class Title {
     double paddingX = 0, paddingY = 2;
-    boolean isVisible;
+    boolean isVisible = true;
+
     Alignment alignment;
     String text;
     Font font;
+
     boolean metricsSet = false;
     double width;
     double height;
     double baselineOffset;
+    double lineHeight;
+    double[] lineOffsets;
 
     /**
-     * Create a title wi
-     * @param text
-     * @param font
-     * @param alignment
+     * Create a title with the following details
+     *
+     * @param text      the text
+     * @param font      the font to use
+     * @param alignment the alignment of the text
      */
     public Title(String text, Font font, Alignment alignment) {
         this.text = text;
@@ -95,14 +104,37 @@ public class Title {
      * @param height         the height of the title
      * @param baselineOffset the baseline offset of the title
      */
-    void setMetrics(double width, double height, double baselineOffset) {
+    void setMetrics(double width, double height, double lineHeight, double baselineOffset, double[] lineOffsets) {
         if (metricsSet) {
             return;
         }
         this.width = width;
         this.height = height;
         this.baselineOffset = baselineOffset;
+        this.lineOffsets = lineOffsets;
         metricsSet = true;
+        this.lineHeight = lineHeight;
     }
+
+    void setMetrics(Consumer<Title> setter) {
+        if (metricsSet) {
+            return;
+        }
+        setter.accept(this);
+    }
+
+    double adjustedX(double x) {
+        switch (alignment) {
+            case LEFT:
+                return x;
+            case CENTER:
+                return x - (width * .5);
+            case RIGHT:
+                return x - width;
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
 
 }
