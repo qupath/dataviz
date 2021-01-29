@@ -122,6 +122,9 @@ public class SVGFile extends ChartExporter {
 
         @Override
         public void clearClip() {
+            if (!isClipped) {
+                return;
+            }
             indent.deleteCharAt(indent.length() - 1);
             out.append(String.format("%s</g>%n", indent));
             isClipped = false;
@@ -129,37 +132,8 @@ public class SVGFile extends ChartExporter {
 
         @Override
         public void drawImage(Object o, double x, double y) {
-            out.append(imageToString(imageToBytes(o, chart), x, y, getCanvas(chart).getImageWidth(o), getCanvas(chart).getImageHeight(o), indent));
-            //TODO
+            out.append(imageToString(imageToBytesUnsafe(o, chart), x, y, getImageWidthUnsafe(o, chart), getImageHeightUnsafe(o, chart), indent));
         }
-
-        @Override
-        public double getImageWidth(Object o) {
-            throw new UnsupportedOperationException();
-
-        }
-
-        @Override
-        public double getImageHeight(Object o) {
-            throw new UnsupportedOperationException();
-
-        }
-
-        @Override
-        public byte[] bytesFromImage(Object o) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public double getTextBaselineOffset(Font font) {
-            return 0;
-        }
-
-        @Override
-        public double getTextWidth(Font font, String text) {
-            return 0;
-        }
-
 
         @Override
         public void curveTo(double cp1X, double cp1Y, double cp2X, double cp2Y, double endX, double endY) {
@@ -265,7 +239,7 @@ public class SVGFile extends ChartExporter {
 
     }
 
-    public static void to(final File output, final Chart<?, ?> chart) {
+    public static void to(final File output, final Chart<?, ?> chart) throws IOException {
         new SVGWriter(output, chart);
     }
 

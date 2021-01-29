@@ -1,8 +1,10 @@
 package net.mahdilamb.charts;
 
-import javafx.scene.image.Image;
-import net.mahdilamb.charts.graphics.*;
+import net.mahdilamb.charts.graphics.ChartCanvas;
+import net.mahdilamb.charts.graphics.Fill;
+import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
+import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGFile;
 import net.mahdilamb.charts.layouts.Plot;
 import net.mahdilamb.charts.plots.PlotSeries;
@@ -11,19 +13,14 @@ import net.mahdilamb.charts.series.DataSeries;
 import net.mahdilamb.charts.series.DataType;
 import net.mahdilamb.charts.series.Dataset;
 import net.mahdilamb.charts.series.NumericSeries;
+import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
-import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URL;
 import java.util.Iterator;
 
 public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
@@ -97,15 +94,14 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         return plot;
     }
 
-    @SuppressWarnings("unchecked")
     final void layout(ChartCanvas<?> canvas) {
         canvas.reset();
-        canvas.setClip(ClipShape.ELLIPSE, 10, 10, 150, 150);
+        // canvas.setClip(ClipShape.ELLIPSE, 10, 10, 150, 150);
         canvas.setStroke(new Stroke(Color.get("aqua"), 2));
         canvas.strokeOval(0, 0, 10, 10);
         canvas.setFill("orange");
         canvas.fillOval(5, 5, 10, 10);
-        canvas.setFill(new Fill(Fill.GradientType.LINEAR, Colormaps.get("viridis"), 0, 0, 200, 200));
+        canvas.setFill(new Fill(Fill.GradientType.LINEAR, Colormaps.buildSequential().addColor(Color.salmon,Color.WHITE).build(), 0, 0, 200, 200));
         canvas.strokeLine(0, 0, 20, 20);
         canvas.strokeRoundRect(30, 30, 50, 50, 5, 5);
         canvas.beginPath();
@@ -116,6 +112,7 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         canvas.fill();
         canvas.fillPolygon(new double[]{50, 100, 0}, new double[]{0, 100, 100}, 3);
         canvas.clearClip();
+
         canvas.strokePolyline(new double[]{100, 150, 150, 25}, new double[]{100, 25, 75, 0}, 4);
         canvas.done();
 
@@ -127,6 +124,26 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
 
     protected abstract ChartCanvas<?> getCanvas();
 
+    /**
+     * Get the baseline offset of a font
+     *
+     * @param font the font
+     * @return the baseline offset
+     */
+    protected abstract double getTextBaselineOffset(final Font font);
+
+    /**
+     * @param font the font
+     * @param text the text
+     * @return the width of the text with the given font
+     */
+    protected abstract double getTextWidth(final Font font, String text);
+
+    protected abstract double getImageWidth(Object image);
+
+    protected abstract double getImageHeight(Object image);
+
+    protected abstract byte[] bytesFromImage(Object image);
 
     static Color getNextColor(Chart<?, ?> chart) {
         if (chart.colormapIt == null || !chart.colormapIt.hasNext()) {
@@ -152,21 +169,110 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
     /**
      * Save this chart as an svg
      *
-     * @param file the output file
+     * @param file the output file.
+     * @throws IOException if the file cannot be written to
      */
-    public void saveAsSVG(File file) {
+    public void saveAsSVG(File file) throws IOException {
         SVGFile.to(file, this);
     }
 
-    public void setBackgroundColor(String name) {
-        setBackgroundColor(Color.get(name));
+    /**
+     * Save the file as a png
+     *
+     * @param file the file path to write to
+     * @throws IOException if the file cannot be written to
+     */
+    public void saveAsPNG(File file) throws IOException {
+        ImageExporter.toPNG(file, this);
     }
 
+    /**
+     * Save the file as a bmp
+     *
+     * @param file the file path to write to
+     * @throws IOException if the file cannot be written to
+     */
+    public void saveAsBMP(File file) throws IOException {
+        ImageExporter.toBMP(file, this);
+    }
+
+    /**
+     * Save the file as a jpeg
+     *
+     * @param file the file path to write to
+     * @throws IOException if the file cannot be written to
+     */
+    public void saveAsJPEG(File file) throws IOException {
+        ImageExporter.toJPEG(file, this);
+    }
+
+    /**
+     * Save a file based on its extension (svg, jpg, bmp, png are supported)
+     *
+     * @param file the file to save as
+     * @throws UnsupportedOperationException if the file format is not supported
+     * @throws IOException                   if the file cannot be written to
+     */
+    public final void saveAs(File file) throws IOException {
+        final String fileExt = StringUtils.getLastCharactersToLowerCase(new char[5], file.toString());
+        switch (fileExt.indexOf(".")) {
+            //four letter extension
+            case 0:
+                switch (fileExt) {
+                    case ".jpeg":
+                        saveAsJPEG(file);
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
+                }
+                break;
+            //three letter extension
+            case 1:
+                switch (fileExt.substring(1, 5)) {
+                    case ".jpg":
+                        saveAsJPEG(file);
+                        break;
+                    case ".png":
+                        saveAsPNG(file);
+                        break;
+                    case ".svg":
+                        saveAsSVG(file);
+                        break;
+                    case ".bmp":
+                        saveAsBMP(file);
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
+
+                }
+                break;
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
+    /**
+     * Set the background color of this chart by the name
+     *
+     * @param colorName the name of the color
+     */
+    public void setBackgroundColor(String colorName) {
+        setBackgroundColor(Color.get(colorName));
+    }
+
+    /**
+     * Set the background color of this chart
+     *
+     * @param color the color to set
+     */
     public void setBackgroundColor(Color color) {
         this.backgroundColor = color;
         layout();
     }
 
+    /**
+     * @return the background color of this chart
+     */
     public Color getBackgroundColor() {
         return backgroundColor;
     }

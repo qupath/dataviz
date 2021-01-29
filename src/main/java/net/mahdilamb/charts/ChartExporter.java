@@ -9,25 +9,22 @@ public class ChartExporter {
     protected static void layoutChart(ChartCanvas<?> dest, Chart<?, ?> source) {
         source.layout(dest);
     }
+
     @SuppressWarnings("unchecked")
     protected static ChartCanvas<Object> getCanvas(Chart<?, ?> chart) {
         return (ChartCanvas<Object>) chart.getCanvas();
     }
 
-    protected static byte[] imageToBytes(Object image, Chart<?, ?> source) {
-        return getCanvas(source).bytesFromImage(image);
+    protected static byte[] imageToBytesUnsafe(Object image, Chart<?, ?> source) {
+        return source.bytesFromImage(image);
     }
 
-    protected static double getTextHeight(Text text) {
-        return text.getHeight();
+    protected static double getImageHeightUnsafe(Object image, Chart<?, ?> source) {
+        return source.getImageHeight(image);
     }
 
-    protected static double getTextWidth(Text text) {
-        return text.getWidth();
-    }
-
-    protected static double getTextBaselineOffset(Text text) {
-        return text.getBaselineOffset();
+    protected static double getImageWidthUnsafe(Object image, Chart<?, ?> source) {
+        return source.getImageWidth(image);
     }
 
 }

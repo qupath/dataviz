@@ -256,20 +256,6 @@ public interface ChartCanvas<IMAGE> {
      */
     void setFont(final Font font);
 
-    /**
-     * Get the baseline offset of a font
-     *
-     * @param font the font
-     * @return the baseline offset
-     */
-    double getTextBaselineOffset(final Font font);
-
-    /**
-     * @param font the font
-     * @param text the text
-     * @return the width of the text with the given font
-     */
-    double getTextWidth(final Font font, String text);
 
     /**
      * Apply a clip
@@ -289,10 +275,5 @@ public interface ChartCanvas<IMAGE> {
 
     void drawImage(IMAGE image, double x, double y);
 
-    double getImageWidth(IMAGE image);
-
-    double getImageHeight(IMAGE image);
-
-    byte[] bytesFromImage(IMAGE image);
 
 }

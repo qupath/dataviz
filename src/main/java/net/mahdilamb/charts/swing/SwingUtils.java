@@ -12,7 +12,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Map;
 
-final class SwingUtils {
+public final class SwingUtils {
     private SwingUtils() {
 
     }

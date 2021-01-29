@@ -13,6 +13,7 @@ import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayDeque;
 import java.util.ConcurrentModificationException;
 import java.util.Queue;
@@ -305,7 +306,6 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
         @Override
         public void stroke() {
             switchToStroked().add(g -> g.draw(path));
-
         }
 
         @Override
@@ -345,32 +345,27 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
 
         @Override
         public void drawImage(BufferedImage bufferedImage, double x, double y) {
-            queue.add(g -> g.drawImage(bufferedImage,  SwingUtils.convert(x), SwingUtils.convert(y),null));
+            queue.add(g -> g.drawImage(bufferedImage, SwingUtils.convert(x), SwingUtils.convert(y), null));
         }
 
-        @Override
-        public double getImageWidth(BufferedImage bufferedImage) {
+        private double getImageWidth(BufferedImage bufferedImage) {
             return bufferedImage.getWidth();
         }
 
-        @Override
-        public double getImageHeight(BufferedImage bufferedImage) {
+        private double getImageHeight(BufferedImage bufferedImage) {
             return bufferedImage.getHeight();
         }
 
-        @Override
-        public byte[] bytesFromImage(BufferedImage bufferedImage) {
+        private byte[] bytesFromImage(BufferedImage bufferedImage) {
             return SwingUtils.convertToByteArray(bufferedImage);
         }
 
-        @Override
-        public double getTextBaselineOffset(Font font) {
+        private double getTextBaselineOffset(Font font) {
             final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(font));
             return fontMetrics.getAscent();
         }
 
-        @Override
-        public double getTextWidth(Font font, String text) {
+        private double getTextWidth(Font font, String text) {
             final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(font));
             return fontMetrics.stringWidth(text);
         }
@@ -391,13 +386,45 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
     }
 
     @Override
-    public void saveAsSVG(File file) {
+    protected double getTextBaselineOffset(Font font) {
+        return canvas.getTextBaselineOffset(font);
+    }
+
+    @Override
+    protected double getTextWidth(Font font, String text) {
+        return canvas.getTextWidth(font, text);
+    }
+
+    @Override
+    protected double getImageWidth(Object image) {
+        return canvas.getImageWidth((BufferedImage) image);
+    }
+
+    @Override
+    protected double getImageHeight(Object image) {
+        return canvas.getImageHeight((BufferedImage) image);
+    }
+
+    @Override
+    protected byte[] bytesFromImage(Object image) {
+        return canvas.bytesFromImage((BufferedImage) image);
+    }
+
+    @Override
+    public void saveAsSVG(File file) throws IOException {
         if (SwingUtilities.isEventDispatchThread()) {
             super.saveAsSVG(file);
         } else {
-            SwingUtilities.invokeLater(() -> super.saveAsSVG(file));
+            SwingUtilities.invokeLater(() -> {
+                try {
+                    super.saveAsSVG(file);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         }
     }
+
 
     public void addTo(Container parent, String position) {
         parent.add(canvas, position);
