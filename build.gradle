@@ -1,5 +1,7 @@
 plugins {
     id 'java'
+
+    id 'org.openjfx.javafxplugin'
 }
 
 group 'net.mahdilamb'
@@ -21,6 +23,10 @@ dependencies {
     compile 'net.mahdilamb:utils-tuples:0.3.1'
     compile 'net.mahdilamb:utils-functions:0.1.2-SNAPSHOT'
 
+}
+javafx {
+    version = "15.0.1"
+    modules = ['javafx.controls']
 }
 
 test {

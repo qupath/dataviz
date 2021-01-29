@@ -2,7 +2,6 @@ package net.mahdilamb.charts.io;
 
 import net.mahdilamb.charts.Chart;
 import net.mahdilamb.charts.ChartExporter;
-import net.mahdilamb.charts.Text;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.geom2d.geometries.Geometries;
@@ -21,7 +20,7 @@ import static net.mahdilamb.charts.utils.StringUtils.EMPTY_STRING;
 public class SVGFile extends ChartExporter {
 
 
-    private static final class SVGWriter implements ChartCanvas {
+    private static final class SVGWriter implements ChartCanvas<Object> {
         String header;
         final StringBuilder out = new StringBuilder();
         final StringBuilder indent = new StringBuilder("\t");
@@ -114,12 +113,6 @@ public class SVGFile extends ChartExporter {
         }
 
         @Override
-        public void fillText(Text text, double x, double y) {
-            out.append(textToString(text.getText(), x, y + getTextBaselineOffset(text), font, defs, indent, null, fill));
-
-        }
-
-        @Override
         public void setClip(ClipShape shape, double x, double y, double width, double height) {
             out.append(String.format("%s<g clip-path=\"url(#%s)\">%n", indent, defs.addClip(shape, x, y, width, height)));
 
@@ -133,6 +126,40 @@ public class SVGFile extends ChartExporter {
             out.append(String.format("%s</g>%n", indent));
             isClipped = false;
         }
+
+        @Override
+        public void drawImage(Object o, double x, double y) {
+            out.append(imageToString(imageToBytes(o, chart), x, y, getCanvas(chart).getImageWidth(o), getCanvas(chart).getImageHeight(o), indent));
+            //TODO
+        }
+
+        @Override
+        public double getImageWidth(Object o) {
+            throw new UnsupportedOperationException();
+
+        }
+
+        @Override
+        public double getImageHeight(Object o) {
+            throw new UnsupportedOperationException();
+
+        }
+
+        @Override
+        public byte[] bytesFromImage(Object o) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
+        public double getTextBaselineOffset(Font font) {
+            return 0;
+        }
+
+        @Override
+        public double getTextWidth(Font font, String text) {
+            return 0;
+        }
+
 
         @Override
         public void curveTo(double cp1X, double cp1Y, double cp2X, double cp2Y, double endX, double endY) {

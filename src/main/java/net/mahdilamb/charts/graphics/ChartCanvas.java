@@ -1,12 +1,11 @@
 package net.mahdilamb.charts.graphics;
 
-import net.mahdilamb.charts.Text;
 import net.mahdilamb.colormap.Color;
 
 /**
  * Interface for the canvas element in a chart
  */
-public interface ChartCanvas {
+public interface ChartCanvas<IMAGE> {
     /**
      * Called before the canvas is laid out
      */
@@ -258,19 +257,42 @@ public interface ChartCanvas {
     void setFont(final Font font);
 
     /**
-     * Add a fill text at the position based on the top-left corner of the bounds (left-aligned), top-middle (center-aligned)
-     * or top-right if right-aligned
+     * Get the baseline offset of a font
      *
-     * @param text the text to place
-     * @param x    the x position
-     * @param y    the y position
-     * @implNote when implemented, this should update the metrics in the text object. As a result, not new Text should
-     * be generated during chart layout
+     * @param font the font
+     * @return the baseline offset
      */
-    void fillText(Text text, double x, double y);
+    double getTextBaselineOffset(final Font font);
 
+    /**
+     * @param font the font
+     * @param text the text
+     * @return the width of the text with the given font
+     */
+    double getTextWidth(final Font font, String text);
+
+    /**
+     * Apply a clip
+     *
+     * @param shape  the shape of the clip
+     * @param x      the x position of the clip
+     * @param y      the y position of the clip
+     * @param width  the width of the clip
+     * @param height the height of the clip
+     */
     void setClip(ClipShape shape, double x, double y, double width, double height);
 
+    /**
+     * Clear the current clip
+     */
     void clearClip();
+
+    void drawImage(IMAGE image, double x, double y);
+
+    double getImageWidth(IMAGE image);
+
+    double getImageHeight(IMAGE image);
+
+    byte[] bytesFromImage(IMAGE image);
 
 }

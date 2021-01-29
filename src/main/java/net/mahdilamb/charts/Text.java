@@ -12,9 +12,6 @@ public class Text {
     String text;
     Font font;
     double width, height, baselineOffset;
-    boolean set = false;
-    static int i = 0;
-    int j = ++i;
 
     public Text(String text, Font font, Alignment alignment) {
         this.text = text;
@@ -37,38 +34,12 @@ public class Text {
         return font;
     }
 
-    synchronized void setMetrics(double width, double height, double baselineOffset) {
-        this.height = height;
-        this.width = width;
-        this.baselineOffset = baselineOffset;
-        this.set = true;
-
-
-    }
-
     double getBaselineOffset() {
         return baselineOffset;
     }
 
     double getHeight() {
         return height;
-    }
-
-    synchronized double getAdjustedY(double y) {
-        return y + baselineOffset;
-    }
-
-    synchronized double getAdjustedX(double x) {
-        switch (alignment) {
-            case LEFT:
-                return x;
-            case CENTER:
-                return x - (width * .5);
-            case RIGHT:
-                return x - width;
-            default:
-                throw new UnsupportedOperationException();
-        }
     }
 
     synchronized double getWidth() {

@@ -7,6 +7,7 @@ import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.colormap.Color;
 
 import java.text.DecimalFormat;
+import java.util.Base64;
 
 import static net.mahdilamb.charts.utils.StringUtils.EMPTY_STRING;
 
@@ -231,7 +232,8 @@ public final class SVGUtils {
         }
         return points.append("\" ").append(convertToString(defs, null, stroke)).append("/>\n").toString();
     }
-    public static String textToString(final String text, double x, double y, net.mahdilamb.charts.graphics.Font font, SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill ){
+
+    public static String textToString(final String text, double x, double y, net.mahdilamb.charts.graphics.Font font, SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
         return String.format(
                 "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s>%s</text>%n",
                 indent.toString(),
@@ -245,5 +247,16 @@ public final class SVGUtils {
                 text
         );
 
+    }
+
+    public static String imageToString(final byte[] bytes, double x, double y, double width, double height, StringBuilder indent) {
+        return String.format("%s<image x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" xlink:href=\"data:image/png;base64,%s\" />%n",
+                indent,
+                convertToString(x),
+                convertToString(y),
+                convertToString(width),
+                convertToString(height),
+                Base64.getMimeEncoder().encodeToString(bytes)
+        );
     }
 }

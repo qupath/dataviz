@@ -1,6 +1,8 @@
 package net.mahdilamb.charts;
 
+import javafx.scene.image.Image;
 import net.mahdilamb.charts.graphics.*;
+import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.io.SVGFile;
 import net.mahdilamb.charts.layouts.Plot;
 import net.mahdilamb.charts.plots.PlotSeries;
@@ -14,7 +16,14 @@ import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URL;
 import java.util.Iterator;
 
 public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
@@ -57,13 +66,13 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
 
     double width, height;
     double titleWidth, titleHeight;
-    boolean firstPass = false;
 
     protected Chart(String title, double width, double height, P plot) {
         //this.title.setTitle(title);//TODO
         this.plot = plot;
         this.width = width;
         this.height = height;
+
     }
 
     public Title getTitle() {
@@ -88,8 +97,8 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         return plot;
     }
 
-
-    final void layout(ChartCanvas canvas) {
+    @SuppressWarnings("unchecked")
+    final void layout(ChartCanvas<?> canvas) {
         canvas.reset();
         canvas.setClip(ClipShape.ELLIPSE, 10, 10, 150, 150);
         canvas.setStroke(new Stroke(Color.get("aqua"), 2));
@@ -114,10 +123,9 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
 
     protected final void layout() {
         layout(getCanvas());
-        firstPass = true;
     }
 
-    protected abstract ChartCanvas getCanvas();
+    protected abstract ChartCanvas<?> getCanvas();
 
 
     static Color getNextColor(Chart<?, ?> chart) {
@@ -163,20 +171,4 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         return backgroundColor;
     }
 
-    protected static boolean isSet(Text text) {
-        return text.set;
-    }
-
-    protected static void setMetrics(Text text, double width, double height, double baselineOffset) {
-        text.setMetrics(width, height, baselineOffset);
-
-    }
-
-    protected static double getAdjustedY(Text text, double y) {
-        return text.getAdjustedY(y);
-    }
-
-    protected static double getAdjustedX(Text text, double x) {
-        return text.getAdjustedX(x);
-    }
 }

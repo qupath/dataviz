@@ -1,7 +1,6 @@
 package net.mahdilamb.charts.swing;
 
 import net.mahdilamb.charts.Chart;
-import net.mahdilamb.charts.Text;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
@@ -12,6 +11,7 @@ import net.mahdilamb.colormap.Colors;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.geom.*;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.util.ArrayDeque;
 import java.util.ConcurrentModificationException;
@@ -97,7 +97,7 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
         }
     }
 
-    private static final class ChartPane extends JPanel implements ChartCanvas {
+    private static final class ChartPane extends JPanel implements ChartCanvas<BufferedImage> {
         private static final class ModifiableBasicStroke extends BasicStroke {
             float width = 1;
 
@@ -119,7 +119,6 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
         private final ModifiableAWTColor strokeColor = new ModifiableAWTColor(0, 0, 0, 1);
         private final ModifiableAWTColor fillColor = new ModifiableAWTColor(0, 0, 0, 1);
         private final Path2D path = new Path2D.Double();
-        double currentBaselineOffset = 0;
         boolean usingFill = true;
 
         ChartPane(Chart<?, ?> chart) {
@@ -316,21 +315,7 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
 
         @Override
         public void setFont(Font font) {
-            queue.add(g -> {
-                g.setFont(SwingUtils.convert(font));
-                currentBaselineOffset = g.getFontMetrics().getAscent();
-            });
-
-        }
-
-        @Override
-        public void fillText(Text text, double x, double y) {
-            if (!isSet(text)) {
-                final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(text.getFont()));
-                setFont(SwingUtils.convert(text.getFont()));
-                setMetrics(text, fontMetrics.stringWidth(text.getText()), fontMetrics.getHeight(), fontMetrics.getAscent());
-            }
-            switchToFilled().add(g -> g.drawString(text.getText(), SwingUtils.convert(getAdjustedX(text, x)), SwingUtils.convert(getAdjustedY(text, y))));
+            queue.add(g -> g.setFont(SwingUtils.convert(font)));
 
         }
 
@@ -355,8 +340,41 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
 
         @Override
         public void clearClip() {
-            queue.add(g->g.setClip(null));
+            queue.add(g -> g.setClip(null));
         }
+
+        @Override
+        public void drawImage(BufferedImage bufferedImage, double x, double y) {
+            queue.add(g -> g.drawImage(bufferedImage,  SwingUtils.convert(x), SwingUtils.convert(y),null));
+        }
+
+        @Override
+        public double getImageWidth(BufferedImage bufferedImage) {
+            return bufferedImage.getWidth();
+        }
+
+        @Override
+        public double getImageHeight(BufferedImage bufferedImage) {
+            return bufferedImage.getHeight();
+        }
+
+        @Override
+        public byte[] bytesFromImage(BufferedImage bufferedImage) {
+            return SwingUtils.convertToByteArray(bufferedImage);
+        }
+
+        @Override
+        public double getTextBaselineOffset(Font font) {
+            final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(font));
+            return fontMetrics.getAscent();
+        }
+
+        @Override
+        public double getTextWidth(Font font, String text) {
+            final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(font));
+            return fontMetrics.stringWidth(text);
+        }
+
 
     }
 
@@ -368,7 +386,7 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
     }
 
     @Override
-    protected ChartCanvas getCanvas() {
+    protected ChartCanvas<BufferedImage> getCanvas() {
         return canvas;
     }
 
@@ -384,5 +402,6 @@ public class ChartSwing<P extends Plot<S>, S extends PlotSeries<S>> extends Char
     public void addTo(Container parent, String position) {
         parent.add(canvas, position);
         layout();
+
     }
 }
