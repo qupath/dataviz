@@ -18,7 +18,7 @@ public class SwingTest {
                 scatter(iris, "sepal_length", "sepal_width", "petal_length")
                         .setMarker('.')
                         .setName("sepal: length v width")
-                        .setGroups(iris.getStringSeries("species"))
+                        .setGroups(iris.get("species").asString())
         );
 
 

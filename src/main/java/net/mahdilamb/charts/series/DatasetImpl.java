@@ -179,10 +179,10 @@ abstract class DatasetImpl implements Dataset {
                                         s.data[row] = Long.parseLong(str);
                                     } else {
                                         s.data[row] = 0;
-                                        if (s.nanCount + 1 > s.isNan.length) {
-                                            s.isNan = Arrays.copyOf(s.isNan, s.isNan.length + 8);
+                                        if (s.nanCount + 1 > s.isNaN.length) {
+                                            s.isNaN = Arrays.copyOf(s.isNaN, s.isNaN.length + 8);
                                         }
-                                        s.isNan[s.nanCount++] = row;
+                                        s.isNaN[s.nanCount++] = row;
                                     }
                                     break;
                                 case DOUBLE:
@@ -318,20 +318,21 @@ abstract class DatasetImpl implements Dataset {
         }
     }
 
+    @SuppressWarnings("unchecked")
     private StringBuilder alignRight(StringBuilder stringBuilder, int col, int row, int width) {
         final String td;
         switch (get(col).getType()) {
             case LONG:
-                td = String.valueOf(((LongSeries) get(col)).isNaN(row) ? "NaN" : ((LongSeries) get(col)).getLong(row));
+                td = String.valueOf(((NumericSeries<Long>) get(col)).isNaN(row) ? "NaN" : ((NumericSeries<Long>) get(col)).get(row));
                 break;
             case DOUBLE:
-                td = String.valueOf(((DoubleSeries) get(col)).getDouble(row));
+                td = String.valueOf(((NumericSeries<Double>) get(col)).get(row));
                 break;
             case BOOLEAN:
-                td = String.valueOf(((BooleanSeries) get(col)).getBoolean(row));
+                td = String.valueOf(((DataSeries<Boolean>) get(col)).get(row));
                 break;
             case STRING:
-                td = ((StringSeries) get(col)).get(row);
+                td = ((DataSeries<String>) get(col)).get(row);
                 break;
             default:
                 throw new UnsupportedOperationException();

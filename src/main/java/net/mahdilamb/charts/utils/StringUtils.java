@@ -4,6 +4,8 @@ import net.mahdilamb.utils.functions.CharacterPredicate;
 
 import java.util.Arrays;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 
 /**
@@ -13,6 +15,7 @@ public final class StringUtils {
     private StringUtils() {
 
     }
+
     public static final String EMPTY_STRING = "";
 
     /**
@@ -197,5 +200,67 @@ public final class StringUtils {
 
         }
         return new String(out);
+    }
+
+    /**
+     * Test if a comparator is correct
+     *
+     * @param eq      whether to test for equality
+     * @param lt      whether to test for less than
+     * @param gt      whether to test for greater than
+     * @param ne      whether to test for not equals
+     * @param compare the int from compilation
+     * @return whether the comparison fits the tests
+     */
+    private static boolean toBoolean(boolean eq, boolean lt, boolean gt, boolean ne, int compare) {
+        return ne ? compare != 0 : ((eq && compare == 0) || (lt && compare < 0 || gt && compare > 0));
+    }
+
+    /**
+     * Convert a string into a functional operator
+     *
+     * @param string       the string to convert
+     * @param rhsConverter the function used to convert the right hand operand into the
+     * @param <T>          the type of the value to use in the comparison
+     * @return a predicate representation of the input string
+     */
+    public static <T extends Comparable<T>> Predicate<T> parseToPredicate(final String string, Function<String, T> rhsConverter) {
+        boolean[] legn = new boolean[4];
+        int i = 0;
+        int j = 0;
+        while (i < string.length() && j < 2) {
+            char c = string.charAt(i++);
+            if (c == '=' || c == '<' || c == '>' || c == '!') {
+                legn[1] |= c == '=';
+                legn[3] |= c == '!';
+                legn[2] |= c == '>';
+                legn[0] |= c == '<';
+                if (j == 1 && legn[1] && (c == '<' || c == '>')) {
+                    throw new IllegalArgumentException("Could not parse - incorrect boolean operators");
+                }
+                ++j;
+            }
+        }
+        if (i == string.length()){
+            throw new IllegalArgumentException("Could not parse - no boolean operators found");
+        }
+        while (i < string.length()) {
+            if (!Character.isWhitespace(string.charAt(i++))) {
+                --i;
+                break;
+            }
+        }
+        j = i + 1;
+        while (j < string.length()) {
+            if (Character.isWhitespace(string.charAt(j++))) {
+                --j;
+                break;
+            }
+        }
+        if (i >= j) {
+            throw new IllegalArgumentException("Could not parse - no right hand arguments");
+        }
+        final T val = rhsConverter.apply(string.substring(i, j));
+        return t -> toBoolean(legn[1], legn[0], legn[2], legn[3], val.compareTo(t));
     }
 }

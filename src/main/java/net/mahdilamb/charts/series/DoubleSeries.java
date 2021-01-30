@@ -1,6 +1,8 @@
 package net.mahdilamb.charts.series;
 
 import java.util.PrimitiveIterator;
+import java.util.function.DoublePredicate;
+import java.util.function.Predicate;
 
 /**
  * A series of ordered double data
@@ -44,6 +46,16 @@ public interface DoubleSeries extends NumericSeries<Double> {
                 return i < size();
             }
         };
+    }
+
+    default double[] toArray(double[] output) {
+        if (output.length != size()) {
+            output = new double[size()];
+        }
+        for (int i = 0; i < size(); ++i) {
+            output[i] = getDouble(i);
+        }
+        return output;
     }
 
 }

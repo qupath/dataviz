@@ -1,6 +1,6 @@
 package net.mahdilamb.charts.plots;
 
-public interface PlotWithLegend<S extends PlotSeries<S>> {
+public interface PlotWithLegend<S> {
     /**
      * Set whether to show this scatter series in the legend
      *

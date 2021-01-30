@@ -1,6 +1,6 @@
 package net.mahdilamb.charts.plots;
 
-public interface PlotWithColorBar<S extends PlotSeries<S>> {
+public interface PlotWithColorBar<S> {
 
     /**
      * Set the color bar as visible (if one is used)

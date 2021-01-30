@@ -40,4 +40,28 @@ public interface BooleanSeries extends DataSeries<Boolean>, SeriesWithFunctional
         };
     }
 
+    default boolean[] toArray(boolean[] output) {
+        if (output.length != size()) {
+            output = new boolean[size()];
+        }
+        for (int i = 0; i < size(); ++i) {
+            output[i] = getBoolean(i);
+        }
+        return output;
+    }
+
+    /**
+     * @return if all the elements are true
+     */
+    default boolean all() {
+        return reduce((a, b) -> a & b, a -> !a);
+    }
+
+    /**
+     * @return if any of the elements are true
+     */
+    default boolean any() {
+        return reduce((a, b) -> a | b, a -> a);
+    }
+
 }

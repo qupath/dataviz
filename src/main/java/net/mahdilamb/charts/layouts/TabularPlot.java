@@ -1,14 +1,13 @@
 package net.mahdilamb.charts.layouts;
 
 import net.mahdilamb.charts.Axis;
-import net.mahdilamb.charts.plots.PlotSeries;
 
 /**
  * A plot that is a table
  *
  * @param <S> the type of the plot series in the plot
  */
-public interface TabularPlot<S extends PlotSeries<S>> extends Plot<S> {
+public interface TabularPlot<S > extends PlotLayout<S> {
     /**
      * @return the column heading
      */

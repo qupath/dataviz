@@ -4,9 +4,8 @@ import net.mahdilamb.charts.axes.LinearAxis;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGFile;
-import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.layouts.XYMarginalPlot;
-import net.mahdilamb.charts.plots.PlotSeries;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
@@ -15,7 +14,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.Iterator;
 
-public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
+public abstract class Chart<P extends PlotLayout<S>, S> {
 
     /**
      * The default chart theme
@@ -222,7 +221,7 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
         int i = 0;
         int lineI = 0;
         int wordStart = 0;
-        double lineOffset = 0;
+        double lineOffset;
         while (i < title.text.length()) {
 
             char c = title.text.charAt(i++);
@@ -268,11 +267,10 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
                 usingRight = isUsing(legend, colorBar, Side.RIGHT);
         if (usingTop) {
             if (legend.side == Side.TOP) {
-                // legend.layout(canvas, 0, titleHeight, width, USE_PREFERRED_HEIGHT);
+                 legend.layout(canvas, 0, titleHeight, width, USE_PREFERRED_HEIGHT);
             }
         }
         //layout plot
-        canvas.fillRotatedText("hi", 20, 20, 90, 20, 20);
         canvas.done();
     }
 
@@ -354,8 +352,8 @@ public abstract class Chart<P extends Plot<S>, S extends PlotSeries<S>> {
 
 
     @SuppressWarnings("unchecked")
-    protected static <S extends PlotSeries<S>> XYMarginalPlot<S> toPlot(S series, double xMin, double xMax, double yMin, double yMax) {
-        return new Layouts.RectangularPlot<>(new LinearAxis(xMin, xMax), new LinearAxis(yMin, yMax), ((PlotSeriesImpl<XYMarginalPlot<S>, S>) series).prepare());
+    protected static <S > XYMarginalPlot<S> toPlot(S series, double xMin, double xMax, double yMin, double yMax) {
+        return new Layouts.RectangularPlot<>(new LinearAxis(xMin, xMax), new LinearAxis(yMin, yMax), ((PlotSeries<XYMarginalPlot<S>, S>) series).prepare());
 
     }
 }

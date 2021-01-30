@@ -71,6 +71,8 @@ abstract class Key {
         /**
          * Lays out the key item and returns the height of the item
          *
+         *
+         * @param chart the source chart
          * @param canvas the canvas to draw on
          * @param x      the x position
          * @param y      the y position
@@ -78,7 +80,7 @@ abstract class Key {
          * @param height the height to draw
          * @return the height of the item
          */
-        protected abstract double layout(ChartCanvas<?> canvas, double x, double y, double width, double height);
+        protected abstract double layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double x, double y, double width, double height);
 
         protected abstract double getItemWidth(final Chart<?, ?> chart);
 

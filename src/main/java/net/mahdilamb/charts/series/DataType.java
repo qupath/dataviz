@@ -1,5 +1,6 @@
 package net.mahdilamb.charts.series;
 
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import static net.mahdilamb.charts.utils.StringUtils.*;
@@ -10,31 +11,34 @@ import static net.mahdilamb.charts.utils.StringUtils.*;
 public enum DataType {
     /**
      * A 64-bit integer. If a value cannot be parsed, it will be 0, though the index will be stored as NaN. This
-     * can be retrieved using the {@link LongSeries#isNaN} method
+     * can be retrieved using the {@link NumericSeries#isNaN} method
      *
      * @apiNote Series that contain longs should also contain a {@code #isNaN(int index)} method to test whether it has
      * been zeroed during parse.
      */
-    LONG(10, INTEGER_PATTERN),
+    LONG(Long.class, 10, INTEGER_PATTERN),
     /**
      * A 64-bit float. If a value cannot be parsed, it will be {@code NaN}.
      */
-    DOUBLE(9, FLOATING_POINT_PATTERN_WITHOUT_HEX),
+    DOUBLE(Double.class, 9, FLOATING_POINT_PATTERN_WITHOUT_HEX),
     /**
      * Values are either true or false. If a value cannot be parsed, it will be false.
      */
-    BOOLEAN(8, BOOLEAN_PATTERN),
+    BOOLEAN(Boolean.class, 8, BOOLEAN_PATTERN),
     /**
      * String type
      */
-    STRING(0, Pattern.compile("(?:.*)"));
+    STRING(String.class, 0, Pattern.compile("(?:.*)"));
+
+    private final Class<?> referenceType;
 
     /**
      * Test if a data type is numeric
+     *
      * @param type the data type
      * @return whether the type is numeric
      */
-    public static boolean isNumeric(DataType type){
+    public static boolean isNumeric(DataType type) {
         return type == LONG || type == DOUBLE;
     }
 
@@ -187,7 +191,7 @@ public enum DataType {
      * @return the double as a string
      */
     public static String toString(double value) {
-        return java.lang.Double.toString(value);
+        return Double.toString(value);
     }
 
     /**
@@ -197,12 +201,14 @@ public enum DataType {
      * @return the long as a string
      */
     public static String toString(long value) {
-        return java.lang.Long.toString(value);
+        return Long.toString(value);
     }
 
-    DataType(int score, Pattern matcher) {
+    DataType(Class<?> referenceType, int score, Pattern matcher) {
+        this.referenceType = referenceType;
         this.score = score;
         this.matcher = matcher;
     }
+
 
 }

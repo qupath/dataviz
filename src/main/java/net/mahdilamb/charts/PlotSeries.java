@@ -3,11 +3,12 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.Marker;
 import net.mahdilamb.charts.graphics.MarkerMode;
 import net.mahdilamb.charts.graphics.MarkerShape;
-import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.plots.*;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.reference.sequential.Viridis;
 
 import java.util.*;
 
@@ -17,8 +18,8 @@ import java.util.*;
  * @param <P> the type of the plot
  * @param <S> the type of the series
  */
-//TODO make not impl
-abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implements PlotSeries<S>, PlotWithColorBar<S>, PlotWithLegend<S> {
+abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBar<S>, PlotWithLegend<S> {
+    public static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
 
     private enum ColorMode {
         SINGLETON,
@@ -65,14 +66,12 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
      */
     protected abstract S prepare();
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setName(String name) {
         this.name = name;
         return (S) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setEdgeSize(double size) {
         if (edgeSize != size) {
@@ -82,7 +81,6 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         return (S) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setEdgeColor(Color color) {
         if (!edgeColor.equals(color)) {
@@ -115,7 +113,6 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         return (S) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setColor(Color color) {
         if (!color.equals(faceColor) || colorMode != ColorMode.SINGLETON) {
@@ -141,7 +138,6 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
     }
 
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setColors(String... colorNames) {
         final List<Color> colors = prepareColorList(colorNames.length);
@@ -151,7 +147,6 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         return (S) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setColors(Iterable<String> colorNames) {
         final List<Color> colors = prepareColorList(-1);
@@ -161,7 +156,6 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         return (S) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setColors(Colormap colormap, Iterable<? extends Number> scalars) {
         needsUpdating = true;
@@ -188,7 +182,6 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         return (S) this;
     }
 
-    @Override
     @SuppressWarnings("unchecked")
     public S setColors(Colormap colormap, double... scalars) {
         needsUpdating = true;
@@ -209,7 +202,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         return (S) this;
     }
 
-    static abstract class AbstractScatter extends PlotSeriesImpl<Layouts.RectangularPlot<Scatter>, Scatter> implements Scatter {
+    static abstract class AbstractScatter extends PlotSeries<Layouts.RectangularPlot<Scatter>, Scatter> implements Scatter {
         MarkerMode mode = MarkerMode.MARKER_ONLY;
         MarginalMode xMarginal = MarginalMode.NONE, yMarginal = MarginalMode.NONE;
         MarkerImpl marker = new MarkerImpl(MarkerShape.POINT, 10, null, 0, null);
@@ -336,7 +329,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class BarImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Bar>, Bar> {
+    static abstract class BarImpl extends PlotSeries<Layouts.RectangularPlot<Bar>, Bar> {
 
 
         @Override
@@ -345,7 +338,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class ViolinImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Violin>, Violin> {
+    static abstract class ViolinImpl extends PlotSeries<Layouts.RectangularPlot<Violin>, Violin> {
 
 
         @Override
@@ -354,7 +347,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class RugImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Rug>, Rug> {
+    static abstract class RugImpl extends PlotSeries<Layouts.RectangularPlot<Rug>, Rug> {
 
 
         @Override
@@ -363,7 +356,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class AreaImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Area>, Area> {
+    static abstract class AreaImpl extends PlotSeries<Layouts.RectangularPlot<Area>, Area> {
 
 
         @Override
@@ -372,7 +365,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class BoxImpl extends PlotSeriesImpl<Layouts.RectangularPlot<BoxAndWhisker>, BoxAndWhisker> {
+    static abstract class BoxImpl extends PlotSeries<Layouts.RectangularPlot<BoxAndWhisker>, BoxAndWhisker> {
 
 
         @Override
@@ -381,7 +374,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class ContourImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Contour>, Contour> {
+    static abstract class ContourImpl extends PlotSeries<Layouts.RectangularPlot<Contour>, Contour> {
 
 
         @Override
@@ -390,7 +383,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class DendrogramImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Dendrogram>, Dendrogram> {
+    static abstract class DendrogramImpl extends PlotSeries<Layouts.RectangularPlot<Dendrogram>, Dendrogram> {
 
 
         @Override
@@ -399,7 +392,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class DensityImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Density>, Density> {
+    static abstract class DensityImpl extends PlotSeries<Layouts.RectangularPlot<Density>, Density> {
 
 
         @Override
@@ -408,7 +401,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class KDEImpl extends PlotSeriesImpl<Layouts.RectangularPlot<KDE>, KDE> {
+    static abstract class KDEImpl extends PlotSeries<Layouts.RectangularPlot<KDE>, KDE> {
 
 
         @Override
@@ -417,7 +410,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class DotImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Dot>, Dot> {
+    static abstract class DotImpl extends PlotSeries<Layouts.RectangularPlot<Dot>, Dot> {
 
 
         @Override
@@ -426,7 +419,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class HeatmapImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Heatmap>, Heatmap> {
+    static abstract class HeatmapImpl extends PlotSeries<Layouts.RectangularPlot<Heatmap>, Heatmap> {
 
 
         @Override
@@ -435,7 +428,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class Histogram2DImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Histogram2D>, Histogram2D> {
+    static abstract class Histogram2DImpl extends PlotSeries<Layouts.RectangularPlot<Histogram2D>, Histogram2D> {
 
 
         @Override
@@ -444,7 +437,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class HistogramImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Histogram>, Histogram> {
+    static abstract class HistogramImpl extends PlotSeries<Layouts.RectangularPlot<Histogram>, Histogram> {
 
 
         @Override
@@ -453,7 +446,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class LineImpl extends PlotSeriesImpl<Layouts.RectangularPlot<Line>, Line> {
+    static abstract class LineImpl extends PlotSeries<Layouts.RectangularPlot<Line>, Line> {
 
 
         @Override
@@ -462,7 +455,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class TableImpl extends PlotSeriesImpl<Layouts.RectangularPlot<TableColumn>, TableColumn> {
+    static abstract class TableImpl extends PlotSeries<Layouts.RectangularPlot<TableColumn>, TableColumn> {
 
 
         @Override
@@ -471,7 +464,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class PolarImpl extends PlotSeriesImpl<Layouts.CircularPlot<Polar>, Polar> {
+    static abstract class PolarImpl extends PlotSeries<Layouts.CircularPlot<Polar>, Polar> {
 
 
         @Override
@@ -480,7 +473,7 @@ abstract class PlotSeriesImpl<P extends Plot<S>, S extends PlotSeries<S>> implem
         }
     }
 
-    static abstract class PieImpl extends PlotSeriesImpl<Layouts.PiePlot<Pie>, Pie> {
+    static abstract class PieImpl extends PlotSeries<Layouts.PiePlot<Pie>, Pie> {
 
 
         @Override

@@ -92,11 +92,39 @@ public interface Dataset extends Iterable<DataSeries<?>> {
     }
 
     /**
+     * Get an iterable over the datatypes of the series
+     */
+    default Iterable<DataType> dataTypes() {
+        return () -> new Iterator<>() {
+            private int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < numSeries();
+            }
+
+            @Override
+            public DataType next() {
+                return get(i++).getType();
+            }
+        };
+    }
+
+    /**
      * @return a list of the series names
      */
     default List<String> listSeriesNames() {
-        final List<String> result = new ArrayList<>();
+        final List<String> result = new ArrayList<>(numSeries());
         seriesNames().forEach(result::add);
+        return result;
+    }
+
+    /**
+     * @return a list of the series names
+     */
+    default List<DataType> listDataTypes() {
+        final List<DataType> result = new ArrayList<>(numSeries());
+        dataTypes().forEach(result::add);
         return result;
     }
 
@@ -135,42 +163,22 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      *
      * @param index the index of the series
      * @return the series
-     * @throws DataSeriesCastException if the index contains a non-double series
+     * @throws DataSeriesCastException if the series cannot be cast to a double series
      */
-    default DoubleSeries getDoubleSeries(final int index) throws DataSeriesCastException {
-        final DataSeries<?> series = get(index);
-        if (series.getType() != DataType.DOUBLE) {
-            //TODO return a view into the original series
-            throw new DataSeriesCastException();
-        }
-        return (DoubleSeries) series;
+    default NumericSeries<Double> getDoubleSeries(final int index) throws DataSeriesCastException {
+        return get(index).asDouble();
     }
 
-    default DoubleSeries getDoubleSeries(final String seriesName) throws DataSeriesCastException {
-        final DataSeries<?> series = get(seriesName);
-        if (series.getType() != DataType.DOUBLE) {
-            //TODO return a view into the original series
-            throw new DataSeriesCastException();
-        }
-        return (DoubleSeries) series;
+    default NumericSeries<Double> getDoubleSeries(final String seriesName) throws DataSeriesCastException {
+        return get(seriesName).asDouble();
     }
 
     default StringSeries getStringSeries(final String seriesName) throws DataSeriesCastException {
-        final DataSeries<?> series = get(seriesName);
-        if (series.getType() != DataType.STRING) {
-            //TODO return a view into the original series
-            throw new DataSeriesCastException();
-        }
-        return (StringSeries) series;
+        return get(seriesName).asString();
     }
 
-    default LongSeries getLongSeries(final String seriesName) throws DataSeriesCastException {
-        final DataSeries<?> series = get(seriesName);
-        if (series.getType() != DataType.LONG) {
-            //TODO return a view into the original series
-            throw new DataSeriesCastException();
-        }
-        return (LongSeries) series;
+    default NumericSeries<Long> getLongSeries(final String seriesName) throws DataSeriesCastException {
+        return get(seriesName).asLong();
     }
 
     /**
@@ -178,15 +186,10 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      *
      * @param index the index of the series
      * @return the series
-     * @throws DataSeriesCastException if the index contains a non-boolean series
+     * @throws DataSeriesCastException  if the series cannot be cast to a boolean series
      */
     default BooleanSeries getBooleanSeries(final int index) throws DataSeriesCastException {
-        final DataSeries<?> series = get(index);
-        if (series.getType() != DataType.BOOLEAN) {
-            //TODO return a view into the original series
-            throw new DataSeriesCastException();
-        }
-        return (BooleanSeries) series;
+        return get(index).asBoolean();
     }
 
     /**
@@ -194,15 +197,10 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      *
      * @param index the index of the series
      * @return the series
-     * @throws DataSeriesCastException if the index contains a non-long series
+     * @throws DataSeriesCastException if the series cannot be cast to a long series
      */
-    default LongSeries getLongSeries(final int index) throws DataSeriesCastException {
-        final DataSeries<?> series = get(index);
-        if (series.getType() != DataType.LONG) {
-            //TODO return a view into the original series
-            throw new DataSeriesCastException();
-        }
-        return (LongSeries) series;
+    default NumericSeries<Long> getLongSeries(final int index) throws DataSeriesCastException {
+        return get(index).asLong();
     }
 
     /**
@@ -210,15 +208,10 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      *
      * @param index the index of index
      * @return a string series at the index
-     * @throws DataSeriesCastException if the index contains a non-string series
+     * @throws DataSeriesCastException if the series cannot be cast to a string series
      */
     default StringSeries getStringSeries(final int index) throws DataSeriesCastException {
-        final DataSeries<?> series = get(index);
-        if (series.getType() != DataType.STRING) {
-            //TODO return a view into the original series
-            throw new DataSeriesCastException();
-        }
-        return (StringSeries) series;
+        return get(index).asString();
     }
 
     /**
@@ -248,7 +241,7 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param data the data to use in the series
      * @return the default series wrapping the data
      */
-    static DoubleSeries of(final String name, double... data) {
+    static NumericSeries<Double> of(final String name, double... data) {
         return new DataSeriesImpl.OfDoubleArray(name, data);
     }
 
@@ -262,7 +255,7 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param dataGetter a function which gets a double element at a position in the series
      * @return a series from a collection of objects
      */
-    static DoubleSeries of(final String name, int size, IntToDoubleFunction dataGetter) {
+    static NumericSeries<Double> of(final String name, int size, IntToDoubleFunction dataGetter) {
         return new DataSeriesImpl.OfFunctionalDouble(name, size, dataGetter);
     }
 

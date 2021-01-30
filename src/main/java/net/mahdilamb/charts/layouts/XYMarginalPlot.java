@@ -1,20 +1,19 @@
 package net.mahdilamb.charts.layouts;
 
-import net.mahdilamb.charts.plots.PlotSeries;
 
 /**
  * An XY plot with potentially two marginals
  */
-public interface XYMarginalPlot<S extends PlotSeries<S>> extends XYPlot<S> {
+public interface XYMarginalPlot<S > extends XYPlot<S> {
     /**
      * @return the marginal associated with the x axis
      */
-    Plot<?> getXMarginal();
+    PlotLayout<?> getXMarginal();
 
     /**
      * @return the marginal associated with the y axis
      */
-    Plot<?> getYMarginal();
+    PlotLayout<?> getYMarginal();
 
     @Override
     default int numSeries() {

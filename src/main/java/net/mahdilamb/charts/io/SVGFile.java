@@ -390,11 +390,12 @@ final class SVGDefinitions {
 
 
     public String addClip(ClipShape shape, double x, double y, double width, double height) {
+        int hash = Objects.hash(shape, x, y, width, height);
         switch (shape) {
             case ELLIPSE:
                 final double rx = width * .5;
                 final double ry = height * .5;
-                return add(Objects.hash(shape, x, y, width, height), () -> add(
+                return add(hash, () -> add(
                         "clipping-path-",
                         "clipPath",
                         String.format("\t\t\t<ellipse cx=\"%s\" cy=\"%s\" rx=\"%s\" ry=\"%s\" />\n",
@@ -407,7 +408,7 @@ final class SVGDefinitions {
                         )
                 );
             case RECTANGLE:
-                return add(Objects.hash(shape, x, y, width, height), () -> add(
+                return add(hash, () -> add(
                         "clipping-path-",
                         "clipPath",
                         String.format("\t\t\t<rect x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" />\n",

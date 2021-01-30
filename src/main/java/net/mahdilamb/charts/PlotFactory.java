@@ -1,13 +1,10 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.plots.Scatter;
-import net.mahdilamb.charts.series.DataSeries;
-import net.mahdilamb.charts.series.DataType;
 import net.mahdilamb.charts.series.Dataset;
-import net.mahdilamb.charts.series.NumericSeries;
 import net.mahdilamb.colormap.Colormap;
 
-import static net.mahdilamb.charts.plots.PlotSeries.DEFAULT_SEQUENTIAL_COLORMAP;
+import static net.mahdilamb.charts.PlotSeries.DEFAULT_SEQUENTIAL_COLORMAP;
 
 //TODO make series using Pattern matching in datasets e.g. for doing replicates
 public final class PlotFactory {
@@ -23,7 +20,7 @@ public final class PlotFactory {
      * @return the scatter series
      */
     public static Scatter scatter(double[] x, double[] y) {
-        return new PlotSeriesImpl.AbstractScatter.FromArray(x, y);
+        return new PlotSeries.AbstractScatter.FromArray(x, y);
     }
 
     /**
@@ -37,12 +34,8 @@ public final class PlotFactory {
      * @throws NullPointerException          if the series cannot be found
      */
     public static Scatter scatter(Dataset dataset, String x, String y) {
-        final DataSeries<?> xSeries = dataset.get(x);
-        final DataSeries<?> ySeries = dataset.get(y);
-        if (DataType.isNumeric(xSeries.getType()) && DataType.isNumeric(ySeries.getType())) {
-            return new PlotSeriesImpl.AbstractScatter.FromIterable((NumericSeries<?>) xSeries, (NumericSeries<?>) ySeries);
-        }
-        throw new UnsupportedOperationException("Both series must be numeric");
+        return new PlotSeries.AbstractScatter.FromIterable(dataset.getDoubleSeries(x), dataset.getDoubleSeries(y));
+
     }
 
     public static Scatter scatter(Dataset dataset, String x, String y, String colorBy, Colormap colormap) {

@@ -3,8 +3,7 @@ package net.mahdilamb.charts.plots;
 import net.mahdilamb.charts.graphics.MarkerMode;
 import net.mahdilamb.charts.graphics.MarkerShape;
 
-//TODO error bar
-public interface Scatter extends PlotSeries<Scatter>, PlotWithLegend<Scatter>, PlotWithColorBar<Scatter> {
+public interface Scatter extends PlotWithLegend<Scatter>, PlotWithColorBar<Scatter>, PlotSeries<Scatter> {
 
     /**
      * Set the size of the marker for all data points
@@ -49,6 +48,7 @@ public interface Scatter extends PlotSeries<Scatter>, PlotWithLegend<Scatter>, P
     Scatter setYMarginal(MarginalMode marginal);
 
     Scatter setGroups(Iterable<String> groupings);
+
 
     //TODO error bars
     //TODO trendline

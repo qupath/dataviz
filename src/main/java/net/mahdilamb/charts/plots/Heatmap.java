@@ -1,4 +1,4 @@
 package net.mahdilamb.charts.plots;
 
-public interface Heatmap extends PlotSeries<Heatmap>{
+public interface Heatmap{
 }

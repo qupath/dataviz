@@ -5,8 +5,7 @@ import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.charts.layouts.Plot;
-import net.mahdilamb.charts.plots.PlotSeries;
+import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.swing.SwingChart;
 import net.mahdilamb.charts.swing.SwingUtils;
 
@@ -18,9 +17,9 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 //TODO come back to this
-public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends Chart<P, S> {
+public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
 
-    private static final class HeadlessChartCanvas<P extends Plot<S>, S extends PlotSeries<S>> extends Component implements ChartCanvas<BufferedImage> {
+    private static final class HeadlessChartCanvas<P extends PlotLayout<S>, S> extends Component implements ChartCanvas<BufferedImage> {
 
         private Graphics2D g;
         private Chart<P, S> chart;
@@ -32,7 +31,6 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
         private Fill currentFill = Fill.BLACK_FILL;
         private Stroke currentStroke = Stroke.BLACK_STROKE;
         boolean usingFill = true;
-        private BufferedImage image;
         private boolean supportTransparency;
         private final AffineTransform affineTransform = new AffineTransform();
 
@@ -42,8 +40,8 @@ public class HeadlessChart<P extends Plot<S>, S extends PlotSeries<S>> extends C
 
         void setChart(Chart<P, S> chart, boolean supportTransparency) {
             this.chart = chart;
-            this.image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), supportTransparency ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
-            this.g = (Graphics2D) this.image.getGraphics();
+            BufferedImage image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), supportTransparency ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+            this.g = (Graphics2D) image.getGraphics();
             this.supportTransparency = supportTransparency;
 
         }

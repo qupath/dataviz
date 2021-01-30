@@ -5,9 +5,8 @@ import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.layouts.XYMarginalPlot;
-import net.mahdilamb.charts.plots.PlotSeries;
 import net.mahdilamb.colormap.Colors;
 
 import javax.swing.*;
@@ -23,7 +22,7 @@ import java.util.function.Consumer;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
-public final class SwingChart<P extends Plot<S>, S extends PlotSeries<S>> extends Chart<P, S> {
+public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     /**
      * Convert a series to a chart
      *
@@ -34,7 +33,7 @@ public final class SwingChart<P extends Plot<S>, S extends PlotSeries<S>> extend
      * @param <S>    the type of the series
      * @return the series in its plot
      */
-    private static <S extends PlotSeries<S>> SwingChart<XYMarginalPlot<S>, S> chart(final String title, double width, double height, final S series) {
+    private static <S> SwingChart<XYMarginalPlot<S>, S> chart(final String title, double width, double height, final S series) {
         return new SwingChart<>(title, width, height, toPlot(series, 0, 10, 0, 10));
     }
     //todo show-editable. Save as images
@@ -48,7 +47,7 @@ public final class SwingChart<P extends Plot<S>, S extends PlotSeries<S>> extend
      * @param series the series
      * @param <S>    the type of the series
      */
-    public static <S extends PlotSeries<S>> void show(final String title, double width, double height, final S series) {
+    public static <S > void show(final String title, double width, double height, final S series) {
         final JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
         chart(title, width, height, series).addTo(frame.getContentPane(), BorderLayout.CENTER);

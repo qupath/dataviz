@@ -16,14 +16,26 @@ public final class ColorBar extends Key {
         //todo
     }
 
-    static final class ColorBarItem {
-        double scaleMin, scaleMax;
-        Colormap colormap;
-        boolean showText;
-    }
 
     double barWidth, textSize;
 
+    static final class ColorBarItem  extends KeyItem{
+        double scaleMin, scaleMax;
+        Colormap colormap;
+        boolean showText;
+
+        @Override
+        protected double layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double x, double y, double width, double height) {
+            //TODO
+            return 0;
+        }
+
+        @Override
+        protected double getItemWidth(Chart<?, ?> chart) {
+            //TODO
+            return 0;
+        }
+    }
 
 
 

@@ -13,6 +13,7 @@ import java.util.function.Predicate;
  */
 interface SeriesWithFunctionalOperators<T extends Comparable<T>> extends DataSeries<T> {
 
+
     /**
      * Reduce the series to a single double value
      *
@@ -30,6 +31,20 @@ interface SeriesWithFunctionalOperators<T extends Comparable<T>> extends DataSer
             }
         }
         return out;
+    }
+
+    /**
+     * @return the minimum element in the series
+     */
+    default T min() {
+        return reduce(Comparables::min);
+    }
+
+    /**
+     * @return the maximum element in the series
+     */
+    default T max() {
+        return reduce(Comparables::max);
     }
 
     /**
@@ -56,20 +71,6 @@ interface SeriesWithFunctionalOperators<T extends Comparable<T>> extends DataSer
             }
         }
         return out;
-    }
-
-    /**
-     * @return the minimum element in the series
-     */
-    default T min() {
-        return reduce(Comparables::min);
-    }
-
-    /**
-     * @return the maximum element in the series
-     */
-    default T max() {
-        return reduce(Comparables::max);
     }
 
 }

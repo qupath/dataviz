@@ -1,10 +1,10 @@
 package net.mahdilamb.charts.series;
 
-import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.utils.StringUtils;
 
 import java.util.*;
-import java.util.function.IntToDoubleFunction;
+import java.util.function.*;
 
 import static net.mahdilamb.charts.series.DatasetImpl.COLUMN_SEPARATOR;
 
@@ -16,6 +16,62 @@ import static net.mahdilamb.charts.series.DatasetImpl.COLUMN_SEPARATOR;
 abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> {
     static int MAX_VISIBLE_CELLS = 10;
 
+    static final class AsTypeArray<S extends Comparable<S>, T extends Comparable<T>> extends DataSeriesImpl<T> {
+        private final DataSeries<S> source;
+        private final Function<S, T> converter;
+        private final DataType dataType;
+
+        AsTypeArray(DataSeries<S> source, DataType dataType, Function<S, T> converter) {
+            super(source.getName());
+            this.source = source;
+            this.converter = converter;
+            this.dataType = dataType;
+            this.end = source.size();
+
+        }
+
+        @Override
+        public T get(int index) {
+            return converter.apply(source.get(index));
+        }
+
+        @Override
+        public DataType getType() {
+            return dataType;
+        }
+    }
+
+    static final class AsNumericTypeArray<S extends Comparable<S>, T extends Number & Comparable<T>> extends DataSeriesImpl<T> implements NumericSeries<T> {
+        private final DataSeries<S> source;
+        private final Function<S, T> converter;
+        private final DataType dataType;
+
+        AsNumericTypeArray(DataSeries<S> source, DataType dataType, Function<S, T> converter) {
+            super(source.getName());
+            this.source = source;
+            this.converter = converter;
+            this.dataType = dataType;
+            this.end = source.size();
+
+        }
+
+        @Override
+        public T get(int index) {
+            return converter.apply(source.get(index));
+        }
+
+        @Override
+        public DataType getType() {
+            return dataType;
+        }
+
+        @Override
+        public boolean isNaN(int index) {
+            return get(index) == null || (get(index).getClass() == Double.class && Double.isNaN((Double) get(index)));
+        }
+    }
+
+
     /**
      * Default implementation of a series backed by a double array
      */
@@ -26,6 +82,24 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
             super(name);
             this.data = data;
             this.end = data.length;
+        }
+
+        <S extends Number & Comparable<S>> OfDoubleArray(NumericSeries<S> source, ToDoubleFunction<S> converter) {
+            super(source.getName());
+            this.data = new double[source.size()];
+            this.end = source.size();
+            for (int i = 0; i < source.size(); ++i) {
+                data[i] = source.isNaN(i) ? Double.NaN : converter.applyAsDouble(source.get(i));
+            }
+        }
+
+        <S extends Comparable<S>> OfDoubleArray(DataSeries<S> source, ToDoubleFunction<S> converter) {
+            super(source.getName());
+            this.data = new double[source.size()];
+            this.end = source.size();
+            for (int i = 0; i < source.size(); ++i) {
+                data[i] = converter.applyAsDouble(source.get(i));
+            }
         }
 
         @Override
@@ -52,6 +126,15 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
             return data[index];
         }
 
+        <S extends Comparable<S>> OfBooleanArray(DataSeries<S> source, Predicate<S> converter) {
+            super(source.getName());
+            this.end = source.size();
+            data = new boolean[source.size()];
+            for (int i = 0; i < source.size(); ++i) {
+                data[i] = converter.test(source.get(i));
+            }
+
+        }
 
     }
 
@@ -67,11 +150,19 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
             this.end = data.length;
         }
 
+        <S extends Comparable<S>> OfStringArray(DataSeries<S> source, Function<S, String> converter) {
+            super(source.getName());
+            this.end = source.size();
+            data = new String[source.size()];
+            for (int i = 0; i < source.size(); ++i) {
+                data[i] = converter.apply(source.get(i));
+            }
+        }
+
         @Override
         public String get(int index) {
             return data[index];
         }
-
 
     }
 
@@ -119,9 +210,11 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
         }
     }
 
+
+
     static final class OfLongArray extends DataSeriesImpl<Long> implements LongSeries {
         final long[] data;
-        int[] isNan;
+        int[] isNaN;
         int nanCount;
 
         /**
@@ -129,10 +222,10 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
          *
          * @param name the name of the series
          */
-        OfLongArray(String name, long[] data, int[] isNan, int nanCount) {
+        OfLongArray(String name, long[] data, int[] isNaN, int nanCount) {
             super(name);
             this.data = data;
-            this.isNan = isNan;
+            this.isNaN = isNaN;
             this.nanCount = nanCount;
             this.end = data.length;
         }
@@ -144,11 +237,38 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
 
         @Override
         public boolean isNaN(int index) {
-            int i = Arrays.binarySearch(isNan, 0, nanCount, index);
+            int i = Arrays.binarySearch(isNaN, 0, nanCount, index);
             return i != -1;
         }
 
+        static int[] ensureCapacity(int[] array, int newCapacity) {
+            if (newCapacity > array.length) {
+                return Arrays.copyOf(array, newCapacity);
+            }
+            return array;
+        }
+
+        <S extends Comparable<S>> OfLongArray(DataSeries<S> source, ToLongFunction<S> converter) {
+            super(source.getName());
+            data = new long[source.size()];
+            nanCount = 0;
+            isNaN = new int[4];
+            this.end = source.size();
+
+            for (int i = 0; i < source.size(); ++i) {
+                if (DataType.LONG.matches(String.valueOf(source.get(i)))) {
+                    data[i] = converter.applyAsLong(source.get(i));
+                } else {
+                    data[i] = 0;
+                    isNaN = ensureCapacity(isNaN, ++nanCount);
+                    isNaN[nanCount - 1] = i;
+                }
+            }
+
+        }
+
     }
+
     static final class OfNonNaNLongArray extends DataSeriesImpl<Long> implements LongSeries {
         final long[] data;
 
@@ -164,6 +284,17 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
             this.end = data.length;
         }
 
+        <S extends Comparable<S>> OfNonNaNLongArray(DataSeries<S> source, ToLongFunction<S> converter) {
+            super(source.getName());
+            data = new long[source.size()];
+            this.end = source.size();
+
+            for (int i = 0; i < source.size(); ++i) {
+                data[i] = converter.applyAsLong(source.get(i));
+            }
+
+        }
+
         @Override
         public long getLong(int index) {
             return data[index];
@@ -175,6 +306,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
         }
 
     }
+
     /**
      * Default implementation of a series backed by a collection of objects
      */
@@ -275,6 +407,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
             }
             throw new IndexOutOfBoundsException();
         }
+
     }
 
     /**
@@ -307,7 +440,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
     /**
      * Map of the plot to compatible series
      */
-    static final Map<CompatibleSeries, Set<Plot<?>>> seriesToPlotMap = new HashMap<>();
+    static final Map<CompatibleSeries, Set<PlotLayout<?>>> seriesToPlotMap = new HashMap<>();
 
     static {
         //TODO go through plots and add to the map
@@ -336,8 +469,9 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
         return end - start;
     }
 
+    @SuppressWarnings("unchecked")
     static String formatCell(DataSeries<?> series, int index) {
-        return series.getType() == DataType.LONG && ((LongSeries) series).isNaN(index) ? "NaN" : String.valueOf(series.get(index));
+        return series.getType() == DataType.LONG && ((NumericSeries<Long>) series).isNaN(index) ? "NaN" : String.valueOf(series.get(index));
     }
 
     @Override

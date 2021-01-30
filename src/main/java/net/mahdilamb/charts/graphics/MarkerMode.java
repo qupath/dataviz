@@ -15,5 +15,5 @@ public enum MarkerMode {
     /**
      * Draw only lines
      */
-    LINE_ONLY;
+    LINE_ONLY
 }

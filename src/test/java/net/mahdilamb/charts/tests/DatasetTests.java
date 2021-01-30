@@ -2,6 +2,7 @@ package net.mahdilamb.charts.tests;
 
 import net.mahdilamb.charts.PlotFactory;
 import net.mahdilamb.charts.series.Dataset;
+import net.mahdilamb.charts.utils.StringUtils;
 import org.junit.Test;
 
 import java.io.File;
@@ -16,8 +17,7 @@ public class DatasetTests {
                         .setMarker('^')
                         .setColor("red")
         );
-        System.out.println(iris.get("sepal_length"));
 
-        System.out.println((Dataset.from(new File("D:\\mahdi\\Desktop\\train.csv")).get("MSZoning")));
+        System.out.println(Dataset.from(new File("D:\\mahdi\\Desktop\\train.csv")));
     }
 }

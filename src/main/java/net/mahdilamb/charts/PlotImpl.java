@@ -1,9 +1,8 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.layouts.Plot;
-import net.mahdilamb.charts.plots.PlotSeries;
+import net.mahdilamb.charts.layouts.PlotLayout;
 
-abstract class PlotImpl<S extends PlotSeries<S>> implements Plot<S> {
+abstract class PlotImpl<S > implements PlotLayout<S> {
     double minorTickSpacing, majorTickSpacing;
     boolean showMinorTicks = true, showMajorTicks = true;
 

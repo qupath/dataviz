@@ -249,7 +249,6 @@ public interface ChartCanvas<IMAGE> {
      */
     void setFont(final Font font);
 
-
     /**
      * Apply a clip
      *

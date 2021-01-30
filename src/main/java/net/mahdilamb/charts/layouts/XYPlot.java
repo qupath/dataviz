@@ -1,12 +1,11 @@
 package net.mahdilamb.charts.layouts;
 
 import net.mahdilamb.charts.Axis;
-import net.mahdilamb.charts.plots.PlotSeries;
 
 /**
  * A rectangular plot containing an x and y axis
  */
-public interface XYPlot<S extends PlotSeries<S>> extends Plot<S> {
+public interface XYPlot<S > extends PlotLayout<S> {
     /**
      * @return the X axis
      */

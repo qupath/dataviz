@@ -4,7 +4,6 @@ import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Marker;
 import net.mahdilamb.charts.graphics.Side;
-import net.mahdilamb.charts.plots.PlotSeries;
 
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -16,7 +15,7 @@ import static net.mahdilamb.charts.Chart.USE_PREFERRED_HEIGHT;
 public final class Legend extends Key {
     double itemWidth = 0, height, hGap = 2, vGap = 2;
     boolean isDirty = true;
-    Map<PlotSeries<?>, KeyItem> items = new LinkedHashMap<>();
+    Map<PlotSeries<?,?>, KeyItem> items = new LinkedHashMap<>();
 
 
     Legend(Chart<?, ?> chart) {
@@ -30,7 +29,7 @@ public final class Legend extends Key {
         if (isDirty) {
             this.itemWidth = 0;
             for (int i = 0; i < chart.getPlot().numSeries(); ++i) {
-                final PlotSeriesImpl<?, ?> series = (PlotSeriesImpl<?, ?>) chart.getPlot().get(i);
+                final PlotSeries<?, ?> series = (PlotSeries<?, ?>) chart.getPlot().get(i);
                 items.put(series, series.getLegendItem());
                 this.itemWidth = Math.max(this.itemWidth, series.getLegendItem().getItemWidth(chart));
             }
@@ -47,7 +46,7 @@ public final class Legend extends Key {
                 double xOffset = (width - ((row == lastRow ? (items.size() % itemsPerRow) : itemsPerRow) * itemWidth)) * .5;
                 for (int i = 0; i < itemsPerRow && it.hasNext(); ++i) {
                     Key.KeyItem ki = it.next();
-                    rowHeight = ki.layout(canvas, xOffset * itemWidth * row, rowHeight == USE_PREFERRED_HEIGHT ? 0 : row * rowHeight, itemWidth, rowHeight);
+                    rowHeight = ki.layout(chart, canvas, xOffset * itemWidth * row, rowHeight == USE_PREFERRED_HEIGHT ? 0 : row * rowHeight, itemWidth, rowHeight);
                 }
 
             }
@@ -104,7 +103,8 @@ public final class Legend extends Key {
         }
 
         @Override
-        protected double layout(ChartCanvas<?> canvas, double x, double y, double width, double height) {
+        protected double layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double x, double y, double width, double height) {
+
             canvas.fillText(label, x, y);
 
             //TODO
@@ -127,12 +127,12 @@ public final class Legend extends Key {
         }
 
         @Override
-        protected double layout(ChartCanvas<?> canvas, double x, double y, double width, double height) {
+        protected double layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double x, double y, double width, double height) {
             if (height == USE_PREFERRED_HEIGHT) {
                 double itemHeight = USE_PREFERRED_HEIGHT;
                 double itemY = 0;
                 for (final LegendItem li : legendItems) {
-                    itemHeight = li.layout(canvas, x, itemY, width, itemHeight);
+                    itemHeight = li.layout(chart, canvas, x, itemY, width, itemHeight);
                     itemY += itemHeight;
                 }
                 return itemHeight;

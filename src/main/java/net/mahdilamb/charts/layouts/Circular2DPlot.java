@@ -1,12 +1,11 @@
 package net.mahdilamb.charts.layouts;
 
 import net.mahdilamb.charts.Axis;
-import net.mahdilamb.charts.plots.PlotSeries;
 
 /**
  * A circular plot containing two axes
  */
-public interface Circular2DPlot<S extends PlotSeries<S>> extends Plot<S> {
+public interface Circular2DPlot<S> extends PlotLayout<S> {
     /**
      * @return the "radial" or outside axis
      */

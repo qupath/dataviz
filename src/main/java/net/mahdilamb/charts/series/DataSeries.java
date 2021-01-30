@@ -1,13 +1,11 @@
 package net.mahdilamb.charts.series;
 
 
-import net.mahdilamb.charts.layouts.Plot;
+import net.mahdilamb.charts.layouts.PlotLayout;
 
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.function.IntToDoubleFunction;
+import java.util.function.Predicate;
 
 /**
  * A series of values
@@ -53,10 +51,107 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
         };
     }
 
+
+
+    /**
+     * @return a version of this series as a string series
+     */
+    @SuppressWarnings("unchecked")
+    default StringSeries asString() {
+        switch (getType()) {
+            case STRING:
+                return (StringSeries) this;
+            case BOOLEAN:
+                return new DataSeriesImpl.OfStringArray(this, el -> DataType.toString((Boolean) el));
+            case LONG:
+                return new DataSeriesImpl.OfStringArray(this, el -> DataType.toString((Long) el));
+            case DOUBLE:
+                return new DataSeriesImpl.OfStringArray(this, el -> DataType.toString((Double) el));
+            default:
+                throw new DataSeriesCastException();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    default NumericSeries<Double> asDouble() {
+        switch (getType()) {
+            case DOUBLE:
+                return (NumericSeries<Double>) this;
+            case BOOLEAN:
+                return new DataSeriesImpl.OfDoubleArray(this, el -> DataType.toDouble((Boolean) el));
+            case LONG:
+                return new DataSeriesImpl.OfDoubleArray((NumericSeries<Long>) this, DataType::toDouble);
+            case STRING:
+                return new DataSeriesImpl.OfDoubleArray(this, el -> DataType.toDouble((String) el));
+            default:
+                throw new DataSeriesCastException();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    default NumericSeries<Long> asLong() {
+        switch (getType()) {
+            case LONG:
+                return (NumericSeries<Long>) this;
+            case DOUBLE:
+                return new DataSeriesImpl.OfLongArray(this, el -> DataType.toLong((Double) el));
+            case BOOLEAN:
+                return new DataSeriesImpl.OfNonNaNLongArray(this, el -> DataType.toLong((Boolean) el));
+            case STRING:
+                return new DataSeriesImpl.OfLongArray(this, el -> DataType.toLong((String) el));
+            default:
+                throw new DataSeriesCastException();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    default BooleanSeries asBoolean() {
+        switch (getType()) {
+            case BOOLEAN:
+                return (BooleanSeries) this;
+            case STRING:
+                return new DataSeriesImpl.OfBooleanArray(this, el -> DataType.toBoolean((String) el));
+            case LONG:
+                return new DataSeriesImpl.OfBooleanArray(this, el -> DataType.toBoolean((Long) el));
+            case DOUBLE:
+                return new DataSeriesImpl.OfBooleanArray(this, el -> DataType.toBoolean((Double) el));
+            default:
+                throw new DataSeriesCastException();
+        }
+    }
+
+    default BooleanSeries asBoolean(Predicate<T> converter) {
+        return new DataSeriesImpl.OfBooleanArray(this, converter);
+    }
+
+    /**
+     * Element-by-element equality operation
+     * <p>
+     * Return a new boolean series containing the results of checking if any of the elements in this series equal
+     * that of the other
+     *
+     * @param other the value to compare with
+     * @return a boolean series containing the results of the equality operation
+     */
+    default BooleanSeries eq(T other) {
+        return asBoolean(el -> Objects.equals(other, el));
+    }
+
+    default T[] toArray(T[] output) {
+        if (output.length != size()) {
+            output = Arrays.copyOf(output, size());
+        }
+        for (int i = 0; i < size(); ++i) {
+            output[i] = get(i);
+        }
+        return output;
+    }
+
     /**
      * @return the counts of each of the elements in the series
      */
-    default Map<T, Integer> counts() {
+    default Map<T, Integer> valueCounts() {
+        //todo return data series
         final Map<T, Integer> map = new Hashtable<>();
         for (int i = 0; i < size(); ++i) {
             final Integer key = map.get(get(i));
@@ -73,6 +168,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @return the frequency of each of the elements in the series
      */
     default Map<T, Double> frequencies() {
+        //todo return data series
         final Map<T, Double> map = new Hashtable<>();
         for (int i = 0; i < size(); ++i) {
             final Double key = map.get(get(i));
@@ -86,7 +182,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
     }
 
     /*todo
-    default LongSeries asFactors() {
+    default LongSeries factorize() {
         final Map<T, Integer> factors = new TreeMap<>();
         int i = 0;
         for (final T s : this) {
@@ -119,7 +215,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @param data the data to use in the series
      * @return the default series wrapping the data
      */
-    static DoubleSeries of(final String name, double... data) {
+    static NumericSeries<Double> of(final String name, double... data) {
         return new DataSeriesImpl.OfDoubleArray(name, data);
     }
 
@@ -133,7 +229,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @param dataGetter a function which gets a double element at a position in the series
      * @return a series from a collection of objects
      */
-    static DoubleSeries of(final String name, int size, IntToDoubleFunction dataGetter) {
+    static NumericSeries<Double> of(final String name, int size, IntToDoubleFunction dataGetter) {
         return new DataSeriesImpl.OfFunctionalDouble(name, size, dataGetter);
     }
 
@@ -143,7 +239,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @param series the series of interest
      * @return an iterable (set) of the possible plots from the given combinations of series
      */
-    static Iterable<Plot<?>> getPlotsForSeries(DataSeries<?>... series) {
+    static Iterable<PlotLayout<?>> getPlotsForSeries(DataSeries<?>... series) {
         if (DataSeriesImpl.seriesToPlotMap.isEmpty()) {
             //TODO look at the arguments in the constructors in plots and match to interfaces and add to map
             //TODO Ignore Series.java. Only use interfaces

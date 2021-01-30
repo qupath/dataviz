@@ -2,7 +2,6 @@ package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.axes.LabeledAxis;
 import net.mahdilamb.charts.layouts.*;
-import net.mahdilamb.charts.plots.PlotSeries;
 
 import java.util.Objects;
 
@@ -12,7 +11,7 @@ final class Layouts {
 
     }
 
-    abstract static class PiePlot<S extends PlotSeries<S>> extends PlotImpl<S> implements Circular1DPlot<S> {
+    abstract static class PiePlot<S > extends PlotImpl<S> implements Circular1DPlot<S> {
         LabeledAxis axis;
 
         @Override
@@ -36,7 +35,7 @@ final class Layouts {
         }
     }
 
-    abstract static class CircularPlot<S extends PlotSeries<S>> extends PlotImpl<S> implements Circular2DPlot<S> {
+    abstract static class CircularPlot<S > extends PlotImpl<S> implements Circular2DPlot<S> {
         Axis radialAxis;
         Axis angularAxis;
 
@@ -71,7 +70,7 @@ final class Layouts {
     /**
      * A plot containing multiple rectangular plots
      */
-    abstract static class GridPlot<S extends PlotSeries<S>> extends PlotImpl<S> implements XYPlot<S> {
+    abstract static class GridPlot<S > extends PlotImpl<S> implements XYPlot<S> {
         private Axis xAxis;
         private Axis yAxis;
 
@@ -106,7 +105,7 @@ final class Layouts {
     /**
      * A scatter plot that contains an extra two regions to show distribution data
      */
-    static class RectangularPlot<S extends PlotSeries<S>> extends PlotImpl<S> implements XYMarginalPlot<S> {
+    static class RectangularPlot<S> extends PlotImpl<S> implements XYMarginalPlot<S> {
         private final Axis xAxis, yAxis;
         PlotImpl<S> xMarginal, yMarginal;
 
@@ -138,12 +137,12 @@ final class Layouts {
 
 
         @Override
-        public Plot<?> getXMarginal() {
+        public PlotLayout<?> getXMarginal() {
             return xMarginal;
         }
 
         @Override
-        public Plot<?> getYMarginal() {
+        public PlotLayout<?> getYMarginal() {
             return yMarginal;
         }
 
