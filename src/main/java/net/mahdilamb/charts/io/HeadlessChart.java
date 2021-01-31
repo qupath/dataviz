@@ -31,6 +31,7 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
         private Fill currentFill = Fill.BLACK_FILL;
         private Stroke currentStroke = Stroke.BLACK_STROKE;
         boolean usingFill = true;
+        private BufferedImage image;
         private boolean supportTransparency;
         private final AffineTransform affineTransform = new AffineTransform();
 
@@ -40,8 +41,8 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
 
         void setChart(Chart<P, S> chart, boolean supportTransparency) {
             this.chart = chart;
-            BufferedImage image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), supportTransparency ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
-            this.g = (Graphics2D) image.getGraphics();
+            this.image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), supportTransparency ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
+            this.g = (Graphics2D) this.image.getGraphics();
             this.supportTransparency = supportTransparency;
 
         }
@@ -269,6 +270,11 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
         private byte[] bytesFromImage(BufferedImage bufferedImage) {
             return convertToByteArray(bufferedImage);
         }
+
+        public double getTextLineHeight(Font font) {
+            return SwingUtils.getLineHeight(getFontMetrics(SwingUtils.convert(font)));
+
+        }
     }
 
     private final HeadlessChartCanvas<P, S> canvas;
@@ -284,11 +290,11 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     @Override
-    protected double getTextHeight(Title title, double maxWidth, double lineSpacing) {
+    protected double getTextLineHeight(Title title, double maxWidth, double lineSpacing) {
         if (title.getText() == null || title.getText().length() == 0) {
             return 0;
         }
-        return SwingChart.getTextHeight(canvas.getFontMetrics(SwingUtils.convert(title.getFont())), title.getText(), maxWidth, lineSpacing);
+        return SwingChart.getTextLineHeight(canvas.getFontMetrics(SwingUtils.convert(title.getFont())), title.getText(), maxWidth, lineSpacing);
     }
 
     @Override
@@ -299,6 +305,11 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     @Override
     protected double getTextWidth(Font font, String text) {
         return canvas.getTextWidth(font, text);
+    }
+
+    @Override
+    protected double getTextLineHeight(Font font) {
+        return canvas.getTextLineHeight(font);
     }
 
     @Override

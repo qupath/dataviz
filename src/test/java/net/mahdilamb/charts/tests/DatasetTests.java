@@ -2,7 +2,9 @@ package net.mahdilamb.charts.tests;
 
 import net.mahdilamb.charts.PlotFactory;
 import net.mahdilamb.charts.series.Dataset;
-import net.mahdilamb.charts.utils.StringUtils;
+import net.mahdilamb.charts.series.DoubleSeries;
+import net.mahdilamb.charts.statistics.BinWidthEstimator;
+import net.mahdilamb.charts.statistics.StatUtils;
 import org.junit.Test;
 
 import java.io.File;
@@ -17,7 +19,6 @@ public class DatasetTests {
                         .setMarker('^')
                         .setColor("red")
         );
-
-        System.out.println(Dataset.from(new File("D:\\mahdi\\Desktop\\train.csv")));
+        System.out.println(StatUtils.histogram(BinWidthEstimator.NUMPY_AUTO, ((DoubleSeries) iris.getDoubleSeries("sepal_length")).toArray(new double[0])));
     }
 }

@@ -32,7 +32,7 @@ public class Fill {
         RADIAL
     }
 
-    private final Object fill;
+    private Object fill;
 
     /**
      * An object representing a gradient
@@ -184,6 +184,10 @@ public class Fill {
      */
     public final Color getColor() {
         return (Color) fill;
+    }
+
+    public void set(final Color color){
+        this.fill = color;
     }
 
     /**

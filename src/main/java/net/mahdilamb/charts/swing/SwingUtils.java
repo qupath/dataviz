@@ -88,15 +88,6 @@ public final class SwingUtils {
         }
     }
 
-
-    static Color convert(SwingChart.ModifiableAWTColor dest, net.mahdilamb.colormap.Color source) {
-        dest.r = source.red();
-        dest.g = source.green();
-        dest.b = source.blue();
-        dest.a = source.alpha();
-        return dest;
-    }
-
     /**
      * Convert a buffered image to a PNG byte array
      *
@@ -249,5 +240,9 @@ public final class SwingUtils {
         }
         Arrays.fill(out, j , out.length, Double.NaN);
         return out;
+    }
+
+    public static double getLineHeight(FontMetrics fontMetrics) {
+        return fontMetrics.getHeight();
     }
 }

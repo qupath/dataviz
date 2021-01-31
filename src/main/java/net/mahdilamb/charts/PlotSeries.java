@@ -1,8 +1,6 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.Marker;
-import net.mahdilamb.charts.graphics.MarkerMode;
-import net.mahdilamb.charts.graphics.MarkerShape;
+import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.plots.*;
 import net.mahdilamb.charts.utils.StringUtils;
@@ -11,6 +9,7 @@ import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.reference.sequential.Viridis;
 
 import java.util.*;
+//TODO deal with grouping and colorscale clash - alpha by iterable
 
 /**
  * Implementations of series
@@ -18,8 +17,9 @@ import java.util.*;
  * @param <P> the type of the plot
  * @param <S> the type of the series
  */
-abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBar<S>, PlotWithLegend<S> {
+abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBar<S>, PlotWithLegend<S> {
     public static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
+
 
     private enum ColorMode {
         SINGLETON,
@@ -27,14 +27,14 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
         COLORMAP
     }
 
-    boolean needsUpdating = true;
+    protected boolean needsUpdating = true;
 
     /**
      * Series display
      */
     boolean showInLegend = true, showInColorBars = false;
-    Legend.LegendItem legendItem;
-    ColorBar.ColorBarItem colorBarItem;
+    protected LegendImpl.LegendItem legendItem;
+    protected ColorBarsImpl.ColorBarItem colorBarItem;
     String name;
 
     /**
@@ -57,7 +57,8 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
 
     protected abstract void layoutData(P plot);
 
-    protected abstract Key.KeyItem getLegendItem();
+    protected abstract LegendImpl.LegendItem getLegendItem();
+    protected abstract ColorBarsImpl.ColorBarItem getColorBarItem();
 
     /**
      * Called before the series is added to a plot
@@ -140,6 +141,7 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
 
     @SuppressWarnings("unchecked")
     public S setColors(String... colorNames) {
+        faceColorArray = null;
         final List<Color> colors = prepareColorList(colorNames.length);
         for (final String string : colorNames) {
             colors.add(Color.get(string));
@@ -149,6 +151,7 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
 
     @SuppressWarnings("unchecked")
     public S setColors(Iterable<String> colorNames) {
+        faceColorArray = null;
         final List<Color> colors = prepareColorList(-1);
         for (final String string : colorNames) {
             colors.add(Color.get(string));
@@ -172,6 +175,7 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
             }
             ++size;
         }
+        faceColors = null;
         faceColorArray = new double[size];
         this.minScale = min;
         this.maxScale = max;
@@ -196,6 +200,7 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
                 max = n.doubleValue();
             }
         }
+        faceColors = null;
         faceColorArray = scalars;
         this.minScale = min;
         this.maxScale = max;
@@ -205,17 +210,16 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
     static abstract class AbstractScatter extends PlotSeries<Layouts.RectangularPlot<Scatter>, Scatter> implements Scatter {
         MarkerMode mode = MarkerMode.MARKER_ONLY;
         MarginalMode xMarginal = MarginalMode.NONE, yMarginal = MarginalMode.NONE;
-        MarkerImpl marker = new MarkerImpl(MarkerShape.POINT, 10, null, 0, null);
         Iterable<String> groups;
         Set<String> groupNames;
-        Key.KeyItem legendItem;
+        LegendImpl.LegendItem legendItem;
+        MarkerShape markerShape;
+        double markerSize = 10;
 
 
         @Override
         public Scatter setGroups(Iterable<String> groupings) {
-
             this.groups = groupings;
-
             return this;
         }
 
@@ -238,23 +242,44 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
         }
 
         @Override
+        protected ColorBarsImpl.ColorBarItem getColorBarItem() {
+            return colorBarItem;
+        }
+
+        @Override
         protected Scatter prepare() {
             //Prepare legend items
-            if (groups == null) {
-                legendItem = new Legend.LegendItem(name, marker);
+
+            if (groups == null) {//todo also check if colors are iterable as these are also groups
+                final MarkerImpl defaultMarker;
+                if (colorMode == ColorMode.SINGLETON) {
+                    defaultMarker = new MarkerImpl(markerShape, 10, faceColor, edgeSize, edgeColor);
+                } else {
+                    if (colorMode == ColorMode.COLORMAP) {
+                        defaultMarker = new MarkerImpl(markerShape, 10, Color.BLACK, edgeSize, edgeColor);
+                    } else {
+                        //go with the chart default
+                        defaultMarker = new MarkerImpl(markerShape, 10, null, edgeSize, edgeColor);
+                    }
+                }
+                legendItem = new LegendImpl.LegendItem(name, defaultMarker);
             } else {
                 groupNames = new LinkedHashSet<>();
                 for (final String s : groups) {
                     groupNames.add(s);
                 }
-                final Legend.LegendItem[] legendItems = new Legend.LegendItem[groupNames.size()];
+
+                final LegendImpl.LegendItem[] legendItems = new LegendImpl.LegendItem[groupNames.size()];
                 int i = 0;
                 for (final String g : groupNames) {
-                    legendItems[i++] = new Legend.LegendItem(g, marker);
+                    legendItems[i++] = new LegendImpl.LegendItem(g, new MarkerImpl(markerShape, 10, null, edgeSize, edgeColor));
                 }
-                legendItem = new Legend.GroupedLegendItem(name, legendItems);
+                legendItem = new LegendImpl.GroupedLegendItem(name, legendItems);
             }
             //prepare colorbar items
+            if (colorMode == ColorMode.COLORMAP) {
+                colorBarItem = new ColorBarsImpl.ColorBarItem(colormap, minScale, maxScale);
+            }
             //prepare data items
             //TODO
             return this;
@@ -270,7 +295,7 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
         }
 
         @Override
-        protected Key.KeyItem getLegendItem() {
+        protected LegendImpl.LegendItem getLegendItem() {
             return legendItem;
         }
 
@@ -300,17 +325,17 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
         public String toString() {
             //TODO
             return "Scatter series {" +
-                    "marker: " + StringUtils.snakeToTitleCase(marker.markerShape.name()) +
-                    ", markerSize: " + marker.size +
+                    "marker: " + StringUtils.snakeToTitleCase(markerShape.name()) +
+                    ", markerSize: " + markerSize +
                     '}';
         }
 
         @Override
         public Scatter setMarkerSize(double size) {
-            if (size != marker.size) {
+            if (size != markerSize) {
                 needsUpdating = true;
             }
-            marker.size = size;
+            markerSize = size;
             return this;
         }
 
@@ -321,10 +346,10 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
 
         @Override
         public Scatter setMarker(MarkerShape marker) {
-            if (marker != this.marker.markerShape) {
+            if (marker != this.markerShape) {
                 needsUpdating = true;
             }
-            this.marker.markerShape = Objects.requireNonNull(marker);
+            this.markerShape = Objects.requireNonNull(marker);
             return this;
         }
     }
@@ -483,32 +508,28 @@ abstract class PlotSeries<P extends PlotLayout<S>,S > implements PlotWithColorBa
     }
 
     static final class MarkerImpl implements Marker {
-        Color face, edge;
+        Fill face;
+        Stroke edge;
         double size, edgeWidth;
         MarkerShape markerShape;
 
         MarkerImpl(MarkerShape markerShape, double size, Color face, double edgeWidth, Color edge) {
-            this.edge = edge;
+            this.edge = new Stroke(edge, edgeWidth);
             this.edgeWidth = edgeWidth;
             this.markerShape = markerShape;
-            this.face = face;
+            this.face = new Fill(face);
             this.size = size;
         }
 
 
         @Override
-        public Color getColor() {
+        public Fill getFill() {
             return face;
         }
 
         @Override
-        public Color getEdgeColor() {
+        public Stroke getStroke() {
             return edge;
-        }
-
-        @Override
-        public double getEdgeWidth() {
-            return edgeWidth;
         }
 
         @Override

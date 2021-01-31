@@ -11,7 +11,7 @@ final class Layouts {
 
     }
 
-    abstract static class PiePlot<S > extends PlotImpl<S> implements Circular1DPlot<S> {
+    abstract static class PiePlot<S > extends PlotLayoutImpl<S> implements Circular1DPlot<S> {
         LabeledAxis axis;
 
         @Override
@@ -25,7 +25,7 @@ final class Layouts {
         }
 
         @Override
-        protected Iterable<Legend.LegendItem> getLegendItems() {
+        protected Iterable<LegendImpl.LegendItem> getLegendItems() {
             //TODO
             return null;
         }
@@ -35,7 +35,7 @@ final class Layouts {
         }
     }
 
-    abstract static class CircularPlot<S > extends PlotImpl<S> implements Circular2DPlot<S> {
+    abstract static class CircularPlot<S > extends PlotLayoutImpl<S> implements Circular2DPlot<S> {
         Axis radialAxis;
         Axis angularAxis;
 
@@ -56,7 +56,7 @@ final class Layouts {
         }
 
         @Override
-        protected Iterable<Legend.LegendItem> getLegendItems() {
+        protected Iterable<LegendImpl.LegendItem> getLegendItems() {
             //TODO
             return null;
         }
@@ -70,7 +70,7 @@ final class Layouts {
     /**
      * A plot containing multiple rectangular plots
      */
-    abstract static class GridPlot<S > extends PlotImpl<S> implements XYPlot<S> {
+    abstract static class GridPlot<S > extends PlotLayoutImpl<S> implements XYPlot<S> {
         private Axis xAxis;
         private Axis yAxis;
 
@@ -91,7 +91,7 @@ final class Layouts {
         }
 
         @Override
-        protected Iterable<Legend.LegendItem> getLegendItems() {
+        protected Iterable<LegendImpl.LegendItem> getLegendItems() {
             //TODO
             return null;
         }
@@ -105,9 +105,9 @@ final class Layouts {
     /**
      * A scatter plot that contains an extra two regions to show distribution data
      */
-    static class RectangularPlot<S> extends PlotImpl<S> implements XYMarginalPlot<S> {
+    static class RectangularPlot<S> extends PlotLayoutImpl<S> implements XYMarginalPlot<S> {
         private final Axis xAxis, yAxis;
-        PlotImpl<S> xMarginal, yMarginal;
+        PlotLayoutImpl<S> xMarginal, yMarginal;
 
         @SafeVarargs
         RectangularPlot(Axis xAxis, Axis yAxis, S... series) {
@@ -123,7 +123,7 @@ final class Layouts {
         }
 
         @Override
-        protected Iterable<Legend.LegendItem> getLegendItems() {
+        protected Iterable<LegendImpl.LegendItem> getLegendItems() {
             //TODO
             return null;
         }

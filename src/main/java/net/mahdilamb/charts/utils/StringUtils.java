@@ -31,7 +31,7 @@ public final class StringUtils {
     /**
      * Regex pattern that matches integers
      */
-    public final static String intPattern = "[+-]?(?:\\d++[Ll]?)";
+    public final static String longPattern = "[+-]?(?:\\d++[Ll]?)";
     /**
      * Regex pattern that matches true or false, case-insensitive
      */
@@ -50,9 +50,9 @@ public final class StringUtils {
      */
     public final static Pattern FLOATING_POINT_PATTERN = Pattern.compile(fpPattern);
     /**
-     * The compiled pattern for {@link #intPattern}
+     * The compiled pattern for {@link #longPattern}
      */
-    public final static Pattern INTEGER_PATTERN = Pattern.compile(intPattern);
+    public final static Pattern LONG_PATTERN = Pattern.compile(longPattern);
     /**
      * The compiled pattern for {@link #boolPattern}
      */
@@ -220,7 +220,7 @@ public final class StringUtils {
      * Convert a string into a functional operator
      *
      * @param string       the string to convert
-     * @param rhsConverter the function used to convert the right hand operand into the
+     * @param rhsConverter the function used to convert the right hand operand into the the correct type for comparison
      * @param <T>          the type of the value to use in the comparison
      * @return a predicate representation of the input string
      */
@@ -235,13 +235,14 @@ public final class StringUtils {
                 legn[3] |= c == '!';
                 legn[2] |= c == '>';
                 legn[0] |= c == '<';
-                if (j == 1 && legn[1] && (c == '<' || c == '>')) {
+
+                if ((j == 1 && legn[1] && (c == '<' || c == '>'))) {
                     throw new IllegalArgumentException("Could not parse - incorrect boolean operators");
                 }
                 ++j;
             }
         }
-        if (i == string.length()){
+        if (i == string.length()) {
             throw new IllegalArgumentException("Could not parse - no boolean operators found");
         }
         while (i < string.length()) {
@@ -263,4 +264,6 @@ public final class StringUtils {
         final T val = rhsConverter.apply(string.substring(i, j));
         return t -> toBoolean(legn[1], legn[0], legn[2], legn[3], val.compareTo(t));
     }
+
+
 }

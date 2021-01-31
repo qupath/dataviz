@@ -62,6 +62,16 @@ abstract class DatasetImpl implements Dataset {
         OfArray(final String name, final DataSeries<?>... series) {
             super(name);
             this.series = series;
+            int size = -1;
+            for (DataSeries<?> s : series) {
+                if (size == -1) {
+                    size = s.size();
+                    continue;
+                }
+                if (s.size() != size) {
+                    throw new IllegalArgumentException("series must be of equal length");
+                }
+            }
         }
 
         @Override
@@ -246,7 +256,6 @@ abstract class DatasetImpl implements Dataset {
 
     @Override
     public String toString() {
-        final StringBuilder stringBuilder = new StringBuilder();
         int[] width = new int[numSeries()];
         int rows = get(0).size();
         int halfRow = MAX_DISPLAY_ROWS >>> 1;
@@ -254,6 +263,8 @@ abstract class DatasetImpl implements Dataset {
 
         int rowStop = rows < MAX_DISPLAY_ROWS ? (rows >>> 1) : halfRow;
         int rowStart = rows < MAX_DISPLAY_ROWS ? rowStop : (rows - halfRow);
+        int idColWidth = String.valueOf(get(0).size()).length();
+        final StringBuilder stringBuilder = new StringBuilder(StringUtils.repeatCharacter(' ', idColWidth)).append(COLUMN_SEPARATOR);
 
         int colStop = numSeries() < MAX_DISPLAY_COLUMNS ? (numSeries() >>> 1) : halfCols;
         int colStart = numSeries() < MAX_DISPLAY_COLUMNS ? colStop : (numSeries() - halfCols);
@@ -262,7 +273,7 @@ abstract class DatasetImpl implements Dataset {
                 stringBuilder.append(SKIP_ROWS).append(COLUMN_SEPARATOR);
                 i = colStart;
             }
-            final String th = get(i).getName();
+            final String th = get(i).getName() == null ? (EMPTY_COLUMN_PREFIX + i) : get(i).getName();
             if (th.length() < MIN_WIDTH) {
                 stringBuilder.append(StringUtils.repeatCharacter(' ', MIN_WIDTH - th.length())).append(th);
                 width[i] = MIN_WIDTH;
@@ -283,6 +294,7 @@ abstract class DatasetImpl implements Dataset {
 
         for (int j = 0; j < rows; ++j) {
             if (j == rowStop && rowStart != rowStop) {
+                alignRight(stringBuilder, SKIP_ROWS, idColWidth).append(COLUMN_SEPARATOR);
                 for (int i = 0; i < numSeries(); ++i) {
                     if (i == colStop && colStop != colStart) {
                         stringBuilder.append(SKIP_ROWS).append(COLUMN_SEPARATOR);
@@ -293,11 +305,12 @@ abstract class DatasetImpl implements Dataset {
                 stringBuilder.delete(stringBuilder.length() - COLUMN_SEPARATOR.length(), stringBuilder.length()).append('\n');
                 j = rowStart;
             }
+            alignRight(stringBuilder, String.valueOf(j), idColWidth).append(COLUMN_SEPARATOR);
+
             for (int i = 0; i < colStop; ++i) {
                 alignRight(stringBuilder, i, j, width[i]).append(COLUMN_SEPARATOR);
             }
             if (colStart != colStop) {
-
                 stringBuilder.append(SKIP_ROWS).append(COLUMN_SEPARATOR);
             }
 

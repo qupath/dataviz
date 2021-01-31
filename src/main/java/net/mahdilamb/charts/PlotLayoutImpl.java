@@ -2,7 +2,7 @@ package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.layouts.PlotLayout;
 
-abstract class PlotImpl<S > implements PlotLayout<S> {
+abstract class PlotLayoutImpl<S > implements PlotLayout<S> {
     double minorTickSpacing, majorTickSpacing;
     boolean showMinorTicks = true, showMajorTicks = true;
 
@@ -11,7 +11,7 @@ abstract class PlotImpl<S > implements PlotLayout<S> {
     Chart<?, ?> chart;
     private final S[] series;
     @SafeVarargs
-    PlotImpl(S... series){
+    PlotLayoutImpl(S... series){
         this.series = series;
     }
 
@@ -36,7 +36,7 @@ abstract class PlotImpl<S > implements PlotLayout<S> {
 
     protected abstract void layoutPlot(double x, double y, double width, double height);
 
-    protected abstract Iterable<Legend.LegendItem> getLegendItems();
+    protected abstract Iterable<LegendImpl.LegendItem> getLegendItems();
 
     protected abstract void layoutAxes();
 

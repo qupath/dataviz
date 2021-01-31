@@ -7,7 +7,6 @@ import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.layouts.XYMarginalPlot;
-import net.mahdilamb.colormap.Colors;
 
 import javax.swing.*;
 import java.awt.*;
@@ -47,15 +46,16 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
      * @param series the series
      * @param <S>    the type of the series
      */
-    public static <S > void show(final String title, double width, double height, final S series) {
+    public static <S> void show(final String title, double width, double height, final S series) {
         final JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
-        chart(title, width, height, series).addTo(frame.getContentPane(), BorderLayout.CENTER);
+        final SwingChart<?, S> chart = chart(title, width, height, series);
+        chart.addTo(frame.getContentPane(), BorderLayout.CENTER);
         frame.setSize((int) Math.ceil(width), (int) Math.ceil(height));
         frame.setVisible(true);
         frame.setTitle(title);
-
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
     }
 
     /**
@@ -90,7 +90,7 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
      * @param lineSpacing the line spacing
      * @return the height of wrapped text
      */
-    public static double getTextHeight(final FontMetrics fontMetrics, final String text, double maxWidth, double lineSpacing) {
+    public static double getTextLineHeight(final FontMetrics fontMetrics, final String text, double maxWidth, double lineSpacing) {
         int lineCount = 0;
         int i = 0;
         int wordStart = 0;
@@ -114,11 +114,11 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     @Override
-    protected double getTextHeight(Title title, double maxWidth, double lineSpacing) {
+    protected double getTextLineHeight(Title title, double maxWidth, double lineSpacing) {
         if (title.getText() == null || title.getText().length() == 0) {
             return 0;
         }
-        return getTextHeight(canvas.getFontMetrics(SwingUtils.convert(title.getFont())), title.getText(), maxWidth, lineSpacing);
+        return getTextLineHeight(canvas.getFontMetrics(SwingUtils.convert(title.getFont())), title.getText(), maxWidth, lineSpacing);
     }
 
     @Override
@@ -130,6 +130,11 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     @Override
     protected double getTextWidth(Font font, String text) {
         return canvas.getTextWidth(font, text);
+    }
+
+    @Override
+    protected double getTextLineHeight(Font font) {
+        return canvas.getTextHeight(font);
     }
 
     @Override
@@ -179,9 +184,12 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
 
 
     private static final class ChartPane extends JPanel implements ChartCanvas<BufferedImage> {
+
+
         private static final class ModifiableBasicStroke extends BasicStroke {
             float width = 1;
 
+            @Override
             public float getLineWidth() {
                 return width;
             }
@@ -197,8 +205,6 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
         private final Ellipse2D ellipse = new Ellipse2D.Double();
         private final Line2D line = new Line2D.Double();
         private final ModifiableBasicStroke stroke = new ModifiableBasicStroke();
-        private final ModifiableAWTColor strokeColor = new ModifiableAWTColor(0, 0, 0, 1);
-        private final ModifiableAWTColor fillColor = new ModifiableAWTColor(0, 0, 0, 1);
         private final Path2D path = new Path2D.Double();
         private final AffineTransform affineTransform = new AffineTransform();
         boolean usingFill = true;
@@ -222,13 +228,15 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
 
         private Queue<Consumer<Graphics2D>> switchToFilled() {
             queue.add(g -> {
+
                 if (!usingFill) {
                     if (currentFill.isGradient()) {
                         g.setPaint(convert(currentFill.getGradient()));
                     } else {
-                        g.setColor(convert(fillColor, currentFill.getColor()));
-                        g.setPaint(fillColor);
+                        g.setColor(convert(currentFill.getColor()));
+                        g.setPaint(g.getColor());
                     }
+
                     usingFill = true;
                 }
             });
@@ -240,7 +248,7 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
                 if (usingFill) {
                     this.stroke.width = (float) currentStroke.getWidth();
                     g.setStroke(this.stroke);
-                    g.setColor(convert(strokeColor, this.currentStroke.getColor()));
+                    g.setColor(convert(this.currentStroke.getColor()));
                     usingFill = false;
                 }
             });
@@ -311,8 +319,8 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
                 if (currentFill.isGradient()) {
                     g.setPaint(convert(currentFill.getGradient()));
                 } else {
-                    g.setColor(convert(fillColor, currentFill.getColor()));
-                    g.setPaint(fillColor);
+                    g.setColor(convert(currentFill.getColor()));
+                    g.setPaint(g.getColor());
                 }
                 usingFill = true;
             });
@@ -324,7 +332,7 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
                 this.currentStroke = stroke;
                 this.stroke.width = (float) currentStroke.getWidth();
                 g.setStroke(this.stroke);
-                g.setColor(convert(strokeColor, this.currentStroke.getColor()));
+                g.setColor(convert(this.currentStroke.getColor()));
                 usingFill = false;
             });
         }
@@ -340,7 +348,7 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
             queue.add(g -> {
                 g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 if (chart.getBackgroundColor() != null) {
-                    g.setColor(convert(fillColor, chart.getBackgroundColor()));
+                    g.setColor(convert(chart.getBackgroundColor()));
                 }
                 g.fillRect(0, 0, getWidth(), getHeight());
                 g.setColor(Color.BLACK);
@@ -471,80 +479,10 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
             return SwingUtils.getTextWidth(getFontMetrics(SwingUtils.convert(font)), text);
 
         }
-    }
 
-    static final class ModifiableAWTColor extends Color {
-        float r, g, b, a;
+        public double getTextHeight(Font font) {
+            return SwingUtils.getLineHeight(getFontMetrics(SwingUtils.convert(font)));
 
-        @Override
-        public int getRed() {
-            return Colors.floatTo8Bit(r);
-        }
-
-        @Override
-        public int getGreen() {
-            return Colors.floatTo8Bit(g);
-        }
-
-        @Override
-        public int getBlue() {
-            return Colors.floatTo8Bit(b);
-        }
-
-        @Override
-        public int getAlpha() {
-            return Colors.floatTo8Bit(a);
-        }
-
-        @Override
-        public int getRGB() {
-            return Colors.RGBAToInteger(r, g, b, a);
-        }
-
-        @Override
-        public float[] getRGBComponents(float[] compArray) {
-            compArray = compArray == null ? new float[4] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            compArray[3] = a;
-            return compArray;
-        }
-
-        @Override
-        public float[] getRGBColorComponents(float[] compArray) {
-            compArray = compArray == null ? new float[3] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            return compArray;
-        }
-
-        @Override
-        public float[] getComponents(float[] compArray) {
-            compArray = compArray == null ? new float[4] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            compArray[3] = a;
-            return compArray;
-        }
-
-        @Override
-        public float[] getColorComponents(float[] compArray) {
-            compArray = compArray == null ? new float[3] : compArray;
-            compArray[0] = r;
-            compArray[1] = g;
-            compArray[2] = b;
-            return compArray;
-        }
-
-        ModifiableAWTColor(float r, float g, float b, float a) {
-            super(r, g, b, a);
-            this.r = r;
-            this.g = g;
-            this.b = b;
-            this.a = a;
         }
     }
 

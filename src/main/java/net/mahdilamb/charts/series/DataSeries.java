@@ -52,7 +52,6 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
     }
 
 
-
     /**
      * @return a version of this series as a string series
      */
@@ -217,6 +216,17 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      */
     static NumericSeries<Double> of(final String name, double... data) {
         return new DataSeriesImpl.OfDoubleArray(name, data);
+    }
+
+    /**
+     * Factory method to create a series from long data
+     *
+     * @param name the name of the series
+     * @param data the data to use in the series
+     * @return the default series wrapping the data
+     */
+    static NumericSeries<Long> of(final String name, long... data) {
+        return new DataSeriesImpl.OfNonNaNLongArray(name, data);
     }
 
     /**

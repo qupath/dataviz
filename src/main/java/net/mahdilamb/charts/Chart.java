@@ -26,8 +26,8 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
 
     final Title title;
     P plot;
-    final Legend legend;
-    final ColorBar colorBar;
+    final LegendImpl legend;
+    final ColorBarsImpl colorBar;
     double width, height;
 
     protected Chart(String title, double width, double height, P plot) {
@@ -35,8 +35,8 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
         this.plot = plot;
         this.width = width;
         this.height = height;
-        this.legend = new Legend(this);
-        this.colorBar = new ColorBar(this);
+        this.legend = new LegendImpl(this);
+        this.colorBar = new ColorBarsImpl(this);
     }
 
 
@@ -217,29 +217,26 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
         return ((ThemeImpl) theme);
     }
 
-    private double drawLineByLine(ChartCanvas<?> canvas, Title title, double x, double y) {
+    private double drawLineByLine(ChartCanvas<?> canvas, Title title, double x, double y, double lineSpacing) {
         int i = 0;
         int lineI = 0;
         int wordStart = 0;
-        double lineOffset;
         while (i < title.text.length()) {
-
             char c = title.text.charAt(i++);
             if (c == '\n') {
-                lineOffset = title.lineOffsets[lineI];
-                if (Double.isNaN(lineOffset)) {
+                double lineOffset = title.lineOffsets[lineI];
+                if (Double.isNaN(lineOffset)) {//NaN is sentinel
                     break;
                 }
                 final String line = title.text.substring(wordStart, i);
-                canvas.fillText(line, (x) - lineOffset, y + title.baselineOffset + (title.lineHeight * lineI++));
+                canvas.fillText(line, x - lineOffset, y + title.baselineOffset + (lineSpacing * title.lineHeight * lineI++));
                 wordStart = i;
-
             }
         }
         if (wordStart < title.text.length()) {
-            canvas.fillText(title.text.substring(wordStart), (x) - title.lineOffsets[lineI], y + title.baselineOffset + (title.lineHeight * lineI++));
+            canvas.fillText(title.text.substring(wordStart), x - title.lineOffsets[lineI], y + title.baselineOffset + (lineSpacing * title.lineHeight * lineI++));
         }
-        return lineI * title.lineHeight;
+        return lineI * title.lineHeight * lineSpacing;
     }
 
 
@@ -250,33 +247,67 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      */
     final void layout(ChartCanvas<?> canvas) {
         canvas.reset();
-
-        double titleHeight = 0;
+        double minY = 0, minX = 0, maxX = width, maxY = height;
+        boolean colorBarDrawn = !colorBar.visible, legendDrawn = !colorBar.visible;
         //layout title
         if (title.isVisible()) {
-            //TODO padding,
+            minY += title.paddingY;
+            double titleWidth = width - (title.paddingX * 2);
+            canvas.setFill(Fill.BLACK_FILL);//Todo fill optional color
             canvas.setFont(title.getFont());
-            title.setMetrics(t -> t.setMetrics(getTextWidth(t.getFont(), t.getText()), getTextHeight(t, width, 1), getLineHeight(t), getTextBaselineOffset(t.getFont()), getTextLineOffsets(t, t.width)));
-            titleHeight = drawLineByLine(canvas, title, width * .5, 0);
+            title.setMetrics(t -> t.setMetrics(getTextWidth(t.getFont(), t.getText()), getTextLineHeight(t, titleWidth, t.lineHeight), getLineHeight(t), getTextBaselineOffset(t.getFont()), getTextLineOffsets(t, t.width)));
+            minY = drawLineByLine(canvas, title, titleWidth * .5, minY, title.lineSpacing);
+            minY += title.paddingY + title.baselineOffset - title.lineHeight;
         }
 
         //layout "keys"
-        boolean usingTop = isUsing(legend, colorBar, Side.TOP),
-                usingLeft = isUsing(legend, colorBar, Side.LEFT),
-                usingBottom = isUsing(legend, colorBar, Side.BOTTOM),
-                usingRight = isUsing(legend, colorBar, Side.RIGHT);
-        if (usingTop) {
-            if (legend.side == Side.TOP) {
-                 legend.layout(canvas, 0, titleHeight, width, USE_PREFERRED_HEIGHT);
+        if (occupies(legend, colorBar, Side.TOP)) {
+
+            if (!legendDrawn && legend.isVisible() && legend.side == Side.TOP) {
+                legend.layout(canvas, 0, minY, width, USE_PREFERRED_HEIGHT);
+                //todo update yoffset
             }
+            if (!colorBarDrawn && colorBar.isVisible() && colorBar.side == Side.TOP) {
+                colorBar.layout(canvas, 0, minY, width, USE_PREFERRED_HEIGHT);
+                //todo update yoffset
+            }
+        } else if (occupies(legend, colorBar, Side.LEFT)) {
+
+        } else if (occupies(legend, colorBar, Side.RIGHT)) {
+            if (!legendDrawn && legend.isVisible() && legend.side == Side.RIGHT) {
+                legend.layout(canvas, 0, minY, maxX, height - minY);
+                maxX -= legend.renderWidth;
+            }
+            if (!colorBarDrawn && colorBar.isVisible() && colorBar.side == Side.RIGHT) {
+                colorBar.layout(canvas, 0, minY, maxX, height - minY);
+                //todo update yoffset
+                maxX-=colorBar.renderWidth;
+            }
+        } else {
+            //BOTTOM
         }
+
         //layout plot
+
+        //layout floating keys
+        if (!colorBarDrawn || !legendDrawn) {
+
+        }
+
         canvas.done();
     }
 
-    private static boolean isUsing(final Key a, final Key b, final Side q) {
-        boolean aSide = !a.isFloating() && a.isVisible() && a.side == q;
-        boolean bSide = !b.isFloating() && b.isVisible() && b.side == q;
+    /**
+     * Test to see if the different regions are occupied
+     *
+     * @param a key a
+     * @param b key b
+     * @param q the side to test on
+     * @return whether that side is occupied
+     */
+    private static boolean occupies(final KeyImpl<?> a, final KeyImpl<?> b, final Side q) {
+        boolean aSide = a.isVisible() && !a.isFloating && a.side == q;
+        boolean bSide = b.isVisible() && !b.isFloating && b.side == q;
         return aSide | bSide;
     }
 
@@ -302,7 +333,7 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      */
     protected abstract ChartCanvas<?> getCanvas();
 
-    protected abstract double getTextHeight(final Title title, double maxWidth, double lineSpacing);
+    protected abstract double getTextLineHeight(final Title title, double maxWidth, double lineSpacing);
 
     /**
      * Get the baseline offset of a font
@@ -318,6 +349,12 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      * @return the width of the text with the given font
      */
     protected abstract double getTextWidth(final Font font, String text);
+
+    /**
+     * @param font the font
+     * @return the height of the text with the given font
+     */
+    protected abstract double getTextLineHeight(final Font font);
 
     /**
      * @param image the image to get the width of
@@ -352,7 +389,7 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
 
 
     @SuppressWarnings("unchecked")
-    protected static <S > XYMarginalPlot<S> toPlot(S series, double xMin, double xMax, double yMin, double yMax) {
+    protected static <S> XYMarginalPlot<S> toPlot(S series, double xMin, double xMax, double yMin, double yMax) {
         return new Layouts.RectangularPlot<>(new LinearAxis(xMin, xMax), new LinearAxis(yMin, yMax), ((PlotSeries<XYMarginalPlot<S>, S>) series).prepare());
 
     }

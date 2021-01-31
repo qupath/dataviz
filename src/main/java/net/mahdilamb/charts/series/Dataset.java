@@ -235,31 +235,6 @@ public interface Dataset extends Iterable<DataSeries<?>> {
     }
 
     /**
-     * Factory method to create a series from double data
-     *
-     * @param name the name of the series
-     * @param data the data to use in the series
-     * @return the default series wrapping the data
-     */
-    static NumericSeries<Double> of(final String name, double... data) {
-        return new DataSeriesImpl.OfDoubleArray(name, data);
-    }
-
-    /**
-     * Factory method to create a series from a "collection" of objects.
-     * <p>
-     * This enables the generation of a series from a collection of objects without having to implement the interface
-     *
-     * @param name       the name of the series
-     * @param size       the size of the series
-     * @param dataGetter a function which gets a double element at a position in the series
-     * @return a series from a collection of objects
-     */
-    static NumericSeries<Double> of(final String name, int size, IntToDoubleFunction dataGetter) {
-        return new DataSeriesImpl.OfFunctionalDouble(name, size, dataGetter);
-    }
-
-    /**
      * Factory method to create a dataset from an array of numeric series
      *
      * @param name   the name of the dataset

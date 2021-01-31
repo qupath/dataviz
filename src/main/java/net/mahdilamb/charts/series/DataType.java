@@ -1,6 +1,5 @@
 package net.mahdilamb.charts.series;
 
-import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import static net.mahdilamb.charts.utils.StringUtils.*;
@@ -16,7 +15,7 @@ public enum DataType {
      * @apiNote Series that contain longs should also contain a {@code #isNaN(int index)} method to test whether it has
      * been zeroed during parse.
      */
-    LONG(Long.class, 10, INTEGER_PATTERN),
+    LONG(Long.class, 10, LONG_PATTERN),
     /**
      * A 64-bit float. If a value cannot be parsed, it will be {@code NaN}.
      */
@@ -124,7 +123,7 @@ public enum DataType {
      * @return the value as a long. Or 0 if not parsable.
      */
     public static long toLong(String value) {
-        if (INTEGER_PATTERN.matcher(value).matches()) {
+        if (LONG_PATTERN.matcher(value).matches()) {
             try {
                 return java.lang.Long.parseLong(value);
             } catch (NumberFormatException ignored) {

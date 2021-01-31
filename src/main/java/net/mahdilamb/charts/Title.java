@@ -8,10 +8,9 @@ import java.util.function.Consumer;
 /**
  * A title is text that takes up space in a layout
  */
-//TODO line spacing
 //TODO auto-wrapping
 public class Title {
-    double paddingX = 0, paddingY = 2;
+    double paddingX = 0, paddingY = 5;
     boolean isVisible = true;
 
     Alignment alignment;
@@ -24,6 +23,7 @@ public class Title {
     double baselineOffset;
     double lineHeight;
     double[] lineOffsets;
+    double lineSpacing = 1;
 
     /**
      * Create a title with the following details

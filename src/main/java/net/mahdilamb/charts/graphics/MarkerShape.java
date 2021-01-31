@@ -12,6 +12,7 @@ public enum MarkerShape {
      * A pixel marker '.'
      */
     POINT('.'),
+    PIXEL(','),
     /**
      * Circle marker 'o'
      */
@@ -35,7 +36,11 @@ public enum MarkerShape {
     /**
      * Hexagonal marker 'h'
      */
-    HEXAGON('h'),
+    HEXAGON1('h'),
+    /**
+     * Hexagonal marker 'h'
+     */
+    HEXAGON2('H'),
     /**
      * Diamond marker. 'D'
      */
