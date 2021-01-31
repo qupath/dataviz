@@ -5,7 +5,7 @@ import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGFile;
 import net.mahdilamb.charts.layouts.PlotLayout;
-import net.mahdilamb.charts.layouts.XYMarginalPlot;
+import net.mahdilamb.charts.layouts.XYPlot;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
@@ -15,7 +15,8 @@ import java.io.IOException;
 import java.util.Iterator;
 
 public abstract class Chart<P extends PlotLayout<S>, S> {
-
+    protected static double DEFAULT_WIDTH = 800;
+    protected static double DEFAULT_HEIGHT = 640;
     /**
      * The default chart theme
      */
@@ -25,12 +26,12 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     Iterator<Float> colormapIt = theme.getDefaultColormap().iterator();
 
     final Title title;
-    P plot;
+    PlotLayoutImpl<S> plot;
     final LegendImpl legend;
     final ColorBarsImpl colorBar;
     double width, height;
 
-    protected Chart(String title, double width, double height, P plot) {
+    protected Chart(String title, double width, double height, PlotLayoutImpl<S> plot) {
         this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()), Alignment.CENTER);
         this.plot = plot;
         this.width = width;
@@ -54,7 +55,7 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      */
     public final void setTitle(String text) {
         this.title.setTitle(text);
-        layout();
+        requestLayout();
     }
 
     /**
@@ -74,8 +75,9 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     /**
      * @return the plot area of the chart
      */
+    @SuppressWarnings("unchecked")
     public final P getPlot() {
-        return plot;
+        return (P) plot;
     }
 
     /**
@@ -194,7 +196,7 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     public final void setBackgroundColor(Color color) {
         getTheme().background = color;
         backgroundChanged();
-        layout();
+        requestLayout();
     }
 
     /**
@@ -255,9 +257,9 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
             double titleWidth = width - (title.paddingX * 2);
             canvas.setFill(Fill.BLACK_FILL);//Todo fill optional color
             canvas.setFont(title.getFont());
-            title.setMetrics(t -> t.setMetrics(getTextWidth(t.getFont(), t.getText()), getTextLineHeight(t, titleWidth, t.lineHeight), getLineHeight(t), getTextBaselineOffset(t.getFont()), getTextLineOffsets(t, t.width)));
-            minY = drawLineByLine(canvas, title, titleWidth * .5, minY, title.lineSpacing);
-            minY += title.paddingY + title.baselineOffset - title.lineHeight;
+            title.setMetrics(t -> t.setMetrics(getTextWidth(t.getFont(), t.getText()), getTextLineHeight(t, titleWidth, t.lineHeight), getTextLineHeight(t), getTextBaselineOffset(t.getFont()), getTextLineOffsets(t, t.width)));
+            minY += drawLineByLine(canvas, title, titleWidth * .5, minY, title.lineSpacing);
+            minY += title.paddingY;
         }
 
         //layout "keys"
@@ -281,14 +283,14 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
             if (!colorBarDrawn && colorBar.isVisible() && colorBar.side == Side.RIGHT) {
                 colorBar.layout(canvas, 0, minY, maxX, height - minY);
                 //todo update yoffset
-                maxX-=colorBar.renderWidth;
+                maxX -= colorBar.renderWidth;
             }
         } else {
             //BOTTOM
         }
 
         //layout plot
-
+        plot.layout(this, canvas, minX, minY, maxX, maxY);
         //layout floating keys
         if (!colorBarDrawn || !legendDrawn) {
 
@@ -317,14 +319,14 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      * @param title the text
      * @return the height of a line of the given texty
      */
-    protected abstract double getLineHeight(Title title);
+    protected abstract double getTextLineHeight(Title title);
 
     protected abstract double[] getTextLineOffsets(Title title, double maxWidth);
 
     /**
      * Layout the chart locally
      */
-    protected final void layout() {
+    protected final void requestLayout() {
         layout(getCanvas());
     }
 
@@ -387,10 +389,28 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     protected static final double USE_PREFERRED_HEIGHT = -1;
     protected static final double USE_PREFERRED_WIDTH = -1;
 
+    protected static void assignToChart(Chart<?, ?> chart, ChartComponent a) {
+        a.chart = chart;
+    }
+
+    protected static void assignToChart(Chart<?, ?> chart, ChartComponent xAxis, ChartComponent yAxis) {
+        assignToChart(chart, xAxis);
+        assignToChart(chart, yAxis);
+    }
 
     @SuppressWarnings("unchecked")
-    protected static <S> XYMarginalPlot<S> toPlot(S series, double xMin, double xMax, double yMin, double yMax) {
-        return new Layouts.RectangularPlot<>(new LinearAxis(xMin, xMax), new LinearAxis(yMin, yMax), ((PlotSeries<XYMarginalPlot<S>, S>) series).prepare());
+    protected static <P extends XYPlot<S>, S> P toPlot(final String xAxisLabel, double xMin, double xMax, final String yAxisLabel, double yMin, double yMax, S series) {
+        final Axis xAxis = new LinearAxis(xAxisLabel, xMin, xMax);
+        final Axis yAxis = new LinearAxis(yAxisLabel, yMin, yMax);
+        return (P) new PlotLayoutImpl.XYPlotImpl<>(xAxis, yAxis, ((PlotSeries<S>) series).prepare(xAxis, yAxis));
 
     }
+/*
+    TODO
+    @SuppressWarnings("unchecked")
+    protected static <P extends PlotLayoutImpl.XYMarginal<S>, S> P toPlot(double xMin, double xMax, double yMin, double yMax, MarginalMode xMarginal, MarginalMode yMarginal, S series) {
+        return (P) new PlotLayoutImpl.XYMarginal<>(new LinearAxis(xMin, xMax), new LinearAxis(yMin, yMax), ((PlotSeries<S>) series).prepare());
+
+    }
+*/
 }

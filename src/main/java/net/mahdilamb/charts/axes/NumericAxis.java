@@ -7,20 +7,24 @@ import net.mahdilamb.charts.Axis;
  * A numeric axis
  */
 public abstract class NumericAxis extends Axis {
-    protected NumericAxis(double min, double max) {
-        super(min, max);
+    protected NumericAxis(final String title, double min, double max) {
+        super(title, min, max);
     }
 
     /**
      * @return the number of decimal points to show
      */
-    protected double getDecimalFormat() {
+    protected int getDecimalFormat() {
         return 2;
     }
 
     @Override
     protected String getLabel(double val) {
-        return String.format("%" + getDecimalFormat() + "f", val);
+        return String.format("%." + getDecimalFormat() + "f", val);
     }
 
+    public void setMinorTickSpacing(double minorTickSpacing) {
+        this.minorTickSpacing = minorTickSpacing;
+        requestLayout();
+    }
 }

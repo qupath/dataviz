@@ -1,12 +1,18 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.charts.layouts.PlotLayout;
+import net.mahdilamb.charts.layouts.XYPlot;
 import net.mahdilamb.charts.plots.*;
+import net.mahdilamb.charts.series.Dataset;
+import net.mahdilamb.charts.series.DoubleSeries;
+import net.mahdilamb.charts.statistics.StatUtils;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.reference.sequential.Viridis;
+import net.mahdilamb.geom2d.trees.BulkLoader;
+import net.mahdilamb.geom2d.trees.PointNode;
+import net.mahdilamb.geom2d.trees.RTree;
 
 import java.util.*;
 //TODO deal with grouping and colorscale clash - alpha by iterable
@@ -14,10 +20,12 @@ import java.util.*;
 /**
  * Implementations of series
  *
- * @param <P> the type of the plot
  * @param <S> the type of the series
  */
-abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBar<S>, PlotWithLegend<S> {
+//TODO hide constructor
+public abstract class PlotSeries<S> extends ChartComponent implements PlotWithColorBar<S>, PlotWithLegend<S> {
+
+
     public static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
 
 
@@ -55,17 +63,36 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
     double[] faceColorArray;
     double minScale, maxScale;
 
-    protected abstract void layoutData(P plot);
-
     protected abstract LegendImpl.LegendItem getLegendItem();
+
     protected abstract ColorBarsImpl.ColorBarItem getColorBarItem();
 
     /**
      * Called before the series is added to a plot
      *
+     * @param a the first axis
+     * @param b the second axis (may be {@code null})
      * @return the series
      */
-    protected abstract S prepare();
+    protected abstract S prepare(Axis a, Axis b);
+
+    /**
+     * Called before the series is added to a plot. Shortcut for 1 axis plots
+     *
+     * @param a the axis
+     * @return this series
+     */
+    protected S prepare(Axis a) {
+        return prepare(a, null);
+    }
+
+    static void checkAxis(Axis axis) {
+        if (axis.lowerBound > axis.upperBound) {
+            double t = axis.upperBound;
+            axis.upperBound = axis.lowerBound;
+            axis.lowerBound = t;
+        }
+    }
 
     @SuppressWarnings("unchecked")
     public S setName(String name) {
@@ -207,15 +234,51 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
         return (S) this;
     }
 
-    static abstract class AbstractScatter extends PlotSeries<Layouts.RectangularPlot<Scatter>, Scatter> implements Scatter {
+    static class ScatterImpl extends PlotSeries<Scatter> implements Scatter {
+        static final class ScatterPoint extends PointNode<MarkerImpl> {
+
+            ScatterPoint(double x, double y, MarkerImpl data) {
+                super(x, y, data);
+            }
+        }
+
         MarkerMode mode = MarkerMode.MARKER_ONLY;
-        MarginalMode xMarginal = MarginalMode.NONE, yMarginal = MarginalMode.NONE;
         Iterable<String> groups;
         Set<String> groupNames;
         LegendImpl.LegendItem legendItem;
         MarkerShape markerShape;
         double markerSize = 10;
+        private final double[] x;
+        private final double[] y;
+        boolean prepared = false;
 
+        private final RTree<MarkerImpl> points = new RTree<>();
+        private ScatterPoint[] scatterPoints;
+
+        ScatterImpl(double[] x, double[] y) {
+            this.x = x;
+            this.y = y;
+        }
+
+        ScatterImpl(Iterable<? extends Number> x, Iterable<? extends Number> y, int numPoints) {
+            this.x = new double[numPoints];
+            this.y = new double[numPoints];
+            final Iterator<? extends Number> xIterator = x.iterator();
+            final Iterator<? extends Number> yIterator = y.iterator();
+            int i = 0;
+            while (i < numPoints && xIterator.hasNext() && yIterator.hasNext()) {
+                Number xi = xIterator.next();
+                Number yi = yIterator.next();
+                this.x[i] = xi == null ? Double.NaN : xi.doubleValue();
+                this.y[i++] = yi == null ? Double.NaN : yi.doubleValue();
+            }
+        }
+
+        ScatterImpl(final Dataset dataset, final String x, final String y) {
+            this.x = ((DoubleSeries) dataset.getDoubleSeries(x)).toArray(new double[dataset.get(0).size()]);
+            this.y = ((DoubleSeries) dataset.getDoubleSeries(y)).toArray(new double[dataset.get(0).size()]);
+
+        }
 
         @Override
         public Scatter setGroups(Iterable<String> groupings) {
@@ -223,23 +286,6 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
             return this;
         }
 
-        @Override
-        public Scatter setXMarginal(MarginalMode marginal) {
-            if (this.xMarginal != marginal) {
-                needsUpdating = true;
-            }
-            this.xMarginal = marginal;
-            return this;
-        }
-
-        @Override
-        public Scatter setYMarginal(MarginalMode marginal) {
-            if (this.yMarginal != marginal) {
-                needsUpdating = true;
-            }
-            this.yMarginal = marginal;
-            return this;
-        }
 
         @Override
         protected ColorBarsImpl.ColorBarItem getColorBarItem() {
@@ -247,7 +293,34 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
         }
 
         @Override
-        protected Scatter prepare() {
+        protected Scatter prepare(final Axis xAxis, final Axis yAxis) {
+            if (prepared) {//todo deal with needs updating clash
+                System.err.println("This series has already been build");
+                return this;
+            }
+            //TODO if finite, then expand the x axis - there may be multiple series
+            //check axes are correct
+            if (!Double.isFinite(xAxis.lowerBound)) {
+                xAxis.lowerBound = StatUtils.min(x);
+            }
+            if (!Double.isFinite(xAxis.upperBound)) {
+                xAxis.upperBound = StatUtils.max(x);
+            }
+            if (!Double.isFinite(yAxis.lowerBound)) {
+                yAxis.lowerBound = StatUtils.min(y);
+            }
+            if (!Double.isFinite(yAxis.upperBound)) {
+                yAxis.upperBound = StatUtils.max(y);
+            }
+            if (xAxis.lowerBound == xAxis.upperBound) {
+                xAxis.upperBound += 1;
+            }
+            if (yAxis.lowerBound == yAxis.upperBound) {
+                yAxis.upperBound += 1;
+            }
+            checkAxis(xAxis);
+            checkAxis(yAxis);
+
             //Prepare legend items
 
             if (groups == null) {//todo also check if colors are iterable as these are also groups
@@ -281,7 +354,17 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
                 colorBarItem = new ColorBarsImpl.ColorBarItem(colormap, minScale, maxScale);
             }
             //prepare data items
-            //TODO
+            scatterPoints = new ScatterPoint[x.length];
+            //TODO deal with grouping and colors modes
+
+            double colorMin = StatUtils.min(faceColorArray);
+            double colorMax = StatUtils.max(faceColorArray);
+            double range = colorMax - colorMin;
+            for (int i = 0; i < x.length; ++i) {
+                scatterPoints[i] = new ScatterPoint(x[i], y[i], new MarkerImpl(markerShape, markerSize, colormap.get((faceColorArray[i] - colorMin) / range), edgeSize, edgeColor));
+            }
+            points.putAll(BulkLoader.OVERLAP_MINIMIZING_TOPDOWN, scatterPoints);
+            prepared = true;
             return this;
         }
 
@@ -299,27 +382,6 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
             return legendItem;
         }
 
-        static final class FromArray extends AbstractScatter {
-            private final double[] x;
-            private final double[] y;
-
-            FromArray(double[] x, double[] y) {
-                this.x = x;
-                this.y = y;
-            }
-
-
-        }
-
-        static final class FromIterable extends AbstractScatter {
-            private final Iterable<? extends Number> x;
-            private final Iterable<? extends Number> y;
-
-            FromIterable(Iterable<? extends Number> x, Iterable<? extends Number> y) {
-                this.x = Objects.requireNonNull(x);
-                this.y = Objects.requireNonNull(y);
-            }
-        }
 
         @Override
         public String toString() {
@@ -340,11 +402,6 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
         }
 
         @Override
-        protected void layoutData(Layouts.RectangularPlot<Scatter> plot) {
-            //TODO
-        }
-
-        @Override
         public Scatter setMarker(MarkerShape marker) {
             if (marker != this.markerShape) {
                 needsUpdating = true;
@@ -352,159 +409,114 @@ abstract class PlotSeries<P extends PlotLayout<S>, S> implements PlotWithColorBa
             this.markerShape = Objects.requireNonNull(marker);
             return this;
         }
-    }
-
-    static abstract class BarImpl extends PlotSeries<Layouts.RectangularPlot<Bar>, Bar> {
-
 
         @Override
-        protected void layoutData(Layouts.RectangularPlot<Bar> plot) {
-            //TODO
+        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+            if (chart.getPlot() instanceof XYPlot) {
+                @SuppressWarnings("unchecked") final Axis xAxis = ((XYPlot<Scatter>) chart.getPlot()).getXAxis();
+                @SuppressWarnings("unchecked") final Axis yAxis = ((XYPlot<Scatter>) chart.getPlot()).getYAxis();
+                double miX = xAxis.getLowerBound() - markerSize / xAxis.scale;
+                double maX = xAxis.getUpperBound() + markerSize / xAxis.scale;
+                double miY = yAxis.getLowerBound() - markerSize / yAxis.scale;
+                double maY = yAxis.getUpperBound() + markerSize / yAxis.scale;
+                points.traverse(
+                        n ->
+                                n.intersects(miX, miY, maX, maY),
+                        n -> {
+                            if (n.isContainedIn(miX, miY, maX, maY)) {
+                                Markers.draw(canvas, xAxis.boundsX + (n.getMidX() - xAxis.getLowerBound()) * xAxis.scale, yAxis.boundsY + yAxis.boundsHeight - (n.getMidY() - yAxis.getLowerBound()) * yAxis.scale, n.get());
+                            }
+                            return false;
+                        }
+                );
+
+
+            }
         }
     }
 
-    static abstract class ViolinImpl extends PlotSeries<Layouts.RectangularPlot<Violin>, Violin> {
+    static abstract class BarImpl extends PlotSeries<Bar> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Violin> plot) {
-            //TODO
-        }
     }
 
-    static abstract class RugImpl extends PlotSeries<Layouts.RectangularPlot<Rug>, Rug> {
+    static abstract class ViolinImpl extends PlotSeries<Violin> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Rug> plot) {
-            //TODO
-        }
     }
 
-    static abstract class AreaImpl extends PlotSeries<Layouts.RectangularPlot<Area>, Area> {
+    static abstract class RugImpl extends PlotSeries<Rug> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Area> plot) {
-            //TODO
-        }
     }
 
-    static abstract class BoxImpl extends PlotSeries<Layouts.RectangularPlot<BoxAndWhisker>, BoxAndWhisker> {
+    static abstract class AreaImpl extends PlotSeries<Area> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<BoxAndWhisker> plot) {
-            //TODO
-        }
     }
 
-    static abstract class ContourImpl extends PlotSeries<Layouts.RectangularPlot<Contour>, Contour> {
+    static abstract class BoxImpl extends PlotSeries<BoxAndWhisker> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Contour> plot) {
-            //TODO
-        }
     }
 
-    static abstract class DendrogramImpl extends PlotSeries<Layouts.RectangularPlot<Dendrogram>, Dendrogram> {
+    static abstract class ContourImpl extends PlotSeries<Contour> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Dendrogram> plot) {
-            //TODO
-        }
     }
 
-    static abstract class DensityImpl extends PlotSeries<Layouts.RectangularPlot<Density>, Density> {
+    static abstract class DendrogramImpl extends PlotSeries<Dendrogram> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Density> plot) {
-            //TODO
-        }
     }
 
-    static abstract class KDEImpl extends PlotSeries<Layouts.RectangularPlot<KDE>, KDE> {
+    static abstract class DensityImpl extends PlotSeries<Density> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<KDE> plot) {
-            //TODO
-        }
     }
 
-    static abstract class DotImpl extends PlotSeries<Layouts.RectangularPlot<Dot>, Dot> {
+    static abstract class KDEImpl extends PlotSeries<KDE> {
 
-
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Dot> plot) {
-            //TODO
-        }
     }
 
-    static abstract class HeatmapImpl extends PlotSeries<Layouts.RectangularPlot<Heatmap>, Heatmap> {
+    static abstract class DotImpl extends PlotSeries<Dot> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Heatmap> plot) {
-            //TODO
-        }
     }
 
-    static abstract class Histogram2DImpl extends PlotSeries<Layouts.RectangularPlot<Histogram2D>, Histogram2D> {
+    static abstract class HeatmapImpl extends PlotSeries<Heatmap> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Histogram2D> plot) {
-            //TODO
-        }
     }
 
-    static abstract class HistogramImpl extends PlotSeries<Layouts.RectangularPlot<Histogram>, Histogram> {
+    static abstract class Histogram2DImpl extends PlotSeries<Histogram2D> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Histogram> plot) {
-            //TODO
-        }
     }
 
-    static abstract class LineImpl extends PlotSeries<Layouts.RectangularPlot<Line>, Line> {
+    static abstract class HistogramImpl extends PlotSeries<Histogram> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<Line> plot) {
-            //TODO
-        }
     }
 
-    static abstract class TableImpl extends PlotSeries<Layouts.RectangularPlot<TableColumn>, TableColumn> {
+    static abstract class LineImpl extends PlotSeries<Line> {
 
 
-        @Override
-        protected void layoutData(Layouts.RectangularPlot<TableColumn> plot) {
-            //TODO
-        }
     }
 
-    static abstract class PolarImpl extends PlotSeries<Layouts.CircularPlot<Polar>, Polar> {
+    static abstract class TableImpl extends PlotSeries<TableColumn> {
 
 
-        @Override
-        protected void layoutData(Layouts.CircularPlot<Polar> plot) {
-            //TODO
-        }
     }
 
-    static abstract class PieImpl extends PlotSeries<Layouts.PiePlot<Pie>, Pie> {
+    static abstract class PolarImpl extends PlotSeries<Polar> {
 
 
-        @Override
-        protected void layoutData(Layouts.PiePlot<Pie> plot) {
-            //TODO
-        }
+    }
+
+    static abstract class PieImpl extends PlotSeries<net.mahdilamb.charts.plots.Pie> {
+
+
     }
 
     static final class MarkerImpl implements Marker {

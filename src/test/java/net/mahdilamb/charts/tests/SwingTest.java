@@ -1,5 +1,6 @@
 package net.mahdilamb.charts.tests;
 
+import net.mahdilamb.charts.axes.NumericAxis;
 import net.mahdilamb.charts.series.Dataset;
 
 import java.io.File;
@@ -12,14 +13,17 @@ public class SwingTest {
     public static void main(String[] args) {
         final File source = new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("iris.csv")).getFile());
         final Dataset iris = Dataset.from(source);
-        show(
-                "Sepal length vs width",
-                800, 640,
+        show("Sepal length vs width",
+                "Sepal length", "Sepal width",
                 scatter(iris, "sepal_length", "sepal_width", "petal_length")
                         .setMarker('o')
-                        .setName("sepal: length v width")
-               // .setGroups(iris.getStringSeries("species"))
-
+                        .setName("sepal: length v width"),
+                chart -> {
+                    chart.getPlot().getXAxis().setMajorTickSpacing(1);
+                    ((NumericAxis)chart.getPlot().getXAxis()).setMinorTickSpacing(0.2);
+                    chart.getPlot().getYAxis().setMajorTickSpacing(1);
+                    ((NumericAxis)chart.getPlot().getYAxis()).setMinorTickSpacing(0.2);
+                }
         );
 
 

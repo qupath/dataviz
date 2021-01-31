@@ -7,25 +7,26 @@ import java.util.PrimitiveIterator;
  */
 public class LinearAxis extends NumericAxis {
 
-    public LinearAxis(double min, double max) {
-        super(min, max == min ? (max + 1e-9) : max);
+    public LinearAxis(String label, double min, double max) {
+        super(label, min, max);
     }
 
     @Override
-    protected Iterable<Double> ticks(double min, double max, double spacing) {
+    protected Iterable<Double> ticks(final double min, double max, double spacing) {
+        if (!Double.isFinite(spacing)) {
+            throw new IllegalArgumentException("could not generate ticks");
+        }
         return () -> new PrimitiveIterator.OfDouble() {
-            private final double start = Math.max(min, getLowerBound());
-            private final double maxIter = ((Math.min(max, getUpperBound()) - start) / spacing);
-            private double i = 0;
+            private double i = min - spacing;
 
             @Override
             public double nextDouble() {
-                return start + (i++ * spacing);
+                return i += spacing;
             }
 
             @Override
             public boolean hasNext() {
-                return i < maxIter;
+                return i <= max;
             }
         };
     }

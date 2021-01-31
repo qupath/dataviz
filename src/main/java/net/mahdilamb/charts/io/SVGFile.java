@@ -108,7 +108,7 @@ public class SVGFile extends ChartExporter {
         }
 
         @Override
-        public void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
+        public void fillText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
             out.append(rotatedTextToString(text, x, y,rotationDegrees,pivotX,pivotY, font, defs, indent, null, fill));
 
         }

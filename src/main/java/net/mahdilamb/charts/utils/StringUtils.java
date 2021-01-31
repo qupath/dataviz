@@ -265,5 +265,7 @@ public final class StringUtils {
         return t -> toBoolean(legn[1], legn[0], legn[2], legn[3], val.compareTo(t));
     }
 
-
+    public static String longerString(final String a, final String b) {
+        return a.length() >= b.length() ? a : b;
+    }
 }

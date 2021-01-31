@@ -3,7 +3,6 @@ package net.mahdilamb.charts.swing;
 import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Fill;
 import net.mahdilamb.geom2d.geometries.Geometries;
-import net.mahdilamb.geom2d.geometries.Point;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -12,12 +11,18 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Map;
 
 public final class SwingUtils {
     private SwingUtils() {
 
     }
+
+    static final Map<net.mahdilamb.charts.graphics.Font, java.awt.Font> fontsToAWT = new HashMap<>();
+    static final Map<net.mahdilamb.colormap.Color, java.awt.Color> colorsToAWT = new HashMap<>();
+
+
 
     /**
      * Convert a double to int
@@ -36,6 +41,11 @@ public final class SwingUtils {
      * @return the AWT color
      */
     public static java.awt.Color convert(final net.mahdilamb.colormap.Color color) {
+        final Color cached = colorsToAWT.get(color);
+        if (cached != null) {
+            return cached;
+
+        }
         return new java.awt.Color(color.red(), color.green(), color.blue(), color.alpha());
     }
 
@@ -47,21 +57,6 @@ public final class SwingUtils {
      */
     public static Color convert(final java.awt.Color color) {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
-    }
-
-    /**
-     * Convert a 2D coordinate to an AWT point
-     *
-     * @param coordinate the coordinate to convert
-     * @return the output point
-     */
-    public static Point2D convertToShape(final Point coordinate) {
-        return convertToShape(new Point2D.Double(), coordinate);
-    }
-
-    public static Point2D convertToShape(Point2D out, final Point coordinate) {
-        out.setLocation(coordinate.getX(), coordinate.getY());
-        return out;
     }
 
     /**
@@ -111,6 +106,10 @@ public final class SwingUtils {
      * @return AWT font
      */
     public static java.awt.Font convert(net.mahdilamb.charts.graphics.Font font) {
+        final java.awt.Font cached = fontsToAWT.get(font);
+        if (cached != null) {
+            return cached;
+        }
         final String family;
         switch (font.getFamily()) {
             case SERIF:
@@ -228,17 +227,17 @@ public final class SwingUtils {
             char c = text.charAt(i++);
             if (c == '\n') {
                 final String line = text.substring(wordStart, i);
-                out = ensureCapacity(out, j+1);
+                out = ensureCapacity(out, j + 1);
                 out[j++] = frac == 0 ? 0 : ((fontMetrics.stringWidth(line) - width) * frac);
                 wordStart = i;
             }
         }
         if (wordStart < text.length()) {
             final String line = text.substring(wordStart);
-            out = ensureCapacity(out, j+1);
+            out = ensureCapacity(out, j + 1);
             out[j++] = frac == 0 ? 0 : ((fontMetrics.stringWidth(line) - width) * frac);
         }
-        Arrays.fill(out, j , out.length, Double.NaN);
+        Arrays.fill(out, j, out.length, Double.NaN);
         return out;
     }
 

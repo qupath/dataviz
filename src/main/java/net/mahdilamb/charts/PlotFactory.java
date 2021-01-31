@@ -20,7 +20,7 @@ public final class PlotFactory {
      * @return the scatter series
      */
     public static Scatter scatter(double[] x, double[] y) {
-        return new PlotSeries.AbstractScatter.FromArray(x, y);
+        return new PlotSeries.ScatterImpl(x, y);
     }
 
     /**
@@ -34,8 +34,7 @@ public final class PlotFactory {
      * @throws NullPointerException          if the series cannot be found
      */
     public static Scatter scatter(Dataset dataset, String x, String y) {
-        return new PlotSeries.AbstractScatter.FromIterable(dataset.getDoubleSeries(x), dataset.getDoubleSeries(y));
-
+        return new PlotSeries.ScatterImpl(dataset, x, y);
     }
 
     public static Scatter scatter(Dataset dataset, String x, String y, String colorBy, Colormap colormap) {

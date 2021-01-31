@@ -1,6 +1,6 @@
 package net.mahdilamb.charts.series;
 
-import net.mahdilamb.charts.layouts.PlotLayout;
+import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.utils.StringUtils;
 
 import java.util.*;
@@ -440,7 +440,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
     /**
      * Map of the plot to compatible series
      */
-    static final Map<CompatibleSeries, Set<PlotLayout<?>>> seriesToPlotMap = new HashMap<>();
+    static final Map<CompatibleSeries, Set<PlotSeries<?>>> seriesToPlotMap = new HashMap<>();
 
     static {
         //TODO go through plots and add to the map

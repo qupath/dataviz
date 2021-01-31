@@ -12,6 +12,7 @@ import java.util.TreeMap;
 /**
  * A fill - supports a single fill color, linear or radial gradient
  */
+//todo make immutable
 public class Fill {
     /**
      * A default black fill

@@ -43,10 +43,6 @@ public interface Scatter extends PlotWithLegend<Scatter>, PlotWithColorBar<Scatt
 
     Scatter setMarkerMode(MarkerMode mode);
 
-    Scatter setXMarginal(MarginalMode marginal);
-
-    Scatter setYMarginal(MarginalMode marginal);
-
     Scatter setGroups(Iterable<String> groupings);
 
 

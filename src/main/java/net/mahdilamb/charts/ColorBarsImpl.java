@@ -26,7 +26,7 @@ public class ColorBarsImpl extends KeyImpl<ColorBarsImpl.ColorBarItem> implement
             }
             for (int i = 0; i < chart.plot.numSeries(); ++i) {
                 //ignore visibility, just make items!
-                final PlotSeries<?, ?> series = (PlotSeries<?, ?>) chart.plot.get(i);
+                final PlotSeries<?> series = (PlotSeries<?>) chart.plot.get(i);
                 final ColorBarItem legendItem = series.getColorBarItem();
                 items.put(series, legendItem);
                 if (side.isHorizontal()) {
@@ -52,11 +52,11 @@ public class ColorBarsImpl extends KeyImpl<ColorBarsImpl.ColorBarItem> implement
             double startX;
             canvas.setFont(labelFont);
             canvas.setFill(Fill.BLACK_FILL);
-            for (final Map.Entry<PlotSeries<?, ?>, ColorBarItem> item : items.entrySet()) {
+            for (final Map.Entry<PlotSeries<?>, ColorBarItem> item : items.entrySet()) {
                 final ColorBarItem li = item.getValue();
 
                 //TODO show scale and label. Also need to update positions on the color bar to be correct
-                startX = (maxWidth - li.preferredSize * maxWidth + hGap) * .5;
+                startX = ((1 - li.preferredSize) * maxWidth + hGap) * .5;
                 currentX += startX;
                 canvas.setFill(li.fill);
                 canvas.fillRect(startX, minY, li.preferredSize * maxWidth, li.itemHeight);
@@ -70,14 +70,15 @@ public class ColorBarsImpl extends KeyImpl<ColorBarsImpl.ColorBarItem> implement
             canvas.setFill(Fill.BLACK_FILL);
             double maxWidth = maxX - minX - (2 * margin);
             double maxHeight = maxY - minY;
-            renderWidth = margin + cellWidth * items.size();
-            double currentX = maxX -renderWidth;
+            renderWidth = margin + cellWidth * items.size() + 2 * hGap;
+            double currentX = maxX - renderWidth;
             double startX = currentX;
-            for (final Map.Entry<PlotSeries<?, ?>, ColorBarItem> item : items.entrySet()) {
+            for (final Map.Entry<PlotSeries<?>, ColorBarItem> item : items.entrySet()) {
                 final ColorBarItem li = item.getValue();
                 canvas.setFill(li.fill);
-
-                canvas.fillRect(currentX, minY, li.labelWidth, li.preferredSize * maxHeight);
+                double height = li.preferredSize * maxHeight;
+                currentX += hGap;
+                canvas.fillRect(currentX, minY + ((.5 - li.preferredSize * .5)) * maxHeight, li.labelWidth, height);
                 currentX += li.preferredSize * maxWidth;
                 currentX += hGap;
 

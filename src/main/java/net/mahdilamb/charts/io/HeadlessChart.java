@@ -1,6 +1,7 @@
 package net.mahdilamb.charts.io;
 
 import net.mahdilamb.charts.Chart;
+import net.mahdilamb.charts.PlotLayoutImpl;
 import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
@@ -207,7 +208,7 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
         }
 
         @Override
-        public void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
+        public void fillText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
             affineTransform.setToIdentity();
             affineTransform.rotate(Math.toRadians(rotationDegrees), pivotX, pivotY);
             g.setTransform(affineTransform);
@@ -278,9 +279,9 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     private final HeadlessChartCanvas<P, S> canvas;
-
-    public HeadlessChart(String title, double width, double height, P plot) {
-        super(title, width, height, plot);
+    @SuppressWarnings("unchecked")
+    protected HeadlessChart(String title, double width, double height, P plot) {
+        super(title, width, height, (PlotLayoutImpl<S>) plot);
         this.canvas = new HeadlessChartCanvas<>();
     }
 
@@ -333,7 +334,7 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     @Override
-    protected double getLineHeight(Title title) {
+    protected double getTextLineHeight(Title title) {
         return canvas.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
 
     }

@@ -1,10 +1,7 @@
 package net.mahdilamb.charts.layouts;
 
-
-/**
- * A plot used in the chart
- */
 public interface PlotLayout<S> {
+
     /**
      * @param series the series to get
      * @return the series at the given index

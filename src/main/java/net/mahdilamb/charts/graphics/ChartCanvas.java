@@ -115,7 +115,11 @@ public interface ChartCanvas<IMAGE> {
      * @param colorName the name of the color
      */
     default void setFill(final String colorName) {
-        setFill(Color.get(colorName));
+        final Color color = Color.get(colorName);
+        if (color == null) {
+            throw new IllegalArgumentException(String.format("Color by the name %s could not be found", colorName));
+        }
+        setFill(color);
     }
 
     /**
@@ -240,7 +244,7 @@ public interface ChartCanvas<IMAGE> {
      */
     void fillText(String text, double x, double y);
 
-    void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY);
+    void fillText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY);
 
     /**
      * Set the font of the canvas

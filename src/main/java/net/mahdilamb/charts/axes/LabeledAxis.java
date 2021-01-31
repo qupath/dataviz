@@ -13,8 +13,8 @@ public class LabeledAxis extends Axis {
     final String[] labelsArray;
     final List<String> labelsList;
 
-    public LabeledAxis(List<String> labels) {
-        super(-.5, labels.size() + .5);//TODO check
+    public LabeledAxis(final String title, List<String> labels) {
+        super(title, -.5, labels.size() + .5);//TODO check
         useArray = false;
         labelsList = labels;
         labelsArray = null;

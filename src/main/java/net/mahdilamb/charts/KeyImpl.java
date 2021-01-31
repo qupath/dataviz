@@ -17,7 +17,7 @@ abstract class KeyImpl<T extends KeyImpl.KeyItem> implements Key {
     Stroke border = Stroke.BLACK_STROKE;
     Font labelFont = new Font(Font.Family.SANS_SERIF, 12);
 
-    Map<PlotSeries<?, ?>, T> items = new LinkedHashMap<>();
+    Map<PlotSeries< ?>, T> items = new LinkedHashMap<>();
 
     boolean isDirty = true;
     double cellHeight, cellWidth;
@@ -60,7 +60,7 @@ abstract class KeyImpl<T extends KeyImpl.KeyItem> implements Key {
     @Override
     public void setTitle(String title) {
         this.title.setTitle(title);
-        chart.layout();
+        chart.requestLayout();
     }
 
     @Override

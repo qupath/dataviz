@@ -1,12 +1,13 @@
 package net.mahdilamb.charts.swing;
 
 import net.mahdilamb.charts.Chart;
+import net.mahdilamb.charts.PlotLayoutImpl;
 import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.layouts.PlotLayout;
-import net.mahdilamb.charts.layouts.XYMarginalPlot;
+import net.mahdilamb.charts.layouts.XYPlot;
 
 import javax.swing.*;
 import java.awt.*;
@@ -22,40 +23,78 @@ import java.util.function.Consumer;
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
 public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
+    private static <S> SwingChart<XYPlot<S>, S> chart(final String title, double width, double height, final String xAxisLabel, double xAxisMin, double xAxisMax, final String yAxisLabel, double yAxisMin, double yAxisMax, final S series) {
+        XYPlot<S> plot = toPlot(xAxisLabel, xAxisMin, xAxisMax, yAxisLabel, yAxisMin, yAxisMax, series);
+        final SwingChart<XYPlot<S>, S> chart = new SwingChart<>(title, width, height, plot);
+        assignToChart(chart, plot.getXAxis(), plot.getYAxis());
+        return chart;
+    }
+
+
     /**
      * Convert a series to a chart
      *
-     * @param title  the title of the chart
-     * @param width  the width of the chart
-     * @param height the height of the chart
-     * @param series the series
-     * @param <S>    the type of the series
+     * @param title      the title of the chart
+     * @param width      the width of the chart
+     * @param height     the height of the chart
+     * @param xAxisLabel the label of the x axis
+     * @param yAxisLabel the label of the y axis
+     * @param series     the series
+     * @param <S>        the type of the series
      * @return the series in its plot
      */
-    private static <S> SwingChart<XYMarginalPlot<S>, S> chart(final String title, double width, double height, final S series) {
-        return new SwingChart<>(title, width, height, toPlot(series, 0, 10, 0, 10));
+    private static <S> SwingChart<XYPlot<S>, S> chart(final String title, double width, double height, final String xAxisLabel, final String yAxisLabel, final S series) {
+        return chart(title, width, height, xAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, yAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, series);
+    }
+
+    private static <S> SwingChart<XYPlot<S>, S> chart(final String title, final String xAxisLabel, final String yAxisLabel, final S series) {
+        return chart(title, DEFAULT_WIDTH, DEFAULT_HEIGHT, xAxisLabel, yAxisLabel, series);
     }
     //todo show-editable. Save as images
 
     /**
      * Show a plot series
      *
-     * @param title  the title of the chart
-     * @param width  the width of the chart
-     * @param height the height of the chart
-     * @param series the series
-     * @param <S>    the type of the series
+     * @param <S>        the type of the series
+     * @param width      the width of the chart
+     * @param height     the height of the chart
+     * @param title      the title of the chart
+     * @param xAxisLabel the label of the x axis
+     * @param yAxisLabel the label of the y axis
+     * @param series     the series
+     * @return the chart that is shown
      */
-    public static <S> void show(final String title, double width, double height, final S series) {
+    public static <S> SwingChart<XYPlot<S>, S> show(final double width, final double height, final String title, final String xAxisLabel, final String yAxisLabel, final S series) {
         final JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
-        final SwingChart<?, S> chart = chart(title, width, height, series);
+        final SwingChart<XYPlot<S>, S> chart = chart(title, width, height, xAxisLabel, yAxisLabel, series);
         chart.addTo(frame.getContentPane(), BorderLayout.CENTER);
-        frame.setSize((int) Math.ceil(width), (int) Math.ceil(height));
+        frame.pack();
         frame.setVisible(true);
         frame.setTitle(title);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        return chart;
+    }
 
+    public static <S> SwingChart<XYPlot<S>, S> show(final String title, final String xAxisLabel, final String yAxisLabel, final S series) {
+        return show(DEFAULT_WIDTH, DEFAULT_HEIGHT, title, xAxisLabel, yAxisLabel, series);
+    }
+
+    public static <S> SwingChart<XYPlot<S>, S> show(final double width, final double height, final String title, final String xAxisLabel, final String yAxisLabel, final S series, final Consumer<SwingChart<XYPlot<S>, S>> beforeShow) {
+        final JFrame frame = new JFrame();
+        frame.setLayout(new BorderLayout());
+        final SwingChart<XYPlot<S>, S> chart = chart(title, width, height, xAxisLabel, yAxisLabel, series);
+        beforeShow.accept(chart);
+        chart.addTo(frame.getContentPane(), BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
+        frame.setTitle(title);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        return chart;
+    }
+
+    public static <S> SwingChart<XYPlot<S>, S> show(final String title, final String xAxisLabel, final String yAxisLabel, final S series, final Consumer<SwingChart<XYPlot<S>, S>> beforeShow) {
+        return show(DEFAULT_WIDTH, DEFAULT_HEIGHT, title, xAxisLabel, yAxisLabel, series, beforeShow);
     }
 
     /**
@@ -66,14 +105,17 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
      */
     public void addTo(Container parent, String position) {
         parent.add(canvas, position);
-        layout();
+        requestLayout();
     }
 
     private final ChartPane canvas = new ChartPane(this);
 
+    @SuppressWarnings("unchecked")
     private SwingChart(String title, double width, double height, P plot) {
-        super(title, width, height, plot);
-        canvas.setSize((int) Math.ceil(width), (int) Math.ceil(height));
+        super(title, width, height, (PlotLayoutImpl<S>) plot);
+        final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
+        canvas.setSize(size);
+        canvas.setPreferredSize(size);
     }
 
     @Override
@@ -173,7 +215,7 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     @Override
-    protected double getLineHeight(Title title) {
+    protected double getTextLineHeight(Title title) {
         return canvas.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
     }
 
@@ -403,7 +445,7 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
         }
 
         @Override
-        public void fillRotatedText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
+        public void fillText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
             switchToFilled().add(g -> {
                 affineTransform.setToIdentity();
                 affineTransform.rotate(Math.toRadians(rotationDegrees), pivotX, pivotY);

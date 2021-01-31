@@ -7,8 +7,8 @@ import java.util.PrimitiveIterator;
  */
 public class LogarithmicAxis extends NumericAxis {
 
-    public LogarithmicAxis(double min, double max) {
-        super(min, max);
+    public LogarithmicAxis(final String title,double min, double max) {
+        super(title,min, max);
     }
 
     @Override

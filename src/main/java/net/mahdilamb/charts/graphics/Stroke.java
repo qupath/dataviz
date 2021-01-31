@@ -7,6 +7,8 @@ import net.mahdilamb.colormap.Color;
  * A basic stroke made up of a width and a color
  */
 //TODO add dashes, etc.
+//todo make immutable
+
 public class Stroke {
     /**
      * A default stroke - black and 1 pixel width. Use the {@link #copy} method to derive strokes

@@ -18,7 +18,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
         cellHeight = -1;
         cellWidth = -1;
 
-        for (final Map.Entry<PlotSeries<?, ?>, LegendItem> item : items.entrySet()) {
+        for (final Map.Entry<PlotSeries<?>, LegendItem> item : items.entrySet()) {
             final LegendItem legendItem = item.getValue();
             if (legendItem.getClass() == LegendImpl.GroupedLegendItem.class) {
                 final LegendImpl.GroupedLegendItem gli = (LegendImpl.GroupedLegendItem) legendItem;
@@ -81,7 +81,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
         if (isDirty) {
             for (int i = 0; i < chart.plot.numSeries(); ++i) {
                 //ignore visibility, just make items!
-                final PlotSeries<?, ?> series = (PlotSeries<?, ?>) chart.plot.get(i);
+                final PlotSeries<?> series = (PlotSeries<?>) chart.plot.get(i);
                 final LegendItem legendItem = series.getLegendItem();
                 items.put(series, legendItem);
             }
@@ -100,7 +100,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
             double startX;
             canvas.setFont(labelFont);
             canvas.setFill(Fill.BLACK_FILL);
-            for (final Map.Entry<PlotSeries<?, ?>, LegendItem> item : items.entrySet()) {
+            for (final Map.Entry<PlotSeries<?>, LegendItem> item : items.entrySet()) {
                 final LegendItem legendItem = item.getValue();
                 if (legendItem.getClass() == LegendImpl.GroupedLegendItem.class) {//TODO, go to next row - also should be done reversed if at bottom
                     final LegendImpl.GroupedLegendItem gli = (LegendImpl.GroupedLegendItem) legendItem;
@@ -111,7 +111,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
                     currentX += hGap;
                     for (final LegendImpl.LegendItem li : gli.legendItems) {
                         currentX += li.marker.getSize() * .5;
-                        Marker.draw(canvas, currentX, minY + cellHeight * .5, li.marker);
+                        Markers.draw(canvas, currentX, minY + cellHeight * .5, li.marker);
                         currentX += li.marker.getSize() * .5;
                         currentX += hGap;
                         canvas.setFill(Fill.BLACK_FILL);
@@ -125,7 +125,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
                     startX = (maxWidth - legendItem.labelWidth + legendItem.marker.size + hGap) * .5;
                     currentX += startX;
                     currentX += legendItem.marker.getSize() * .5;
-                    Marker.draw(canvas, currentX, minY + cellHeight * .5, legendItem.marker);
+                    Markers.draw(canvas, currentX, minY + cellHeight * .5, legendItem.marker);
                     currentX += legendItem.marker.getSize() * .5;
                     currentX += hGap;
                     canvas.setFill(Fill.BLACK_FILL);
@@ -147,7 +147,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
 
             canvas.setFont(labelFont);
             canvas.setFill(Fill.BLACK_FILL);
-            for (final Map.Entry<PlotSeries<?, ?>, LegendItem> item : items.entrySet()) {
+            for (final Map.Entry<PlotSeries<?>, LegendItem> item : items.entrySet()) {
                 final LegendItem legendItem = item.getValue();
                 if (legendItem.getClass() == LegendImpl.GroupedLegendItem.class) {
                     final LegendImpl.GroupedLegendItem gli = (LegendImpl.GroupedLegendItem) legendItem;
@@ -159,7 +159,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
                     currentY += vGap;
                     for (final LegendImpl.LegendItem li : gli.legendItems) {
                        // currentY += li.marker.getSize() * .5;
-                        Marker.draw(canvas, offsetX+li.marker.getSize() * .5, currentY+gli.itemHeight * .5 , li.marker);
+                        Markers.draw(canvas, offsetX+li.marker.getSize() * .5, currentY+gli.itemHeight * .5 , li.marker);
                         canvas.setFill(Fill.BLACK_FILL);
                         canvas.fillText(li.getLabel(), offsetX+li.marker.getSize()+labelMarkerSpacing, currentY + chart.getTextBaselineOffset(labelFont));
                         currentY += gli.itemHeight;
@@ -171,7 +171,7 @@ public class LegendImpl extends KeyImpl<LegendImpl.LegendItem> implements Legend
                     offsetX-=legendItem.labelWidth+legendItem.marker.getSize()+labelMarkerSpacing;
                     startY += (maxHeight - legendItem.itemHeight) * .5;
                     currentY = startY;
-                    Marker.draw(canvas, offsetX+legendItem.marker.getSize() * .5, currentY+legendItem.itemHeight * .5 , legendItem.marker);
+                    Markers.draw(canvas, offsetX+legendItem.marker.getSize() * .5, currentY+legendItem.itemHeight * .5 , legendItem.marker);
                     canvas.setFill(Fill.BLACK_FILL);
                     canvas.fillText(legendItem.getLabel(), offsetX+legendItem.marker.getSize()+labelMarkerSpacing, currentY + chart.getTextBaselineOffset(labelFont));
                     currentY += legendItem.itemHeight;

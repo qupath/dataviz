@@ -10,6 +10,7 @@ import java.util.Objects;
  * The constants are a compromise between the SVG specification
  * and the AWT constants
  */
+//todo make immutable
 public class Font {
 
     /**

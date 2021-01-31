@@ -1,7 +1,8 @@
 package net.mahdilamb.charts.series;
 
 
-import net.mahdilamb.charts.layouts.PlotLayout;
+
+import net.mahdilamb.charts.PlotSeries;
 
 import java.util.*;
 import java.util.function.IntToDoubleFunction;
@@ -249,7 +250,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @param series the series of interest
      * @return an iterable (set) of the possible plots from the given combinations of series
      */
-    static Iterable<PlotLayout<?>> getPlotsForSeries(DataSeries<?>... series) {
+    static Iterable<PlotSeries<?>> getPlotsForSeries(DataSeries<?>... series) {
         if (DataSeriesImpl.seriesToPlotMap.isEmpty()) {
             //TODO look at the arguments in the constructors in plots and match to interfaces and add to map
             //TODO Ignore Series.java. Only use interfaces
