@@ -55,7 +55,7 @@ public abstract class Axis extends ChartComponent {
     }
 
     protected Axis(final String label, double min, double max) {
-        this.title = new Title(label, new Font(Font.Family.SANS_SERIF, 18), Alignment.CENTER);
+        this.title = new Title(label, new Font(Font.Family.SANS_SERIF, 18), HAlign.CENTER);
         this.lowerBound = min;
         this.upperBound = max;
 
@@ -181,13 +181,13 @@ public abstract class Axis extends ChartComponent {
     }
 
     @Override
-    protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+    protected void layout(ChartCanvas<?> canvas, Chart<?,?> source, double minX, double minY, double maxX, double maxY) {
         switch (type) {
             case X:
-                drawXAxis(chart, canvas);
+                drawXAxis(source, canvas);
                 return;
             case Y:
-                drawYAxis(chart, canvas);
+                drawYAxis(source, canvas);
                 return;
             default:
                 throw new UnsupportedOperationException();

@@ -3,7 +3,7 @@ package net.mahdilamb.charts.graphics;
 /**
  * The horizontal alignment
  */
-public enum Alignment {
+public enum HAlign {
     /**
      * Left
      */

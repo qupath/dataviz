@@ -10,7 +10,6 @@ import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.reference.sequential.Viridis;
-import net.mahdilamb.geom2d.trees.BulkLoader;
 import net.mahdilamb.geom2d.trees.PointNode;
 import net.mahdilamb.geom2d.trees.RTree;
 
@@ -363,7 +362,7 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
             for (int i = 0; i < x.length; ++i) {
                 scatterPoints[i] = new ScatterPoint(x[i], y[i], new MarkerImpl(markerShape, markerSize, colormap.get((faceColorArray[i] - colorMin) / range), edgeSize, edgeColor));
             }
-            points.putAll(BulkLoader.OVERLAP_MINIMIZING_TOPDOWN, scatterPoints);
+            points.putAll( scatterPoints);
             prepared = true;
             return this;
         }
@@ -411,11 +410,11 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
         }
 
         @Override
-        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
 
-            if (chart.getPlot() instanceof XYPlot) {
-                @SuppressWarnings("unchecked") final Axis xAxis = ((XYPlot<Scatter>) chart.getPlot()).getXAxis();
-                @SuppressWarnings("unchecked") final Axis yAxis = ((XYPlot<Scatter>) chart.getPlot()).getYAxis();
+            if (source.getPlot() instanceof XYPlot) {
+                @SuppressWarnings("unchecked") final Axis xAxis = ((XYPlot<Scatter>) source.getPlot()).getXAxis();
+                @SuppressWarnings("unchecked") final Axis yAxis = ((XYPlot<Scatter>) source.getPlot()).getYAxis();
                 double miX = xAxis.getLowerBound() - markerSize / xAxis.scale;
                 double maX = xAxis.getUpperBound() + markerSize / xAxis.scale;
                 double miY = yAxis.getLowerBound() - markerSize / yAxis.scale;

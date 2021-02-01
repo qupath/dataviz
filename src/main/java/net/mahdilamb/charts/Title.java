@@ -1,6 +1,6 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.Alignment;
+import net.mahdilamb.charts.graphics.HAlign;
 import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
 
@@ -14,7 +14,7 @@ public class Title extends ChartComponent{
     double paddingX = 0, paddingY = 5;
     boolean isVisible = true;
 
-    Alignment alignment;
+    HAlign alignment;
     String text;
     Font font;
 
@@ -33,7 +33,7 @@ public class Title extends ChartComponent{
      * @param font      the font to use
      * @param alignment the alignment of the text
      */
-    public Title(String text, Font font, Alignment alignment) {
+    public Title(String text, Font font, HAlign alignment) {
         this.text = text;
         this.font = font;
         this.alignment = alignment;
@@ -73,7 +73,7 @@ public class Title extends ChartComponent{
     /**
      * @return the alignment of the label
      */
-    public Alignment getAlignment() {
+    public HAlign getAlignment() {
         return alignment;
     }
 
@@ -139,7 +139,7 @@ public class Title extends ChartComponent{
 
 
     @Override
-    protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
-        //TODO
+    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+
     }
 }

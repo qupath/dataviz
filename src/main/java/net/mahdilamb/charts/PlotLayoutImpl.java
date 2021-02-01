@@ -44,9 +44,10 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
 
+
         @Override
-        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
-            //TODO
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+
         }
     }
 
@@ -62,7 +63,7 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
 
 
         @Override
-        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
             //TODO
         }
     }
@@ -75,7 +76,7 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
         @Override
-        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
             //TODO
         }
     }
@@ -98,7 +99,7 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
         @Override
-        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
             //TODO
         }
     }
@@ -183,15 +184,15 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
 
         @Override
         @SuppressWarnings("unchecked")
-        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
             canvas.setFill(backgroundColor);
-            calculateBounds(chart, canvas, minX, minY, maxX, maxY);
+            calculateBounds(source, canvas, minX, minY, maxX, maxY);
             canvas.fillRect(boundsX, boundsY, boundsWidth, boundsHeight);
-            xAxis.layout(chart, canvas, minX, minY, maxX, maxY);
-            yAxis.layout(chart, canvas, minX, minY, maxX, maxY);
+            xAxis.layout(canvas, source, minX, minY, maxX, maxY);
+            yAxis.layout(canvas, source, minX, minY, maxX, maxY);
             canvas.setClip(ClipShape.RECTANGLE, boundsX, boundsY, boundsWidth, boundsHeight);
             for (final S s : series) {
-                ((PlotSeries<S>) s).layout(chart, canvas, minX, minY, maxX, maxY);
+                ((PlotSeries<S>) s).layout(canvas, source, minX, minY, maxX, maxY);
             }
             canvas.clearClip();
             //draw border
@@ -234,7 +235,7 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
         @Override
-        protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
             //TODO
         }
 

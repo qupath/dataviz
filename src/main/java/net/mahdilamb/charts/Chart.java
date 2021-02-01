@@ -49,7 +49,7 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     double width, height;
 
     protected Chart(String title, double width, double height, PlotLayoutImpl<S> plot) {
-        this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()), Alignment.CENTER);
+        this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()), HAlign.CENTER);
         this.plot = plot;
         this.width = width;
         this.height = height;
@@ -191,14 +191,8 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     }
 
 
-    /**
-     * Layout the chart
-     *
-     * @param canvas the canvas to layout on
-     */
-    final void layout(ChartCanvas<?> canvas) {
+    protected void layout(ChartCanvas<?> canvas, Chart<?,?> source, double minX, double minY, double maxX, double maxY) {
         canvas.reset();
-        double minY = 0, minX = 0, maxX = width, maxY = height;
         boolean colorBarDrawn = !colorBar.visible, legendDrawn = !colorBar.visible;
         //layout title
         if (title.isVisible()) {
@@ -239,13 +233,23 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
         }
 
         //layout plot
-        plot.layout(this, canvas, minX, minY, maxX, maxY);
+        plot.layout(canvas, this, minX, minY, maxX, maxY);
         //layout floating keys
         if (!colorBarDrawn || !legendDrawn) {
 
         }
 
         canvas.done();
+    }
+
+    /**
+     * Layout the chart
+     *
+     * @param canvas the canvas to layout on
+     */
+    final void layout(ChartCanvas<?> canvas) {
+        layout(canvas, this, 0, 0, width, height);
+
     }
 
     /**
@@ -353,8 +357,9 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
 
     /**
      * Register a file format
+     *
      * @param extensionWithDot the extension with the dot
-     * @param writer the writer
+     * @param writer           the writer
      */
     protected static void registerFileWriter(final String extensionWithDot, BiConsumer<File, Chart<?, ?>> writer) {
         supportedFormats.put(extensionWithDot, writer);

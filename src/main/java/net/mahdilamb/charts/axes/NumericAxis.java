@@ -14,13 +14,13 @@ public abstract class NumericAxis extends Axis {
     /**
      * @return the number of decimal points to show
      */
-    protected int getDecimalFormat() {
-        return 2;
+    protected String getFormatting() {
+        return "%." + 2 + "f";
     }
 
     @Override
     protected String getLabel(double val) {
-        return String.format("%." + getDecimalFormat() + "f", val);
+        return String.format(getFormatting(), val);
     }
 
     public void setMinorTickSpacing(double minorTickSpacing) {
