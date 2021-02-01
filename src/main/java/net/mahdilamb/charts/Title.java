@@ -1,6 +1,7 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.Alignment;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
 
 import java.util.function.Consumer;
@@ -9,7 +10,7 @@ import java.util.function.Consumer;
  * A title is text that takes up space in a layout
  */
 //TODO auto-wrapping
-public class Title {
+public class Title extends ChartComponent{
     double paddingX = 0, paddingY = 5;
     boolean isVisible = true;
 
@@ -137,4 +138,8 @@ public class Title {
     }
 
 
+    @Override
+    protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        //TODO
+    }
 }

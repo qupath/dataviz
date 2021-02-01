@@ -2,6 +2,7 @@ package net.mahdilamb.charts.swing;
 
 import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Fill;
+import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.geom2d.geometries.Geometries;
 
 import javax.imageio.ImageIO;
@@ -21,7 +22,6 @@ public final class SwingUtils {
 
     static final Map<net.mahdilamb.charts.graphics.Font, java.awt.Font> fontsToAWT = new HashMap<>();
     static final Map<net.mahdilamb.colormap.Color, java.awt.Color> colorsToAWT = new HashMap<>();
-
 
 
     /**
@@ -244,4 +244,6 @@ public final class SwingUtils {
     public static double getLineHeight(FontMetrics fontMetrics) {
         return fontMetrics.getHeight();
     }
+
+
 }

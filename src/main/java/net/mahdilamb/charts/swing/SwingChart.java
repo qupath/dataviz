@@ -195,18 +195,9 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     @Override
-    public void saveAsSVG(File file) throws IOException {
-        if (SwingUtilities.isEventDispatchThread()) {
-            super.saveAsSVG(file);
-        } else {
-            SwingUtilities.invokeLater(() -> {
-                try {
-                    super.saveAsSVG(file);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        }
+    protected int argbFromImage(Object image, int x, int y) {
+        return ((BufferedImage) image).getRGB(x, y);
+
     }
 
     @Override
@@ -242,6 +233,8 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
         private final Chart<?, ?> chart;
         private Fill currentFill = Fill.BLACK_FILL;
         private Stroke currentStroke = Stroke.BLACK_STROKE;
+
+
         private final Rectangle2D rect = new Rectangle2D.Double();
         private final RoundRectangle2D roundedRect = new RoundRectangle2D.Double();
         private final Ellipse2D ellipse = new Ellipse2D.Double();
@@ -390,7 +383,8 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
             queue.add(g -> {
                 g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 if (chart.getBackgroundColor() != null) {
-                    g.setColor(convert(chart.getBackgroundColor()));
+                    g.setColor(convert(
+                            chart.getBackgroundColor()));
                 }
                 g.fillRect(0, 0, getWidth(), getHeight());
                 g.setColor(Color.BLACK);

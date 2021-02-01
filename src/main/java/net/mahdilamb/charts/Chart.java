@@ -12,9 +12,26 @@ import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.function.BiConsumer;
 
 public abstract class Chart<P extends PlotLayout<S>, S> {
+    private static final Map<String, BiConsumer<File, Chart<?, ?>>> supportedFormats = new HashMap<>();
+
+    static {
+        supportedFormats.put(".jpg", ImageExporter::toJPEG);
+        supportedFormats.put(".jpeg", ImageExporter::toJPEG);
+        supportedFormats.put(".tif", ImageExporter::toTIFF);
+        supportedFormats.put(".tiff", ImageExporter::toTIFF);
+        supportedFormats.put(".svg", SVGFile::to);
+        supportedFormats.put(".svgz", SVGFile::toCompressed);
+        supportedFormats.put(".png", ImageExporter::toPNG);
+        supportedFormats.put(".bmp", ImageExporter::toBMP);
+
+    }
+
     protected static double DEFAULT_WIDTH = 800;
     protected static double DEFAULT_HEIGHT = 640;
     /**
@@ -95,46 +112,6 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     }
 
     /**
-     * Save this chart as an svg
-     *
-     * @param file the output file.
-     * @throws IOException if the file cannot be written to
-     */
-    public void saveAsSVG(File file) throws IOException {
-        SVGFile.to(file, this);
-    }
-
-    /**
-     * Save the file as a png
-     *
-     * @param file the file path to write to
-     * @throws IOException if the file cannot be written to
-     */
-    public void saveAsPNG(File file) throws IOException {
-        ImageExporter.toPNG(file, this);
-    }
-
-    /**
-     * Save the file as a bmp
-     *
-     * @param file the file path to write to
-     * @throws IOException if the file cannot be written to
-     */
-    public void saveAsBMP(File file) throws IOException {
-        ImageExporter.toBMP(file, this);
-    }
-
-    /**
-     * Save the file as a jpeg
-     *
-     * @param file the file path to write to
-     * @throws IOException if the file cannot be written to
-     */
-    public void saveAsJPEG(File file) throws IOException {
-        ImageExporter.toJPEG(file, this);
-    }
-
-    /**
      * Save a file based on its extension (svg, jpg, bmp, png are supported)
      *
      * @param file the file to save as
@@ -142,41 +119,13 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      * @throws IOException                   if the file cannot be written to
      */
     public final void saveAs(File file) throws IOException {
-        final String fileExt = StringUtils.getLastCharactersToLowerCase(new char[5], file.toString());
-        switch (fileExt.indexOf(".")) {
-            //four letter extension
-            case 0:
-                switch (fileExt) {
-                    case ".jpeg":
-                        saveAsJPEG(file);
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-                }
-                break;
-            //three letter extension
-            case 1:
-                switch (fileExt.substring(1, 5)) {
-                    case ".jpg":
-                        saveAsJPEG(file);
-                        break;
-                    case ".png":
-                        saveAsPNG(file);
-                        break;
-                    case ".svg":
-                        saveAsSVG(file);
-                        break;
-                    case ".bmp":
-                        saveAsBMP(file);
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-
-                }
-                break;
-            default:
-                throw new UnsupportedOperationException();
+        final String filePath = file.toString();
+        final String fileExt = StringUtils.getLastCharactersToLowerCase(new char[filePath.length() - filePath.lastIndexOf('.')], file.toString());
+        final BiConsumer<File, Chart<?, ?>> fileWriter = supportedFormats.get(fileExt);
+        if (fileWriter == null) {
+            throw new UnsupportedOperationException("Cannot write to " + filePath + ". File type not supported");
         }
+        fileWriter.accept(file, this);
     }
 
     /**
@@ -379,6 +328,22 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      */
     protected abstract byte[] bytesFromImage(Object image) throws ClassCastException;
 
+    /**
+     * Get a packed int from an image, laid out as alpha, red, green, blue
+     *
+     * @param image the image (native to its canvas)
+     * @param x     the x position
+     * @param y     the y position
+     * @return the packed into from an image at a specific position
+     */
+    protected abstract int argbFromImage(Object image, int x, int y);
+
+    /**
+     * Get the next color in the default colormap
+     *
+     * @param chart the chart
+     * @return the next color in the chart
+     */
     protected static Color getNextColor(Chart<?, ?> chart) {
         if (chart.colormapIt == null || !chart.colormapIt.hasNext()) {
             chart.colormapIt = chart.theme.getDefaultColormap().iterator();
@@ -386,16 +351,38 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
         return chart.theme.getDefaultColormap().get(chart.colormapIt.next());
     }
 
+    /**
+     * Register a file format
+     * @param extensionWithDot the extension with the dot
+     * @param writer the writer
+     */
+    protected static void registerFileWriter(final String extensionWithDot, BiConsumer<File, Chart<?, ?>> writer) {
+        supportedFormats.put(extensionWithDot, writer);
+    }
+
     protected static final double USE_PREFERRED_HEIGHT = -1;
     protected static final double USE_PREFERRED_WIDTH = -1;
 
+    /**
+     * Assign a component to a chart
+     *
+     * @param chart the chart
+     * @param a     the component
+     */
     protected static void assignToChart(Chart<?, ?> chart, ChartComponent a) {
         a.chart = chart;
     }
 
-    protected static void assignToChart(Chart<?, ?> chart, ChartComponent xAxis, ChartComponent yAxis) {
-        assignToChart(chart, xAxis);
-        assignToChart(chart, yAxis);
+    /**
+     * Assigns a chart component to a chart
+     *
+     * @param chart the chart to assign to
+     * @param a     component a
+     * @param b     component b
+     */
+    protected static void assignToChart(Chart<?, ?> chart, ChartComponent a, ChartComponent b) {
+        assignToChart(chart, a);
+        assignToChart(chart, b);
     }
 
     @SuppressWarnings("unchecked")

@@ -50,7 +50,7 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
      */
     Color edgeColor = Color.BLACK;
     boolean showEdges = false;
-    double edgeSize = 2;
+    double edgeSize = 1;
 
     /**
      * Face options
@@ -412,6 +412,7 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
 
         @Override
         protected void layout(Chart<?, ?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+
             if (chart.getPlot() instanceof XYPlot) {
                 @SuppressWarnings("unchecked") final Axis xAxis = ((XYPlot<Scatter>) chart.getPlot()).getXAxis();
                 @SuppressWarnings("unchecked") final Axis yAxis = ((XYPlot<Scatter>) chart.getPlot()).getYAxis();

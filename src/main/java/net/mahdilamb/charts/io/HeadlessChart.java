@@ -279,6 +279,7 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     private final HeadlessChartCanvas<P, S> canvas;
+
     @SuppressWarnings("unchecked")
     protected HeadlessChart(String title, double width, double height, P plot) {
         super(title, width, height, (PlotLayoutImpl<S>) plot);
@@ -326,6 +327,11 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     @Override
     protected byte[] bytesFromImage(Object image) throws ClassCastException {
         return canvas.bytesFromImage((BufferedImage) image);
+    }
+
+    @Override
+    protected int argbFromImage(Object image, int x, int y) {
+        return ((BufferedImage) image).getRGB(x, y);
     }
 
     @Override

@@ -13,32 +13,50 @@ import java.awt.geom.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
 public class ImageExporter extends ChartExporter {
+
 
     /**
      * Create a PNG version of a chart
      *
      * @param file  the output file
      * @param chart the chart
-     * @throws IOException thrown if the file cannot be written to
      */
-    public static void toPNG(File file, Chart<?, ?> chart) throws IOException {
-        ImageIO.write(toBufferedImage(java.awt.image.BufferedImage.TYPE_INT_ARGB, chart), "png", file);
+    public static void toPNG(File file, Chart<?, ?> chart)  {
+        try {
+            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "png", file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
+    public static void toTIFF(File file, Chart<?, ?> chart)  {
+        try {
+            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "tiff", file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
+    }
     /**
      * Create a JPEG version of a chart
      *
      * @param file  the output file
      * @param chart the chart
-     * @throws IOException thrown if the file cannot be written to
      */
-    public static void toJPEG(File file, Chart<?, ?> chart) throws IOException {
-        ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "jpeg", file);
+    public static void toJPEG(File file, Chart<?, ?> chart)  {
+        try {
+            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "jpeg", file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -46,10 +64,13 @@ public class ImageExporter extends ChartExporter {
      *
      * @param file  the output file
      * @param chart the chart
-     * @throws IOException thrown if the file cannot be written to
      */
-    public static void toBMP(File file, Chart<?, ?> chart) throws IOException {
-        ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "bmp", file);
+    public static void toBMP(File file, Chart<?, ?> chart)  {
+        try {
+            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "bmp", file);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private static final class ImageExporterCanvas extends Component implements ChartCanvas<java.awt.image.BufferedImage> {

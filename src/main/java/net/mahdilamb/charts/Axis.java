@@ -1,6 +1,7 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.axes.LinearAxis;
+import net.mahdilamb.charts.axes.NumericAxis;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.layouts.XYPlot;
 import net.mahdilamb.charts.utils.StringUtils;
@@ -25,7 +26,7 @@ public abstract class Axis extends ChartComponent {
      * @param max the initial max of the range
      * @return a linear axis
      */
-    public static Axis linear(final String title, double min, double max) {
+    public static NumericAxis linear(final String title, double min, double max) {
         return new LinearAxis(title, min, max);
     }
 
@@ -34,7 +35,7 @@ public abstract class Axis extends ChartComponent {
      *
      * @return a linear axis
      */
-    public static Axis linear() {
+    public static NumericAxis linear() {
         return new LinearAxis("", Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY);
     }
 
@@ -132,7 +133,7 @@ public abstract class Axis extends ChartComponent {
                         if (showMinorGridLines) {
                             canvas.setStroke(minorStroke);
                             for (final double n : ticks(lastMark + minorTickSpacing, m - minorTickSpacing, minorTickSpacing)) {
-                                if (n < lowerBound){
+                                if (n < lowerBound) {
                                     continue;
                                 }
                                 double q = (n - lowerBound) * scale;

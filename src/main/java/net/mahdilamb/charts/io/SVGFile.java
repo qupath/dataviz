@@ -6,13 +6,13 @@ import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.geom2d.geometries.Geometries;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.function.Supplier;
+import java.util.zip.GZIPOutputStream;
 
 import static net.mahdilamb.charts.io.SVGUtils.*;
 import static net.mahdilamb.charts.utils.StringUtils.EMPTY_STRING;
@@ -34,13 +34,18 @@ public class SVGFile extends ChartExporter {
 
         private static final StringBuilder pathD = new StringBuilder();
         private Font font = new Font(Font.Family.SANS_SERIF, 12);
+        boolean compressed;
 
-
-        SVGWriter(File output, Chart<?, ?> chart) {
+        SVGWriter(File output, Chart<?, ?> chart, boolean compressed) {
+            this.compressed = compressed;
             this.chart = chart;
             this.output = output;
             layoutChart(this, chart);
 
+        }
+
+        SVGWriter(File output, Chart<?, ?> chart) {
+            this(output, chart, false);
         }
 
         @Override
@@ -109,7 +114,7 @@ public class SVGFile extends ChartExporter {
 
         @Override
         public void fillText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
-            out.append(rotatedTextToString(text, x, y,rotationDegrees,pivotX,pivotY, font, defs, indent, null, fill));
+            out.append(rotatedTextToString(text, x, y, rotationDegrees, pivotX, pivotY, font, defs, indent, null, fill));
 
         }
 
@@ -234,7 +239,7 @@ public class SVGFile extends ChartExporter {
                 clearClip();
             }
             out.append("</svg>");
-            try (final FileWriter writer = new FileWriter(output)) {
+            try (final Writer writer = compressed ? new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(output)), StandardCharsets.UTF_8) : new FileWriter(output)) {
                 writer.write(header);
                 writer.write(defs.get());
                 writer.write(out.toString());
@@ -245,10 +250,13 @@ public class SVGFile extends ChartExporter {
 
     }
 
-    public static void to(final File output, final Chart<?, ?> chart) throws IOException {
+    public static void to(final File output, final Chart<?, ?> chart)  {
         new SVGWriter(output, chart);
     }
 
+    public static void toCompressed(File file, Chart<?, ?> chart) {
+        new SVGWriter(file, chart, true);
+    }
 
 }
 
