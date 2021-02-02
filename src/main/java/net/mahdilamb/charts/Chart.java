@@ -1,10 +1,11 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.axes.LinearAxis;
-import net.mahdilamb.charts.graphics.*;
+import net.mahdilamb.charts.graphics.ChartCanvas;
+import net.mahdilamb.charts.graphics.Font;
+import net.mahdilamb.charts.graphics.Theme;
 import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGFile;
-import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.layouts.XYPlot;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
@@ -12,12 +13,25 @@ import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 import java.util.function.BiConsumer;
 
-public abstract class Chart<P extends PlotLayout<S>, S> {
+public abstract class Chart<P, S> extends ChartComponent {
+
+    public static class PlotLayout extends ChartComponent {
+
+        @Override
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+            //todo
+        }
+
+        @Override
+        protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+            //TODO
+        }
+    }
+
+
     private static final Map<String, BiConsumer<File, Chart<?, ?>>> supportedFormats = new HashMap<>();
 
     static {
@@ -42,21 +56,61 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     Theme theme = Theme.DEFAULT;
     Iterator<Float> colormapIt = theme.getDefaultColormap().iterator();
 
-    final Title title;
-    PlotLayoutImpl<S> plot;
-    final LegendImpl legend;
-    final ColorBarsImpl colorBar;
+    Title title;
+    ChartNode topArea, leftArea, rightArea, bottomArea;
+    final PlotLayout container;
+    ChartNode central; // to be used when adding colorscale/legend to the chart
+    ChartNode overlay;//for interaction
     double width, height;
 
-    protected Chart(String title, double width, double height, PlotLayoutImpl<S> plot) {
-        this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()), HAlign.CENTER);
-        this.plot = plot;
+    S singleData;
+    List<S> data;
+    ChartComponent singleAnnotation;
+    List<ChartComponent> annotations;
+
+    protected Chart(String title, double width, double height, PlotLayout plot) {
+        this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()));//todo
+        this.title.chart = this;
+        this.container = plot;
+        this.container.chart = this;
         this.width = width;
         this.height = height;
-        this.legend = new LegendImpl(this);
-        this.colorBar = new ColorBarsImpl(this);
     }
 
+
+    public void addData(S data) {
+        //todo update key/color bar
+
+        if (this.data == null) {
+            if (singleData == null) {
+                singleData = data;
+                return;
+            }
+            this.data = new ArrayList<>();
+            this.data.add(singleData);
+            this.data.add(data);
+            singleData = null;
+            return;
+        }
+        this.data.add(data);
+
+    }
+
+    public void addAnnotation(ChartComponent annotation) {
+        if (annotations == null) {
+            if (singleAnnotation == null) {
+                singleAnnotation = annotation;
+                return;
+            }
+            this.annotations = new ArrayList<>();
+            this.annotations.add(singleAnnotation);
+            this.annotations.add(annotation);
+            singleAnnotation = null;
+            return;
+        }
+        this.annotations.add(annotation);
+
+    }
 
     /**
      * @return the title of the chart
@@ -73,28 +127,6 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     public final void setTitle(String text) {
         this.title.setTitle(text);
         requestLayout();
-    }
-
-    /**
-     * @return the legend of the chart.
-     */
-    public final Legend getLegend() {
-        return legend;
-    }
-
-    /**
-     * @return the color bar area of the chart
-     */
-    public final ColorBar getColorBars() {
-        return colorBar;
-    }
-
-    /**
-     * @return the plot area of the chart
-     */
-    @SuppressWarnings("unchecked")
-    public final P getPlot() {
-        return (P) plot;
     }
 
     /**
@@ -168,79 +200,6 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
         return ((ThemeImpl) theme);
     }
 
-    private double drawLineByLine(ChartCanvas<?> canvas, Title title, double x, double y, double lineSpacing) {
-        int i = 0;
-        int lineI = 0;
-        int wordStart = 0;
-        while (i < title.text.length()) {
-            char c = title.text.charAt(i++);
-            if (c == '\n') {
-                double lineOffset = title.lineOffsets[lineI];
-                if (Double.isNaN(lineOffset)) {//NaN is sentinel
-                    break;
-                }
-                final String line = title.text.substring(wordStart, i);
-                canvas.fillText(line, x - lineOffset, y + title.baselineOffset + (lineSpacing * title.lineHeight * lineI++));
-                wordStart = i;
-            }
-        }
-        if (wordStart < title.text.length()) {
-            canvas.fillText(title.text.substring(wordStart), x - title.lineOffsets[lineI], y + title.baselineOffset + (lineSpacing * title.lineHeight * lineI++));
-        }
-        return lineI * title.lineHeight * lineSpacing;
-    }
-
-
-    protected void layout(ChartCanvas<?> canvas, Chart<?,?> source, double minX, double minY, double maxX, double maxY) {
-        canvas.reset();
-        boolean colorBarDrawn = !colorBar.visible, legendDrawn = !colorBar.visible;
-        //layout title
-        if (title.isVisible()) {
-            minY += title.paddingY;
-            double titleWidth = width - (title.paddingX * 2);
-            canvas.setFill(Fill.BLACK_FILL);//Todo fill optional color
-            canvas.setFont(title.getFont());
-            title.setMetrics(t -> t.setMetrics(getTextWidth(t.getFont(), t.getText()), getTextLineHeight(t, titleWidth, t.lineHeight), getTextLineHeight(t), getTextBaselineOffset(t.getFont()), getTextLineOffsets(t, t.width)));
-            minY += drawLineByLine(canvas, title, titleWidth * .5, minY, title.lineSpacing);
-            minY += title.paddingY;
-        }
-
-        //layout "keys"
-        if (occupies(legend, colorBar, Side.TOP)) {
-
-            if (!legendDrawn && legend.isVisible() && legend.side == Side.TOP) {
-                legend.layout(canvas, 0, minY, width, USE_PREFERRED_HEIGHT);
-                //todo update yoffset
-            }
-            if (!colorBarDrawn && colorBar.isVisible() && colorBar.side == Side.TOP) {
-                colorBar.layout(canvas, 0, minY, width, USE_PREFERRED_HEIGHT);
-                //todo update yoffset
-            }
-        } else if (occupies(legend, colorBar, Side.LEFT)) {
-
-        } else if (occupies(legend, colorBar, Side.RIGHT)) {
-            if (!legendDrawn && legend.isVisible() && legend.side == Side.RIGHT) {
-                legend.layout(canvas, 0, minY, maxX, height - minY);
-                maxX -= legend.renderWidth;
-            }
-            if (!colorBarDrawn && colorBar.isVisible() && colorBar.side == Side.RIGHT) {
-                colorBar.layout(canvas, 0, minY, maxX, height - minY);
-                //todo update yoffset
-                maxX -= colorBar.renderWidth;
-            }
-        } else {
-            //BOTTOM
-        }
-
-        //layout plot
-        plot.layout(canvas, this, minX, minY, maxX, maxY);
-        //layout floating keys
-        if (!colorBarDrawn || !legendDrawn) {
-
-        }
-
-        canvas.done();
-    }
 
     /**
      * Layout the chart
@@ -253,20 +212,6 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
     }
 
     /**
-     * Test to see if the different regions are occupied
-     *
-     * @param a key a
-     * @param b key b
-     * @param q the side to test on
-     * @return whether that side is occupied
-     */
-    private static boolean occupies(final KeyImpl<?> a, final KeyImpl<?> b, final Side q) {
-        boolean aSide = a.isVisible() && !a.isFloating && a.side == q;
-        boolean bSide = b.isVisible() && !b.isFloating && b.side == q;
-        return aSide | bSide;
-    }
-
-    /**
      * Get the height of a line
      *
      * @param title the text
@@ -274,13 +219,29 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      */
     protected abstract double getTextLineHeight(Title title);
 
-    protected abstract double[] getTextLineOffsets(Title title, double maxWidth);
+    @Override
+    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+        canvas.reset();
+
+        title.calculateBounds(canvas, source, minX, minY, maxX, maxY);
+
+        canvas.done();
+    }
+
+    boolean isEmpty(final ChartNode node) {
+        return node == null || node.size() == 0;
+    }
 
     /**
      * Layout the chart locally
      */
     protected final void requestLayout() {
         layout(getCanvas());
+    }
+
+    @Override
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+
     }
 
     /**
@@ -304,6 +265,8 @@ public abstract class Chart<P extends PlotLayout<S>, S> {
      * @return the width of the text with the given font
      */
     protected abstract double getTextWidth(final Font font, String text);
+
+    protected abstract double getCharWidth(final Font font, char character);
 
     /**
      * @param font the font

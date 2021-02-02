@@ -1,11 +1,9 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.charts.layouts.XYPlot;
 import net.mahdilamb.charts.plots.*;
-import net.mahdilamb.charts.series.Dataset;
+import net.mahdilamb.charts.series.DataFrame;
 import net.mahdilamb.charts.series.DoubleSeries;
-import net.mahdilamb.charts.statistics.StatUtils;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
@@ -27,6 +25,11 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
 
     public static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
 
+    @Override
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+
+    }
+
 
     private enum ColorMode {
         SINGLETON,
@@ -40,8 +43,7 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
      * Series display
      */
     boolean showInLegend = true, showInColorBars = false;
-    protected LegendImpl.LegendItem legendItem;
-    protected ColorBarsImpl.ColorBarItem colorBarItem;
+
     String name;
 
     /**
@@ -62,9 +64,6 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
     double[] faceColorArray;
     double minScale, maxScale;
 
-    protected abstract LegendImpl.LegendItem getLegendItem();
-
-    protected abstract ColorBarsImpl.ColorBarItem getColorBarItem();
 
     /**
      * Called before the series is added to a plot
@@ -244,7 +243,6 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
         MarkerMode mode = MarkerMode.MARKER_ONLY;
         Iterable<String> groups;
         Set<String> groupNames;
-        LegendImpl.LegendItem legendItem;
         MarkerShape markerShape;
         double markerSize = 10;
         private final double[] x;
@@ -273,7 +271,7 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
             }
         }
 
-        ScatterImpl(final Dataset dataset, final String x, final String y) {
+        ScatterImpl(final DataFrame dataset, final String x, final String y) {
             this.x = ((DoubleSeries) dataset.getDoubleSeries(x)).toArray(new double[dataset.get(0).size()]);
             this.y = ((DoubleSeries) dataset.getDoubleSeries(y)).toArray(new double[dataset.get(0).size()]);
 
@@ -286,84 +284,10 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
         }
 
 
-        @Override
-        protected ColorBarsImpl.ColorBarItem getColorBarItem() {
-            return colorBarItem;
-        }
 
         @Override
         protected Scatter prepare(final Axis xAxis, final Axis yAxis) {
-            if (prepared) {//todo deal with needs updating clash
-                System.err.println("This series has already been build");
-                return this;
-            }
-            //TODO if finite, then expand the x axis - there may be multiple series
-            //check axes are correct
-            if (!Double.isFinite(xAxis.lowerBound)) {
-                xAxis.lowerBound = StatUtils.min(x);
-            }
-            if (!Double.isFinite(xAxis.upperBound)) {
-                xAxis.upperBound = StatUtils.max(x);
-            }
-            if (!Double.isFinite(yAxis.lowerBound)) {
-                yAxis.lowerBound = StatUtils.min(y);
-            }
-            if (!Double.isFinite(yAxis.upperBound)) {
-                yAxis.upperBound = StatUtils.max(y);
-            }
-            if (xAxis.lowerBound == xAxis.upperBound) {
-                xAxis.upperBound += 1;
-            }
-            if (yAxis.lowerBound == yAxis.upperBound) {
-                yAxis.upperBound += 1;
-            }
-            checkAxis(xAxis);
-            checkAxis(yAxis);
 
-            //Prepare legend items
-
-            if (groups == null) {//todo also check if colors are iterable as these are also groups
-                final MarkerImpl defaultMarker;
-                if (colorMode == ColorMode.SINGLETON) {
-                    defaultMarker = new MarkerImpl(markerShape, 10, faceColor, edgeSize, edgeColor);
-                } else {
-                    if (colorMode == ColorMode.COLORMAP) {
-                        defaultMarker = new MarkerImpl(markerShape, 10, Color.BLACK, edgeSize, edgeColor);
-                    } else {
-                        //go with the chart default
-                        defaultMarker = new MarkerImpl(markerShape, 10, null, edgeSize, edgeColor);
-                    }
-                }
-                legendItem = new LegendImpl.LegendItem(name, defaultMarker);
-            } else {
-                groupNames = new LinkedHashSet<>();
-                for (final String s : groups) {
-                    groupNames.add(s);
-                }
-
-                final LegendImpl.LegendItem[] legendItems = new LegendImpl.LegendItem[groupNames.size()];
-                int i = 0;
-                for (final String g : groupNames) {
-                    legendItems[i++] = new LegendImpl.LegendItem(g, new MarkerImpl(markerShape, 10, null, edgeSize, edgeColor));
-                }
-                legendItem = new LegendImpl.GroupedLegendItem(name, legendItems);
-            }
-            //prepare colorbar items
-            if (colorMode == ColorMode.COLORMAP) {
-                colorBarItem = new ColorBarsImpl.ColorBarItem(colormap, minScale, maxScale);
-            }
-            //prepare data items
-            scatterPoints = new ScatterPoint[x.length];
-            //TODO deal with grouping and colors modes
-
-            double colorMin = StatUtils.min(faceColorArray);
-            double colorMax = StatUtils.max(faceColorArray);
-            double range = colorMax - colorMin;
-            for (int i = 0; i < x.length; ++i) {
-                scatterPoints[i] = new ScatterPoint(x[i], y[i], new MarkerImpl(markerShape, markerSize, colormap.get((faceColorArray[i] - colorMin) / range), edgeSize, edgeColor));
-            }
-            points.putAll( scatterPoints);
-            prepared = true;
             return this;
         }
 
@@ -374,11 +298,6 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
             }
             this.mode = mode;
             return this;
-        }
-
-        @Override
-        protected LegendImpl.LegendItem getLegendItem() {
-            return legendItem;
         }
 
 
@@ -412,26 +331,6 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
         @Override
         protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
 
-            if (source.getPlot() instanceof XYPlot) {
-                @SuppressWarnings("unchecked") final Axis xAxis = ((XYPlot<Scatter>) source.getPlot()).getXAxis();
-                @SuppressWarnings("unchecked") final Axis yAxis = ((XYPlot<Scatter>) source.getPlot()).getYAxis();
-                double miX = xAxis.getLowerBound() - markerSize / xAxis.scale;
-                double maX = xAxis.getUpperBound() + markerSize / xAxis.scale;
-                double miY = yAxis.getLowerBound() - markerSize / yAxis.scale;
-                double maY = yAxis.getUpperBound() + markerSize / yAxis.scale;
-                points.traverse(
-                        n ->
-                                n.intersects(miX, miY, maX, maY),
-                        n -> {
-                            if (n.isContainedIn(miX, miY, maX, maY)) {
-                                Markers.draw(canvas, xAxis.boundsX + (n.getMidX() - xAxis.getLowerBound()) * xAxis.scale, yAxis.boundsY + yAxis.boundsHeight - (n.getMidY() - yAxis.getLowerBound()) * yAxis.scale, n.get());
-                            }
-                            return false;
-                        }
-                );
-
-
-            }
         }
     }
 

@@ -11,12 +11,12 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.PrimitiveIterator;
 import java.util.function.IntFunction;
-import java.util.function.IntToDoubleFunction;
+import java.util.function.Predicate;
 
 /**
  * Datasets are a series of named series. They can be thought of as a table.
  */
-public interface Dataset extends Iterable<DataSeries<?>> {
+public interface DataFrame extends Iterable<DataSeries<?>> {
     /**
      * The default quote character to use when reading a text file
      */
@@ -57,6 +57,28 @@ public interface Dataset extends Iterable<DataSeries<?>> {
         }
         System.err.println("No series could be found with the name " + name);
         return null;
+    }
+
+    /**
+     * @param names the names of the columns of interest
+     * @return a new data frame with the column names as specified
+     */
+    default DataFrame subset(String... names) {
+        final DataSeries<?>[] series = new DataSeries[names.length];
+        for (int j = 0; j < names.length; ++j) {
+            boolean found = false;
+            for (int i = 0; i < numSeries(); ++i) {
+                if (get(i).getName().equals(names[j])) {
+                    series[j] = get(i);
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                throw new IllegalArgumentException("Could not find column by name " + names[j]);
+            }
+        }
+        return new DataFrameImpl.OfArray(getName() + " {subset}", series);
     }
 
     /**
@@ -148,6 +170,37 @@ public interface Dataset extends Iterable<DataSeries<?>> {
     }
 
     /**
+     * @return the first series
+     */
+    default DataSeries<?> first() {
+        return get(0);
+    }
+
+    /**
+     * @return the last series
+     */
+    default DataSeries<?> last() {
+        return get(numSeries() - 1);
+    }
+
+    /**
+     * Return a subset of series
+     *
+     * @param start the start index (inclusive)
+     * @param end   the end index (exclusive)
+     * @return a dataframe
+     * @implNote this will return a sliced view into the dataframe
+     */
+    DataFrame subset(int start, int end);
+
+    /**
+     * Get a subset of the series based on a test of the series names
+     * @param test the test of the series names
+     * @return a sliced view of this data frame
+     */
+    DataFrame subset(Predicate<String> test);
+
+    /**
      * Check the type of a series
      *
      * @param index the index of a series
@@ -163,7 +216,6 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      *
      * @param index the index of the series
      * @return the series
-     * @throws DataSeriesCastException if the series cannot be cast to a double series
      */
     default NumericSeries<Double> getDoubleSeries(final int index) throws DataSeriesCastException {
         return get(index).asDouble();
@@ -186,7 +238,7 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      *
      * @param index the index of the series
      * @return the series
-     * @throws DataSeriesCastException  if the series cannot be cast to a boolean series
+     * @throws DataSeriesCastException if the series cannot be cast to a boolean series
      */
     default BooleanSeries getBooleanSeries(final int index) throws DataSeriesCastException {
         return get(index).asBoolean();
@@ -241,8 +293,8 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param series the array of series
      * @return a dataset wrapping the series
      */
-    static Dataset from(final String name, DataSeries<?>... series) {
-        return new DatasetImpl.OfArray(name, series);
+    static DataFrame from(final String name, DataSeries<?>... series) {
+        return new DataFrameImpl.OfArray(name, series);
     }
 
     /**
@@ -253,8 +305,8 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param seriesGetter the function used to get a series from a name
      * @return a dataset that using functional programming to retrieve series
      */
-    static Dataset from(final String name, int size, IntFunction<DataSeries<?>> seriesGetter) {
-        return new DatasetImpl.OfFunctional(name, size, seriesGetter);
+    static DataFrame from(final String name, int size, IntFunction<DataSeries<?>> seriesGetter) {
+        return new DataFrameImpl.OfFunctional(name, size, seriesGetter);
     }
 
     /**
@@ -265,10 +317,10 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param quoteCharacter the quote character
      * @param charset        the character set used to read the file
      * @return a dataset importer.
-     * @see DatasetImporter
+     * @see DataFrameImporter
      */
-    static DatasetImporter importer(final File source, char separator, char quoteCharacter, Charset charset) {
-        return new DatasetImporter.FromFile(source, separator, quoteCharacter, charset, true);
+    static DataFrameImporter importer(final File source, char separator, char quoteCharacter, Charset charset) {
+        return new DataFrameImporter.FromFile(source, separator, quoteCharacter, charset, true);
     }
 
     /**
@@ -278,7 +330,7 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param file the file
      * @return a dataset importer
      */
-    static DatasetImporter importer(final File file) {
+    static DataFrameImporter importer(final File file) {
         final String ext = StringUtils.getLastCharactersToLowerCase(new char[4], file.getName());
         switch (ext) {
             case ".csv":
@@ -299,8 +351,8 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param charset        the character set used by the file
      * @return a dataset from the file
      */
-    static Dataset from(final File source, char separator, char quoteCharacter, Charset charset) {
-        return new DatasetImporter.FromFile(source, separator, quoteCharacter, charset, false).build();
+    static DataFrame from(final File source, char separator, char quoteCharacter, Charset charset) {
+        return new DataFrameImporter.FromFile(source, separator, quoteCharacter, charset, false).build();
     }
 
     /**
@@ -310,7 +362,7 @@ public interface Dataset extends Iterable<DataSeries<?>> {
      * @param file the file to import
      * @return a dataset from the file
      */
-    static Dataset from(File file) {
+    static DataFrame from(File file) {
         final String ext = StringUtils.getLastCharactersToLowerCase(new char[4], file.getName());
         switch (ext) {
             case ".csv":
@@ -321,5 +373,6 @@ public interface Dataset extends Iterable<DataSeries<?>> {
                 throw new UnsupportedOperationException("Reading " + file + " is not currently supported");
         }
     }
+
 
 }

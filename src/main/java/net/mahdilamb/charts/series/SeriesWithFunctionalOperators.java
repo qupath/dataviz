@@ -7,7 +7,7 @@ import java.util.function.Predicate;
 
 /**
  * Functional operators to be used with data series. These have been abstracted away as getting a series via dataset will
- * not work for {@link Dataset#get} as the comparator cannot be retrieved for an unknown type
+ * not work for {@link DataFrame#get} as the comparator cannot be retrieved for an unknown type
  *
  * @param <T> the type of the elements in the series
  */

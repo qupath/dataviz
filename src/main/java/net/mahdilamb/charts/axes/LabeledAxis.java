@@ -1,6 +1,8 @@
 package net.mahdilamb.charts.axes;
 
 import net.mahdilamb.charts.Axis;
+import net.mahdilamb.charts.Chart;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 
 import java.util.List;
 import java.util.PrimitiveIterator;
@@ -44,5 +46,6 @@ public class LabeledAxis extends Axis {
             }
         };
     }
+
 
 }

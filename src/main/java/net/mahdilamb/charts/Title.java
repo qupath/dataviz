@@ -1,42 +1,33 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.HAlign;
 import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
-
-import java.util.function.Consumer;
+import net.mahdilamb.charts.graphics.HAlign;
 
 /**
  * A title is text that takes up space in a layout
  */
-//TODO auto-wrapping
-public class Title extends ChartComponent{
-    double paddingX = 0, paddingY = 5;
+public class Title extends ChartComponent {
+    double paddingX = 20, paddingY = 20;
     boolean isVisible = true;
 
-    HAlign alignment;
+    HAlign textAlign = HAlign.LEFT;
     String text;
     Font font;
 
     boolean metricsSet = false;
-    double width;
-    double height;
     double baselineOffset;
-    double lineHeight;
-    double[] lineOffsets;
-    double lineSpacing = 1;
+
 
     /**
      * Create a title with the following details
      *
-     * @param text      the text
-     * @param font      the font to use
-     * @param alignment the alignment of the text
+     * @param text the text
+     * @param font the font to use
      */
-    public Title(String text, Font font, HAlign alignment) {
+    public Title(String text, Font font) {
         this.text = text;
         this.font = font;
-        this.alignment = alignment;
     }
 
     /**
@@ -67,14 +58,14 @@ public class Title extends ChartComponent{
      */
     public void setTitle(String text) {
         this.text = text;
-        metricsSet = false;
+        //TODO either change in chart, or queue change, and clear metrics
     }
 
     /**
      * @return the alignment of the label
      */
     public HAlign getAlignment() {
-        return alignment;
+        return textAlign;
     }
 
     /**
@@ -91,47 +82,14 @@ public class Title extends ChartComponent{
         return font;
     }
 
-    /**
-     * Mark this title as requiring the metrics to be set on the next layout pass
-     */
-    void markDirty() {
-        metricsSet = false;
-    }
-
-    /**
-     * Set the metrics of this title
-     *
-     * @param width          the width of the title
-     * @param height         the height of the title
-     * @param baselineOffset the baseline offset of the title
-     */
-    void setMetrics(double width, double height, double lineHeight, double baselineOffset, double[] lineOffsets) {
-        if (metricsSet) {
-            return;
-        }
-        this.width = width;
-        this.height = height;
-        this.baselineOffset = baselineOffset;
-        this.lineOffsets = lineOffsets;
-        metricsSet = true;
-        this.lineHeight = lineHeight;
-    }
-
-    void setMetrics(Consumer<Title> setter) {
-        if (metricsSet) {
-            return;
-        }
-        setter.accept(this);
-    }
-
-    double adjustedX(double x) {
-        switch (alignment) {
-            case LEFT:
-                return x;
+    private double getAlignFrac() {
+        switch (textAlign) {
             case CENTER:
-                return x - (width * .5);
+                return 0.5;
             case RIGHT:
-                return x - width;
+                return 1;
+            case LEFT:
+                return 0;
             default:
                 throw new UnsupportedOperationException();
         }
@@ -140,6 +98,32 @@ public class Title extends ChartComponent{
 
     @Override
     protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+        if (!isVisible()) {
+            return;
+        }
+        canvas.setFont(font);
+        if (!metricsSet) {
+            calculateBounds(canvas, source, minX, minY, maxX, maxY);
+            this.boundsX = minX;
+            this.boundsY = minY;
+
+        }
+        canvas.fillText(text, minX + paddingX * 0.5, minY + baselineOffset + paddingX * 0.5);
+        drawBounds(canvas);
 
     }
+
+    @Override
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+        baselineOffset = source.getTextBaselineOffset(font);
+        int i = 0;
+        boundsWidth = paddingX;
+        while (i < text.length()) {
+            boundsWidth += source.getCharWidth(font, text.charAt(i++));
+        }
+        boundsHeight = source.getTextLineHeight(font) + paddingY;
+    }
+
+
+
 }

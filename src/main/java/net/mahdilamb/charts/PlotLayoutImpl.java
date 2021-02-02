@@ -31,6 +31,11 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         this.series = series;
     }
 
+    @Override
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+
+    }
+
     public static class Circular<S> extends PlotLayoutImpl<S> {
         Axis radialAxis;
         Axis angularAxis;

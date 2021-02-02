@@ -1,5 +1,6 @@
 package net.mahdilamb.charts.utils;
 
+import net.mahdilamb.utils.functions.AndBiIntFunction;
 import net.mahdilamb.utils.functions.CharacterPredicate;
 
 import java.util.Arrays;
@@ -268,4 +269,47 @@ public final class StringUtils {
     public static String longerString(final String a, final String b) {
         return a.length() >= b.length() ? a : b;
     }
+
+
+    public static <T> T slice(AndBiIntFunction<T> object, String slice, int defaultEnd) {
+        //TODO deal with negatives
+        if (slice.length() == 0) {
+            throw new IllegalArgumentException("slice must not be empty");
+        }
+        int start = 0, end = defaultEnd;
+        int i = slice.length();
+        int l = i - 1;
+        int e = 1;
+        int j = 0;
+        int k = 0;
+        while (i > 0) {
+            final char c = slice.charAt(--i);
+            if (Character.isWhitespace(c)) {
+                throw new IllegalArgumentException("slice must not contain white space characters");
+            }
+            if (c == ':') {
+                if (j == 0) {
+                    end =  k;
+                }
+                e = 1;
+                ++j;
+                if (j >= 2) {
+                    throw new IllegalArgumentException("Only start and end supported");
+                }
+            }
+            if (Character.isDigit(c)) {
+                k += e * Character.getNumericValue(c);
+                e *= 10;
+            }
+        }
+        if (j == 0) {
+            //no colon
+            return object.apply(k, k + 1);
+        } else if (j == 1) {
+            return object.apply(k, defaultEnd);
+        }
+        return object.apply(start, end);
+    }
+
+
 }

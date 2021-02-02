@@ -1,7 +1,7 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.plots.Scatter;
-import net.mahdilamb.charts.series.Dataset;
+import net.mahdilamb.charts.series.DataFrame;
 import net.mahdilamb.colormap.Colormap;
 
 import static net.mahdilamb.charts.PlotSeries.DEFAULT_SEQUENTIAL_COLORMAP;
@@ -33,15 +33,15 @@ public final class PlotFactory {
      * @throws UnsupportedOperationException of either series is not numeric
      * @throws NullPointerException          if the series cannot be found
      */
-    public static Scatter scatter(Dataset dataset, String x, String y) {
+    public static Scatter scatter(DataFrame dataset, String x, String y) {
         return new PlotSeries.ScatterImpl(dataset, x, y);
     }
 
-    public static Scatter scatter(Dataset dataset, String x, String y, String colorBy, Colormap colormap) {
+    public static Scatter scatter(DataFrame dataset, String x, String y, String colorBy, Colormap colormap) {
         return scatter(dataset, x, y).setColors(colormap, dataset.getDoubleSeries(colorBy));
     }
 
-    public static Scatter scatter(Dataset dataset, String x, String y, String colorBy) {
+    public static Scatter scatter(DataFrame dataset, String x, String y, String colorBy) {
         return scatter(dataset, x, y, colorBy, DEFAULT_SEQUENTIAL_COLORMAP);
     }
 

@@ -9,19 +9,19 @@ import java.util.Objects;
 import java.util.Scanner;
 
 import static net.mahdilamb.charts.series.DataType.STRING;
-import static net.mahdilamb.charts.series.DatasetImpl.EMPTY_COLUMN_PREFIX;
+import static net.mahdilamb.charts.series.DataFrameImpl.EMPTY_COLUMN_PREFIX;
 import static net.mahdilamb.charts.utils.StringUtils.LINE_PATTERN;
 import static net.mahdilamb.charts.utils.StringUtils.iterateLine;
 
 /**
  * Builder for importing data from a file or strong.
  */
-public abstract class DatasetImporter {
+public abstract class DataFrameImporter {
 
     /**
      * @return a temporary dataset with the top n rows.
      */
-    public final Dataset preview() {
+    public final DataFrame preview() {
         preparePreview();
         return currentPreview;
     }
@@ -29,7 +29,7 @@ public abstract class DatasetImporter {
     /**
      * @return the final dataset. If this is reused, it will create a new dataset with the same backing data
      */
-    public abstract Dataset build();
+    public abstract DataFrame build();
 
     /**
      * Set a column type
@@ -38,7 +38,7 @@ public abstract class DatasetImporter {
      * @param type  the type of the column
      * @return this importer
      */
-    public DatasetImporter setType(int index, DataType type) {
+    public DataFrameImporter setType(int index, DataType type) {
         types[index] = Objects.requireNonNull(type);
         return this;
     }
@@ -49,19 +49,19 @@ public abstract class DatasetImporter {
     protected int numLines;
     protected int numColumns;
     protected DataType[] types;
-    protected transient Dataset currentPreview;
+    protected transient DataFrame currentPreview;
 
     /**
      * Fields that should be populated with user input
      */
     protected boolean hasColumnNames;
 
-    private DatasetImporter() {
+    private DataFrameImporter() {
 
     }
 
     //TODO allow creating from string or clipboard
-    static final class FromString extends DatasetImporter {
+    static final class FromString extends DataFrameImporter {
         private final String source;
 
         FromString(final String source) {
@@ -74,7 +74,7 @@ public abstract class DatasetImporter {
         }
 
         @Override
-        public Dataset build() {
+        public DataFrame build() {
             //TODO
             return null;
         }
@@ -82,7 +82,7 @@ public abstract class DatasetImporter {
 
     //TODO allow changing whether it has header or not
     //TODO skiprows, skipcols, last row, lastcol
-    static final class FromFile extends DatasetImporter {
+    static final class FromFile extends DataFrameImporter {
         static int TEST_LINES = 20;
         final File source;
         final char separator;
@@ -275,13 +275,13 @@ public abstract class DatasetImporter {
                         throw new UnsupportedOperationException();
                 }
             }
-            currentPreview = new DatasetImpl.OfArray(source.getName(), series);
+            currentPreview = new DataFrameImpl.OfArray(source.getName(), series);
 
         }
 
         @Override
-        public Dataset build() {
-            return new DatasetImpl.FromFile(this);
+        public DataFrame build() {
+            return new DataFrameImpl.FromFile(this);
         }
     }
 

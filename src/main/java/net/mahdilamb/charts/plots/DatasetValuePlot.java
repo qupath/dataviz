@@ -1,9 +1,9 @@
 package net.mahdilamb.charts.plots;
 
-import net.mahdilamb.charts.series.Dataset;
+import net.mahdilamb.charts.series.DataFrame;
 
 public class DatasetValuePlot {
-    Dataset dataset;
+    DataFrame dataset;
     String value, color;
 
     public DatasetValuePlot setValues(final String value) {

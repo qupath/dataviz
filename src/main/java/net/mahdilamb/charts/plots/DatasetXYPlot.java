@@ -1,8 +1,8 @@
 package net.mahdilamb.charts.plots;
 
-import net.mahdilamb.charts.series.Dataset;
+import net.mahdilamb.charts.series.DataFrame;
 
 public class DatasetXYPlot {
-    Dataset dataset;
+    DataFrame dataset;
     String x, y, size, color, alpha;
 }

@@ -6,7 +6,8 @@ import net.mahdilamb.charts.utils.StringUtils;
 import java.util.*;
 import java.util.function.*;
 
-import static net.mahdilamb.charts.series.DatasetImpl.COLUMN_SEPARATOR;
+import static net.mahdilamb.charts.series.DataFrameImpl.COLUMN_SEPARATOR;
+import static net.mahdilamb.charts.series.DataFrameImpl.range;
 
 /**
  * Implementations of the various different types of series
@@ -211,7 +212,6 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
     }
 
 
-
     static final class OfLongArray extends DataSeriesImpl<Long> implements LongSeries {
         final long[] data;
         int[] isNaN;
@@ -248,7 +248,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
             return array;
         }
 
-        <S extends Comparable<S>> OfLongArray(DataSeries<S> source, ToLongFunction<S> converter) {
+        <S extends Comparable<S>> OfLongArray(DataSeries<S> source, ToLongFunction<S> converter, Predicate<S> notNanTest) {
             super(source.getName());
             data = new long[source.size()];
             nanCount = 0;
@@ -256,7 +256,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
             this.end = source.size();
 
             for (int i = 0; i < source.size(); ++i) {
-                if (DataType.LONG.matches(String.valueOf(source.get(i)))) {
+                if (notNanTest.test(source.get(i))) {
                     data[i] = converter.applyAsLong(source.get(i));
                 } else {
                     data[i] = 0;
@@ -264,7 +264,6 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
                     isNaN[nanCount - 1] = i;
                 }
             }
-
         }
 
     }
@@ -465,7 +464,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
     }
 
     @Override
-    public final int size() {
+    public int size() {
         return end - start;
     }
 
@@ -474,31 +473,126 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
         return series.getType() == DataType.LONG && ((NumericSeries<Long>) series).isNaN(index) ? "NaN" : String.valueOf(series.get(index));
     }
 
+    int getId(int i) {
+        return i;
+    }
+
     @Override
     public String toString() {
         final StringBuilder stringBuilder = new StringBuilder();
         if (size() > 1) {
-            int width = Math.max(1, String.valueOf(size()).length());
+            int width = Math.max(1, String.valueOf(getId(size() - 1)).length());
             if (size() < MAX_VISIBLE_CELLS) {
                 for (int i = 0; i < size(); ++i) {
-                    DatasetImpl.alignRight(stringBuilder, String.valueOf(i), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
+                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
 
                 }
             } else {
                 int halfRows = MAX_VISIBLE_CELLS >>> 1;
                 for (int i = 0; i < halfRows; ++i) {
-                    DatasetImpl.alignRight(stringBuilder, String.valueOf(i), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
+                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
                 }
                 //ellipses
-                DatasetImpl.alignRight(stringBuilder, StringUtils.repeatCharacter('.', Math.min(3, Math.max(width, 1))), width).append(COLUMN_SEPARATOR).append("...\n");
+                DataFrameImpl.alignRight(stringBuilder, StringUtils.repeatCharacter('.', Math.min(3, Math.max(width, 1))), width).append(COLUMN_SEPARATOR).append("...\n");
                 for (int i = size() - halfRows; i < size(); ++i) {
-                    DatasetImpl.alignRight(stringBuilder, String.valueOf(i), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
+                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
                 }
             }
 
 
         }
         return stringBuilder.append(String.format("{Series: \"%s\", size: %d, type: %s}", getName(), size(), StringUtils.toTitleCase(getType().name()))).toString();
+    }
+
+    @Override
+    public DataSeries<T> subset(int start, int end) {
+        return new DataSeriesView<>(this, start, end);
+    }
+
+    @Override
+    public DataSeries<T> subset(IntPredicate test) {
+        return new DataSeriesView<>(this, test);
+    }
+
+    static final class DataSeriesView<T extends Comparable<T>> extends DataSeriesImpl<T> {
+
+        final DataSeries<T> dataSeries;
+        int[] rows;
+        int numRows;
+
+        public DataSeriesView(DataSeries<T> dataSeries, int[] ids, int numRows) {
+            super(dataSeries.getName());
+            if (dataSeries.getClass() == DataSeriesView.class) {
+                this.dataSeries = ((DataSeriesView<T>) dataSeries).dataSeries;
+                rows = new int[ids.length];
+                for (int i = 0; i < ids.length; ++i) {
+                    rows[i] = ((DataSeriesView<T>) dataSeries).getId(ids[i]);
+                }
+            } else {
+                this.dataSeries = dataSeries;
+                rows = ids;
+            }
+            this.numRows = numRows;
+
+        }
+
+        public DataSeriesView(DataSeries<T> dataSeries, int[] ids) {
+            this(dataSeries, ids, ids.length);
+        }
+
+        public DataSeriesView(DataSeries<T> dataSeries, IntPredicate test) {
+            super(dataSeries.getName());
+            int j = 0;
+            int i = 0;
+            if (dataSeries.getClass() == DataSeriesView.class) {
+                this.dataSeries = ((DataSeriesView<T>) dataSeries).dataSeries;
+                this.rows = new int[dataSeries.size()];
+
+                while (i < dataSeries.size()) {
+                    int k = ((DataSeriesView<T>) dataSeries).getId(i);
+                    if (test.test(k)) {
+                        rows[j++] = k;
+                    }
+                    ++i;
+                }
+            } else {
+                this.dataSeries = dataSeries;
+                this.rows = new int[dataSeries.size()];
+                while (i < dataSeries.size()) {
+                    if (test.test(i)) {
+                        rows[j++] = i;
+                    }
+                    ++i;
+                }
+            }
+            numRows = j;
+
+        }
+
+        protected DataSeriesView(DataSeries<T> dataSeries, int start, int end) {
+            this(dataSeries, range(start, end));
+        }
+
+        @Override
+        int getId(int i) {
+
+            return rows[i];
+        }
+
+        @Override
+        public T get(int index) {
+            return dataSeries.get(rows[index]);
+        }
+
+        @Override
+        public int size() {
+            return numRows;
+        }
+
+        @Override
+        public DataType getType() {
+            return dataSeries.getType();
+        }
     }
 
 }

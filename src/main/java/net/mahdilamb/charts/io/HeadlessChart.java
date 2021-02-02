@@ -1,12 +1,10 @@
 package net.mahdilamb.charts.io;
 
 import net.mahdilamb.charts.Chart;
-import net.mahdilamb.charts.PlotLayoutImpl;
 import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.charts.layouts.PlotLayout;
 import net.mahdilamb.charts.swing.SwingChart;
 import net.mahdilamb.charts.swing.SwingUtils;
 
@@ -18,9 +16,15 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 //TODO come back to this
-public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
+public abstract class HeadlessChart<P extends Chart.PlotLayout, S> extends Chart<P, S> {
 
-    private static final class HeadlessChartCanvas<P extends PlotLayout<S>, S> extends Component implements ChartCanvas<BufferedImage> {
+
+    protected HeadlessChart(String title, double width, double height, PlotLayout plot, HeadlessChartCanvas<P, S> canvas) {
+        super(title, width, height, plot);
+        this.canvas = canvas;
+    }
+
+    private static final class HeadlessChartCanvas<P extends Chart.PlotLayout, S> extends Component implements ChartCanvas<BufferedImage> {
 
         private Graphics2D g;
         private Chart<P, S> chart;
@@ -279,13 +283,13 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     private final HeadlessChartCanvas<P, S> canvas;
-
+/*
     @SuppressWarnings("unchecked")
     protected HeadlessChart(String title, double width, double height, P plot) {
         super(title, width, height, (PlotLayoutImpl<S>) plot);
         this.canvas = new HeadlessChartCanvas<>();
     }
-
+*/
     @Override
     protected ChartCanvas<?> getCanvas() {
         return canvas;
@@ -343,11 +347,6 @@ public class HeadlessChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     protected double getTextLineHeight(Title title) {
         return canvas.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
 
-    }
-
-    @Override
-    protected double[] getTextLineOffsets(Title title, double maxWidth) {
-        return SwingUtils.getLineOffsets(canvas.g.getFontMetrics(), title, maxWidth);
     }
 
 

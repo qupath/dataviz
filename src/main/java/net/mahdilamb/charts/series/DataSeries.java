@@ -1,10 +1,10 @@
 package net.mahdilamb.charts.series;
 
 
-
 import net.mahdilamb.charts.PlotSeries;
 
 import java.util.*;
+import java.util.function.IntPredicate;
 import java.util.function.IntToDoubleFunction;
 import java.util.function.Predicate;
 
@@ -94,11 +94,11 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
             case LONG:
                 return (NumericSeries<Long>) this;
             case DOUBLE:
-                return new DataSeriesImpl.OfLongArray(this, el -> DataType.toLong((Double) el));
+                return new DataSeriesImpl.OfLongArray(this, el -> DataType.toLong((Double) el), v -> !Double.isNaN((Double) v));
             case BOOLEAN:
                 return new DataSeriesImpl.OfNonNaNLongArray(this, el -> DataType.toLong((Boolean) el));
             case STRING:
-                return new DataSeriesImpl.OfLongArray(this, el -> DataType.toLong((String) el));
+                return new DataSeriesImpl.OfLongArray(this, el -> DataType.toLong((String) el), v -> DataType.LONG.matches((String) v));
             default:
                 throw new DataSeriesCastException();
         }
@@ -262,4 +262,54 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
         return DataSeriesImpl.seriesToPlotMap.get(new DataSeriesImpl.CompatibleSeries(arr));
     }
 
+    /**
+     * Get a subset of this series
+     *
+     * @param start the start index (inclusive)
+     * @param end   the end index (exclusive)
+     * @return a sliced view into this data series
+     */
+    DataSeries<T> subset(int start, int end);
+
+    /**
+     * Get the first n elements
+     *
+     * @param n the number of elements
+     * @return a sliced view into this data series
+     */
+    default DataSeries<T> head(int n) {
+        return subset(0, n);
+    }
+
+    /**
+     * @return a sliced view of the first 5 elements in the series
+     */
+    default DataSeries<T> head() {
+        return head(5);
+    }
+
+    /**
+     * Get the last n elements
+     *
+     * @param n the number of elements
+     * @return a sliced view into this data series
+     */
+    default DataSeries<T> tail(int n) {
+        return subset(size() - n, size());
+    }
+
+    /**
+     * @return a sliced view of the last 5 elements in the series
+     */
+    default DataSeries<T> tail() {
+        return tail(5);
+    }
+
+    /**
+     * Get a subset of this series by doing a test on the indices of the series
+     *
+     * @param test the test on the indices
+     * @return a sliced view of this series based on the test
+     */
+    DataSeries<T> subset(IntPredicate test);
 }

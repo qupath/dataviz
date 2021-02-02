@@ -110,7 +110,7 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
 
     @SuppressWarnings("unchecked")
     private SwingChart(String title, double width, double height, P plot) {
-        super(title, width, height, (PlotLayoutImpl<S>) plot);
+        super(title, width, height, (PlotLayout) new PlotLayout());//todo
         final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
         canvas.setSize(size);
         canvas.setPreferredSize(size);
@@ -173,6 +173,11 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     }
 
     @Override
+    protected double getCharWidth(Font font, char character) {
+        return canvas.getFontMetrics(SwingUtils.convert(font)).charWidth(character);
+    }
+
+    @Override
     protected double getTextLineHeight(Font font) {
         return canvas.getTextHeight(font);
     }
@@ -207,12 +212,6 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
     protected double getTextLineHeight(Title title) {
         return canvas.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
     }
-
-    @Override
-    protected double[] getTextLineOffsets(Title title, double maxWidth) {
-        return canvas.getLineOffsets(title, maxWidth);
-    }
-
 
     private static final class ChartPane extends JPanel implements ChartCanvas<BufferedImage> {
 
@@ -502,11 +501,6 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
         private double getTextBaselineOffset(Font font) {
             final FontMetrics fontMetrics = getFontMetrics(SwingUtils.convert(font));
             return fontMetrics.getAscent();
-        }
-
-        double[] getLineOffsets(final Title title, double maxWidth) {
-            return SwingUtils.getLineOffsets(getFontMetrics(SwingUtils.convert(title.getFont())), title, maxWidth);
-
         }
 
         private double getTextWidth(Font font, String text) {

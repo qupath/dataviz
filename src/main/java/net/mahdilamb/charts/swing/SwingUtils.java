@@ -194,53 +194,6 @@ public final class SwingUtils {
         return source;
     }
 
-    /**
-     * Gets the line offsets of a title based on the alignment and the max width
-     *
-     * @param fontMetrics the font metrics to use
-     * @param title       the source title
-     * @param width       the desired width
-     * @return an array of sets. The length may exceed the number of lines. All excess elements are filled with NaN
-     */
-    public static double[] getLineOffsets(final FontMetrics fontMetrics, final Title title, double width) {
-        int i = 0;
-        int wordStart = 0;
-        final double frac;
-        double[] out = new double[4];
-        int j = 0;
-
-        switch (title.getAlignment()) {
-            case LEFT:
-                frac = 0;
-                break;
-            case CENTER:
-                frac = 0.5;
-                break;
-            case RIGHT:
-                frac = 1;
-                break;
-            default:
-                throw new UnsupportedOperationException();
-        }
-        final String text = title.getText();
-        while (i < text.length()) {
-            char c = text.charAt(i++);
-            if (c == '\n') {
-                final String line = text.substring(wordStart, i);
-                out = ensureCapacity(out, j + 1);
-                out[j++] = frac == 0 ? 0 : ((fontMetrics.stringWidth(line) - width) * frac);
-                wordStart = i;
-            }
-        }
-        if (wordStart < text.length()) {
-            final String line = text.substring(wordStart);
-            out = ensureCapacity(out, j + 1);
-            out[j++] = frac == 0 ? 0 : ((fontMetrics.stringWidth(line) - width) * frac);
-        }
-        Arrays.fill(out, j, out.length, Double.NaN);
-        return out;
-    }
-
     public static double getLineHeight(FontMetrics fontMetrics) {
         return fontMetrics.getHeight();
     }

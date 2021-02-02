@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
 import java.util.function.IntFunction;
+import java.util.function.IntPredicate;
+import java.util.function.Predicate;
 
 import static net.mahdilamb.charts.series.DataType.*;
 import static net.mahdilamb.charts.utils.StringUtils.iterateLine;
@@ -18,7 +20,7 @@ import static net.mahdilamb.charts.utils.StringUtils.iterateLine;
 /**
  * Default implementation of datasets
  */
-abstract class DatasetImpl implements Dataset {
+abstract class DataFrameImpl implements DataFrame {
     /**
      * The prefix to use for unnamed columns
      */
@@ -47,10 +49,83 @@ abstract class DatasetImpl implements Dataset {
     static String SKIP_ROWS = "...";
     static String SKIP_COLUMNS = "...";
 
+    static final class DataFrameView extends DataFrameImpl {
+
+        private final DataFrame dataFrame;
+        int numSeries;
+        int[] seriesIDs;
+        DataSeries<?>[] series;
+        int rows[];
+        int numRows = -1;
+
+        public DataFrameView(DataFrame dataFrame, int[] ids) {
+            //TODO what if dataframe is dataframe view?
+            super(dataFrame.getName());
+            this.dataFrame = dataFrame;
+            this.numSeries = ids.length;
+            seriesIDs = ids;
+        }
+
+        public DataFrameView(DataFrame dataFrame, IntPredicate test) {
+            //TODO what if dataframe is dataframe view?
+            super(dataFrame.getName());
+            this.dataFrame = dataFrame;
+            this.seriesIDs = new int[dataFrame.numSeries()];
+            int j = 0;
+            int i = 0;
+            while (i < dataFrame.numSeries()) {
+                if (test.test(i)) {
+                    seriesIDs[j++] = i;
+                }
+                ++i;
+            }
+            numSeries = j;
+        }
+
+        public DataFrameView(DataFrame dataFrame, Predicate<String> test) {
+            //TODO what if dataframe is dataframe view?
+            super(dataFrame.getName());
+            this.dataFrame = dataFrame;
+            this.seriesIDs = new int[dataFrame.numSeries()];
+            int j = 0;
+            int i = 0;
+            while (i < dataFrame.numSeries()) {
+                if (test.test(dataFrame.get(i).getName())) {
+                    seriesIDs[j++] = i;
+                }
+                ++i;
+            }
+            numSeries = j;
+        }
+
+        public DataFrameView(DataFrame dataFrame, int start, int end) {
+            this(dataFrame, range(start, end));
+        }
+
+        @Override
+        public DataSeries<?> get(int series) {
+            if (this.series == null) {
+                return dataFrame.get(series);
+            }
+            if (this.series[series] == null) {
+                this.series[series] = new DataSeriesImpl.DataSeriesView<>(dataFrame.get(series), rows);
+            }
+            //todo bounds checking
+            return this.series[series];
+        }
+
+
+        @Override
+        public int numSeries() {
+            return numSeries;
+        }
+    }
+
+
     /**
      * Dataset from an array of series
      */
-    static final class OfArray extends DatasetImpl {
+    static final class OfArray extends DataFrameImpl {
         private final DataSeries<?>[] series;
 
         /**
@@ -89,7 +164,7 @@ abstract class DatasetImpl implements Dataset {
     /**
      * Functional implementation of a dataset
      */
-    static final class OfFunctional extends DatasetImpl {
+    static final class OfFunctional extends DataFrameImpl {
         private final IntFunction<DataSeries<?>> seriesGetter;
         private final int size;
 
@@ -127,17 +202,17 @@ abstract class DatasetImpl implements Dataset {
      *
      * @param name the name of the dataset
      */
-    protected DatasetImpl(final String name) {
+    protected DataFrameImpl(final String name) {
         this.name = name;
     }
 
     /**
      * Implementation of a dataset created from a file
      */
-    static final class FromFile extends DatasetImpl {
+    static final class FromFile extends DataFrameImpl {
         private final DataSeries<?>[] series;
 
-        FromFile(DatasetImporter.FromFile importer) {
+        FromFile(DataFrameImporter.FromFile importer) {
             this(importer.source, importer.separator, importer.quoteCharacter, importer.charset, importer.putativeHeader, importer.types, importer.hasColumnNames, importer.numColumns, (importer.hasColumnNames ? -1 : 0) + importer.numLines);
         }
 
@@ -353,5 +428,24 @@ abstract class DatasetImpl implements Dataset {
         return alignRight(stringBuilder, td, width);
     }
 
+    @Override
+    public DataFrame subset(int start, int end) {
+        return new DataFrameView(this, start, end);
+    }
 
+    @Override
+    public DataFrame subset(Predicate<String> test) {
+        return new DataFrameView(this, test);
+    }
+
+    static int[] range(int[] out, int start, int end) {
+        for (int i = start, j = 0; i < end; ++i) {
+            out[j++] = i;
+        }
+        return out;
+    }
+
+    static int[] range(int start, int end) {
+        return range(new int[end - start], start, end);
+    }
 }
