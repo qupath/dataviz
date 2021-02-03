@@ -3,8 +3,8 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Stroke;
 
-abstract class ChartComponent {
-    Chart<?, ?> chart;
+abstract class ChartComponent<P, S> {
+    Chart<? extends P, ? extends S> chart;
     double boundsX, boundsY, boundsWidth, boundsHeight;
 
 
@@ -58,7 +58,7 @@ abstract class ChartComponent {
         drawBounds(canvas, this);
     }
 
-    static void drawBounds(final ChartCanvas<?> canvas, final ChartComponent component) {
+    static <P, S> void drawBounds(final ChartCanvas<?> canvas, final ChartComponent<P, S> component) {
         canvas.setStroke(Stroke.BLACK_STROKE);
         canvas.strokeRect(component.boundsX, component.boundsY, component.boundsWidth, component.boundsHeight);
     }
@@ -73,7 +73,7 @@ abstract class ChartComponent {
      * @param maxX   the requested maxX
      * @param maxY   the requested maxY
      */
-    protected abstract void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY);
+    protected abstract void calculateBounds(ChartCanvas<?> canvas, Chart<? extends P, ?extends S> source, double minX, double minY, double maxX, double maxY);
 
     /**
      * Draw the elements
@@ -85,6 +85,6 @@ abstract class ChartComponent {
      * @param maxX   the requested maxX
      * @param maxY   the requested maxY
      */
-    protected abstract void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY);
+    protected abstract void layout(ChartCanvas<?> canvas, Chart<? extends P, ?extends S> source, double minX, double minY, double maxX, double maxY);
 
 }

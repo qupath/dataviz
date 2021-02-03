@@ -2,8 +2,8 @@ package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.plots.*;
-import net.mahdilamb.charts.series.DataFrame;
-import net.mahdilamb.charts.series.DoubleSeries;
+import net.mahdilamb.charts.dataframe.DataFrame;
+import net.mahdilamb.charts.dataframe.DoubleSeries;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
@@ -20,16 +20,15 @@ import java.util.*;
  * @param <S> the type of the series
  */
 //TODO hide constructor
-public abstract class PlotSeries<S> extends ChartComponent implements PlotWithColorBar<S>, PlotWithLegend<S> {
+public abstract class PlotSeries<S> extends ChartComponent<Object,S> implements PlotWithColorBar<S>, PlotWithLegend<S> {
 
 
     public static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
 
     }
-
 
     private enum ColorMode {
         SINGLETON,
@@ -233,6 +232,11 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
     }
 
     static class ScatterImpl extends PlotSeries<Scatter> implements Scatter {
+        @Override
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends Scatter> source, double minX, double minY, double maxX, double maxY) {
+
+        }
+
         static final class ScatterPoint extends PointNode<MarkerImpl> {
 
             ScatterPoint(double x, double y, MarkerImpl data) {
@@ -328,10 +332,6 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
             return this;
         }
 
-        @Override
-        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
-
-        }
     }
 
     static abstract class BarImpl extends PlotSeries<Bar> {
@@ -364,10 +364,7 @@ public abstract class PlotSeries<S> extends ChartComponent implements PlotWithCo
 
     }
 
-    static abstract class DendrogramImpl extends PlotSeries<Dendrogram> {
 
-
-    }
 
     static abstract class DensityImpl extends PlotSeries<Density> {
 

@@ -1,10 +1,11 @@
 package net.mahdilamb.charts.tests;
 
 import net.mahdilamb.charts.PlotFactory;
-import net.mahdilamb.charts.series.DataFrame;
-import net.mahdilamb.charts.series.DoubleSeries;
+import net.mahdilamb.charts.dataframe.DataFrame;
+import net.mahdilamb.charts.dataframe.DoubleSeries;
 import net.mahdilamb.charts.statistics.BinWidthEstimator;
 import net.mahdilamb.charts.statistics.StatUtils;
+import net.mahdilamb.charts.statistics.utils.GroupBy;
 import org.junit.Test;
 
 import java.io.File;
@@ -19,7 +20,8 @@ public class DataFrameTests {
                         .setMarker('^')
                         .setColor("red")
         );
-        System.out.println(iris.subset("sepal_length","petal_length").last());
+        System.out.println(iris.subset(s -> s.startsWith("sepal")).first().subset(i -> i > 130));
         System.out.println(StatUtils.histogram(BinWidthEstimator.NUMPY_AUTO, ((DoubleSeries) iris.getDoubleSeries("sepal_length")).toArray(new double[0])));
+
     }
 }

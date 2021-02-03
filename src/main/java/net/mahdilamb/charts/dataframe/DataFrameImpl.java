@@ -1,4 +1,4 @@
-package net.mahdilamb.charts.series;
+package net.mahdilamb.charts.dataframe;
 
 
 import net.mahdilamb.charts.utils.StringUtils;
@@ -8,18 +8,18 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
-import java.util.Objects;
 import java.util.Scanner;
-import java.util.function.IntFunction;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
-import static net.mahdilamb.charts.series.DataType.*;
+import static net.mahdilamb.charts.dataframe.DataType.*;
 import static net.mahdilamb.charts.utils.StringUtils.iterateLine;
 
 /**
  * Default implementation of datasets
  */
+//TODO use correct id column
+//todo check formatting when number of rows equals MAX_ROWS
 abstract class DataFrameImpl implements DataFrame {
     /**
      * The prefix to use for unnamed columns
@@ -136,9 +136,11 @@ abstract class DataFrameImpl implements DataFrame {
          */
         OfArray(final String name, final DataSeries<?>... series) {
             super(name);
-            this.series = series;
+            this.series = new DataSeries[series.length];
             int size = -1;
+            int i = 0;
             for (DataSeries<?> s : series) {
+                this.series[i++] = (s.getClass() == DataSeriesImpl.DataSeriesView.class) ? ((DataSeriesImpl.DataSeriesView<?>) s).dataSeries : s;
                 if (size == -1) {
                     size = s.size();
                     continue;
@@ -159,37 +161,6 @@ abstract class DataFrameImpl implements DataFrame {
             return series.length;
         }
 
-    }
-
-    /**
-     * Functional implementation of a dataset
-     */
-    static final class OfFunctional extends DataFrameImpl {
-        private final IntFunction<DataSeries<?>> seriesGetter;
-        private final int size;
-
-        /**
-         * Create a Dataset without having to implement the interface
-         *
-         * @param name         the name of the dataset
-         * @param seriesGetter the function to get a series from its name
-         * @param size         the number of series in the dataset
-         */
-        OfFunctional(final String name, final int size, final IntFunction<DataSeries<?>> seriesGetter) {
-            super(name);
-            this.seriesGetter = Objects.requireNonNull(seriesGetter);
-            this.size = size;
-        }
-
-        @Override
-        public DataSeries<?> get(int series) {
-            return seriesGetter.apply(series);
-        }
-
-        @Override
-        public int numSeries() {
-            return size;
-        }
     }
 
     /**

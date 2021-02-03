@@ -1,14 +1,14 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.axes.LinearAxis;
 import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Theme;
 import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGFile;
-import net.mahdilamb.charts.layouts.XYPlot;
+import net.mahdilamb.charts.statistics.StatUtils;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
+import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 
 import java.io.File;
@@ -16,21 +16,165 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public abstract class Chart<P, S> extends ChartComponent {
+public abstract class Chart<P, S> extends ChartComponent<P, S> {
 
-    public static class PlotLayout extends ChartComponent {
+    static class CategoricalSeries {
+        String[] labels;
+        double[] values;
+    }
+
+    static class StatsSeries {
+        double[] values;
+    }
+
+    static class XYSeries {
+
+    }
+
+    static class XYSeriesBuilder {
+        final double[] x;
+        final double[] y;
+        final double xMin, xMax, yMin, yMax;
+
+        XYSeriesBuilder(double[] x, double[] y) {
+            if (x.length != y.length) {
+                throw new IllegalArgumentException("x and y must be the same length");
+            }
+            this.x = x;
+            this.y = y;
+            this.xMin = StatUtils.min(x);
+            this.xMax = StatUtils.max(x);
+            this.yMin = StatUtils.min(y);
+            this.yMax = StatUtils.max(y);
+        }
+
+    }
+
+    private static final class ColorBy {
+        String name;
+    }
+
+    private static final class ColorByScale {
+        String name;
+        boolean showInLegend, showColorScale;
+    }
+
+    private static final class ColorByGroup {
+        String name;
+        boolean showInLegend;
+    }
+
+    public static class Scatter extends XYSeriesBuilder {
+
+        int[] colorByGroup;
+        String[] colorByGroupName;
+
+        String colorByName;
+        Color[] colors;
+        double colorMin, colorMax;
+        boolean useColorScale = false;
+
+        public Scatter(double[] x, double[] y) {
+            super(x, y);
+
+        }
+
+        public Scatter setColorBy(final String name, final Colormap colormap, double[] colorBy, boolean normalize) {
+            if (colorBy.length != x.length) {
+                //todo check if divisible
+            }
+            this.colorByName = name;
+            colors = new Color[x.length];
+            colorMin = StatUtils.min(colorBy);
+            colorMax = StatUtils.max(colorBy);
+            double range = colorMax - colorMin;
+            for (int i = 0; i < x.length; ++i) {
+                colors[i] = colormap.get(normalize ? ((colorBy[i] - colorMin) / range) : colorBy[i]);
+            }
+            useColorScale = true;
+            return this;
+        }
+
+        public Scatter setColorBy(final String name, String[] colorNames) {
+            if (colorNames.length != x.length) {
+                //todo
+            }
+            this.colorByName = name;
+            colors = new Color[x.length];
+            for (int i = 0; i < x.length; ++i) {
+                colors[i] = Color.get(colorNames[i]);
+            }
+            useColorScale = false;
+            return this;
+        }
+
+        public Scatter setGroupBy(final String name, Iterable<String> groups) {
+            colorByName = name;
+            final Set<String> colors = new LinkedHashSet<>();
+            int num = 0;
+            for (String s : groups) {
+                colors.add(s);
+                ++num;
+            }
+            if (num != x.length) {
+                throw new IllegalArgumentException("number of colors must equal that of scatter points");
+            }
+            final Map<String, Integer> map = new Hashtable<>(colors.size());
+            int i = 0;
+            for (String color : colors) {
+                map.put(color, i++);
+            }
+            this.colorByGroup = new int[x.length];
+            this.colorByGroupName = new String[x.length];
+            int j = 0;
+            for (final String s : groups) {
+                this.colorByGroup[j] = map.get(s);
+                this.colorByGroupName[j++] = s;
+            }
+
+            useColorScale = false;
+            return this;
+        }
+
+        public Scatter setColorBy(final String name, Color[] colors) {
+            if (colors.length != x.length) {
+                //todo
+            }
+            this.colorByName = name;
+            this.colors = colors;
+            useColorScale = false;
+            return this;
+        }
+
+
+    }
+
+    public abstract static class PlotLayout<S> extends ChartComponent<Object, S> {
 
         @Override
-        protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
-            //todo
+        protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+
         }
 
         @Override
-        protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
-            //TODO
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+            setBoundsFromExtent(minX, minY, maxX, maxY);
+            canvas.fillOval(0, 0, 505, 50);
         }
     }
 
+    public static class XYPlot<S> extends PlotLayout<S> {
+
+        private final Axis xAxis;
+        private final Axis yAxis;
+
+        public XYPlot(Axis xAxis, Axis yAxis) {
+            super();
+            this.xAxis = xAxis;
+            this.yAxis = yAxis;
+            System.out.println(xAxis);
+        }
+    }
 
     private static final Map<String, BiConsumer<File, Chart<?, ?>>> supportedFormats = new HashMap<>();
 
@@ -57,22 +201,22 @@ public abstract class Chart<P, S> extends ChartComponent {
     Iterator<Float> colormapIt = theme.getDefaultColormap().iterator();
 
     Title title;
-    ChartNode topArea, leftArea, rightArea, bottomArea;
-    final PlotLayout container;
-    ChartNode central; // to be used when adding colorscale/legend to the chart
-    ChartNode overlay;//for interaction
+    ChartNode<P, S> topArea, leftArea, rightArea, bottomArea;
+    final PlotLayout<S> plotArea;
+    ChartNode<P, S> central; // to be used when adding colorscale/legend to the chart
+    ChartNode<P, S> overlay;//for interaction
     double width, height;
 
     S singleData;
     List<S> data;
-    ChartComponent singleAnnotation;
-    List<ChartComponent> annotations;
+    ChartComponent<P, S> singleAnnotation;
+    List<ChartComponent<P, S>> annotations;
 
-    protected Chart(String title, double width, double height, PlotLayout plot) {
+    protected Chart(String title, double width, double height, PlotLayout<S> plot) {
         this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()));//todo
         this.title.chart = this;
-        this.container = plot;
-        this.container.chart = this;
+        this.plotArea = plot;
+        this.plotArea.chart = this;
         this.width = width;
         this.height = height;
     }
@@ -96,7 +240,7 @@ public abstract class Chart<P, S> extends ChartComponent {
 
     }
 
-    public void addAnnotation(ChartComponent annotation) {
+    public void addAnnotation(ChartComponent<P, S> annotation) {
         if (annotations == null) {
             if (singleAnnotation == null) {
                 singleAnnotation = annotation;
@@ -220,15 +364,16 @@ public abstract class Chart<P, S> extends ChartComponent {
     protected abstract double getTextLineHeight(Title title);
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(ChartCanvas<?> canvas, Chart<? extends P, ? extends S> source, double minX, double minY, double maxX, double maxY) {
         canvas.reset();
 
-        title.calculateBounds(canvas, source, minX, minY, maxX, maxY);
+        //title.calculateBounds(canvas, source, minX, minY, maxX, maxY);
+        plotArea.layout(canvas, source, minX, minY, maxX, maxY);
 
         canvas.done();
     }
 
-    boolean isEmpty(final ChartNode node) {
+    boolean isEmpty(final ChartNode<?, ?> node) {
         return node == null || node.size() == 0;
     }
 
@@ -240,7 +385,7 @@ public abstract class Chart<P, S> extends ChartComponent {
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<? extends P, ? extends S> source, double minX, double minY, double maxX, double maxY) {
 
     }
 
@@ -337,7 +482,7 @@ public abstract class Chart<P, S> extends ChartComponent {
      * @param chart the chart
      * @param a     the component
      */
-    protected static void assignToChart(Chart<?, ?> chart, ChartComponent a) {
+    protected static <P, S> void assignToChart(Chart<P, S> chart, ChartComponent<P, S> a) {
         a.chart = chart;
     }
 
@@ -348,16 +493,14 @@ public abstract class Chart<P, S> extends ChartComponent {
      * @param a     component a
      * @param b     component b
      */
-    protected static void assignToChart(Chart<?, ?> chart, ChartComponent a, ChartComponent b) {
+    protected static <P, S> void assignToChart(Chart<P, S> chart, ChartComponent<P, S> a, ChartComponent<P, S> b) {
         assignToChart(chart, a);
         assignToChart(chart, b);
     }
 
     @SuppressWarnings("unchecked")
-    protected static <P extends XYPlot<S>, S> P toPlot(final String xAxisLabel, double xMin, double xMax, final String yAxisLabel, double yMin, double yMax, S series) {
-        final Axis xAxis = new LinearAxis(xAxisLabel, xMin, xMax);
-        final Axis yAxis = new LinearAxis(yAxisLabel, yMin, yMax);
-        return (P) new PlotLayoutImpl.XYPlotImpl<>(xAxis, yAxis, ((PlotSeries<S>) series).prepare(xAxis, yAxis));
+    protected static <P extends XYPlot<S>, S> P toPlot(final String xAxisLabel, Axis xAxis, final Axis yAxis, S series) {
+        return (P) new XYPlot<>(xAxis, yAxis);
 
     }
 /*

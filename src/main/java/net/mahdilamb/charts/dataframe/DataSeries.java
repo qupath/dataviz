@@ -1,4 +1,4 @@
-package net.mahdilamb.charts.series;
+package net.mahdilamb.charts.dataframe;
 
 
 import net.mahdilamb.charts.PlotSeries;
@@ -118,23 +118,6 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
             default:
                 throw new DataSeriesCastException();
         }
-    }
-
-    default BooleanSeries asBoolean(Predicate<T> converter) {
-        return new DataSeriesImpl.OfBooleanArray(this, converter);
-    }
-
-    /**
-     * Element-by-element equality operation
-     * <p>
-     * Return a new boolean series containing the results of checking if any of the elements in this series equal
-     * that of the other
-     *
-     * @param other the value to compare with
-     * @return a boolean series containing the results of the equality operation
-     */
-    default BooleanSeries eq(T other) {
-        return asBoolean(el -> Objects.equals(other, el));
     }
 
     default T[] toArray(T[] output) {

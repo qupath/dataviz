@@ -13,9 +13,9 @@ import net.mahdilamb.colormap.Color;
 import java.util.Objects;
 
 //TODO make package protected
-public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLayout<S> {
+public abstract class PlotLayoutImpl<S> extends ChartComponent<Object,S> implements PlotLayout<S> {
 
-    static void showBounds(ChartCanvas<?> canvas, ChartComponent component) {
+    static void showBounds(ChartCanvas<?> canvas, ChartComponent<?,?> component) {
         canvas.strokeRect(component.boundsX, component.boundsY, component.boundsWidth, component.boundsHeight);
 
     }
@@ -26,15 +26,16 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
     Fill backgroundColor = new Fill(Color.lightgrey);
     Stroke border = new Stroke(Color.darkgray, 1.5);
 
+    @Override
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+
+    }
+
     @SafeVarargs
     protected PlotLayoutImpl(S... series) {
         this.series = series;
     }
 
-    @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
-
-    }
 
     public static class Circular<S> extends PlotLayoutImpl<S> {
         Axis radialAxis;
@@ -49,9 +50,8 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
 
-
         @Override
-        protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
 
         }
     }
@@ -66,10 +66,9 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
             super(xAxis, yAxis, series);
         }
 
-
         @Override
-        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
-            //TODO
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+
         }
     }
 
@@ -81,8 +80,8 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
         @Override
-        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
-            //TODO
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+
         }
     }
 
@@ -104,8 +103,8 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
         @Override
-        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
-            //TODO
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+
         }
     }
 
@@ -187,9 +186,10 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
             this.boundsHeight = yAxis.boundsHeight;
         }
 
+
         @Override
         @SuppressWarnings("unchecked")
-        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
             canvas.setFill(backgroundColor);
             calculateBounds(source, canvas, minX, minY, maxX, maxY);
             canvas.fillRect(boundsX, boundsY, boundsWidth, boundsHeight);
@@ -204,7 +204,6 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
             canvas.setStroke(border);
             canvas.strokeRect(boundsX, boundsY, boundsWidth, boundsHeight);
         }
-
 
     }
 
@@ -240,8 +239,8 @@ public abstract class PlotLayoutImpl<S> extends ChartComponent implements PlotLa
         }
 
         @Override
-        protected void layout(ChartCanvas<?> canvas,  Chart<?, ?>  source, double minX, double minY, double maxX, double maxY) {
-            //TODO
+        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+
         }
 
     }

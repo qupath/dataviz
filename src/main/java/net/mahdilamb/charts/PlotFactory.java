@@ -1,7 +1,7 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.plots.Scatter;
-import net.mahdilamb.charts.series.DataFrame;
+import net.mahdilamb.charts.dataframe.DataFrame;
 import net.mahdilamb.colormap.Colormap;
 
 import static net.mahdilamb.charts.PlotSeries.DEFAULT_SEQUENTIAL_COLORMAP;

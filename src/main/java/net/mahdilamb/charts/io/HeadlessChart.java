@@ -16,15 +16,15 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 //TODO come back to this
-public abstract class HeadlessChart<P extends Chart.PlotLayout, S> extends Chart<P, S> {
+public abstract class HeadlessChart<P extends Chart.PlotLayout<S>, S> extends Chart<P, S> {
 
 
-    protected HeadlessChart(String title, double width, double height, PlotLayout plot, HeadlessChartCanvas<P, S> canvas) {
+    protected HeadlessChart(String title, double width, double height, PlotLayout<S> plot, HeadlessChartCanvas<P, S> canvas) {
         super(title, width, height, plot);
         this.canvas = canvas;
     }
 
-    private static final class HeadlessChartCanvas<P extends Chart.PlotLayout, S> extends Component implements ChartCanvas<BufferedImage> {
+    private static final class HeadlessChartCanvas<P extends Chart.PlotLayout<S>, S> extends Component implements ChartCanvas<BufferedImage> {
 
         private Graphics2D g;
         private Chart<P, S> chart;

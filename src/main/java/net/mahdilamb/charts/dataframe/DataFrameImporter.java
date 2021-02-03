@@ -1,4 +1,4 @@
-package net.mahdilamb.charts.series;
+package net.mahdilamb.charts.dataframe;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,8 +8,8 @@ import java.util.Arrays;
 import java.util.Objects;
 import java.util.Scanner;
 
-import static net.mahdilamb.charts.series.DataType.STRING;
-import static net.mahdilamb.charts.series.DataFrameImpl.EMPTY_COLUMN_PREFIX;
+import static net.mahdilamb.charts.dataframe.DataType.STRING;
+import static net.mahdilamb.charts.dataframe.DataFrameImpl.EMPTY_COLUMN_PREFIX;
 import static net.mahdilamb.charts.utils.StringUtils.LINE_PATTERN;
 import static net.mahdilamb.charts.utils.StringUtils.iterateLine;
 

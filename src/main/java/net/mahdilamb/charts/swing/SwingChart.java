@@ -1,13 +1,11 @@
 package net.mahdilamb.charts.swing;
 
+import net.mahdilamb.charts.Axis;
 import net.mahdilamb.charts.Chart;
-import net.mahdilamb.charts.PlotLayoutImpl;
 import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.charts.layouts.PlotLayout;
-import net.mahdilamb.charts.layouts.XYPlot;
 
 import javax.swing.*;
 import java.awt.*;
@@ -20,11 +18,10 @@ import java.util.function.Consumer;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
-public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
+public final class SwingChart<P, S> extends Chart<P, S> {
     private static <S> SwingChart<XYPlot<S>, S> chart(final String title, double width, double height, final String xAxisLabel, double xAxisMin, double xAxisMax, final String yAxisLabel, double yAxisMin, double yAxisMax, final S series) {
-        XYPlot<S> plot = toPlot(xAxisLabel, xAxisMin, xAxisMax, yAxisLabel, yAxisMin, yAxisMax, series);
-        final SwingChart<XYPlot<S>, S> chart = new SwingChart<>(title, width, height, plot);
-        assignToChart(chart, plot.getXAxis(), plot.getYAxis());
+        final SwingChart<XYPlot<S>, S> chart = new SwingChart<>(title, width, height, new XYPlot<>(Axis.linear(xAxisLabel, xAxisMin, xAxisMax), Axis.linear(yAxisLabel, yAxisMin, yAxisMax)));
+        //todo assignToChart(chart, plot.getXAxis(), plot.getYAxis());
         return chart;
     }
 
@@ -42,7 +39,9 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
      * @return the series in its plot
      */
     private static <S> SwingChart<XYPlot<S>, S> chart(final String title, double width, double height, final String xAxisLabel, final String yAxisLabel, final S series) {
-        return chart(title, width, height, xAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, yAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, series);
+    //    return chart(title, width, height, xAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, yAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, series);
+        return chart(title, width, height, xAxisLabel, 0, 10, yAxisLabel, 0, 10, series);
+
     }
 
     private static <S> SwingChart<XYPlot<S>, S> chart(final String title, final String xAxisLabel, final String yAxisLabel, final S series) {
@@ -108,9 +107,8 @@ public final class SwingChart<P extends PlotLayout<S>, S> extends Chart<P, S> {
 
     private final ChartPane canvas = new ChartPane(this);
 
-    @SuppressWarnings("unchecked")
-    private SwingChart(String title, double width, double height, P plot) {
-        super(title, width, height, (PlotLayout) new PlotLayout());//todo
+    private SwingChart(String title, double width, double height, PlotLayout<S> plot) {
+        super(title, width, height,plot);//todo
         final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
         canvas.setSize(size);
         canvas.setPreferredSize(size);

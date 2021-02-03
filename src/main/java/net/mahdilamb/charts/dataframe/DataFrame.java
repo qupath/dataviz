@@ -1,4 +1,4 @@
-package net.mahdilamb.charts.series;
+package net.mahdilamb.charts.dataframe;
 
 
 import net.mahdilamb.charts.utils.StringUtils;
@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.PrimitiveIterator;
-import java.util.function.IntFunction;
 import java.util.function.Predicate;
 
 /**
@@ -78,7 +77,7 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
                 throw new IllegalArgumentException("Could not find column by name " + names[j]);
             }
         }
-        return new DataFrameImpl.OfArray(getName() + " {subset}", series);
+        return new DataFrameImpl.OfArray(getName(), series);
     }
 
     /**
@@ -195,6 +194,7 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
 
     /**
      * Get a subset of the series based on a test of the series names
+     *
      * @param test the test of the series names
      * @return a sliced view of this data frame
      */
@@ -267,6 +267,29 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
     }
 
     /**
+     * Get the size of an axis in the data frame
+     *
+     * @param axis the axis
+     * @return the size of the axis
+     */
+    default int size(Axis axis) {
+        switch (axis) {
+            case COLUMN:
+                return numSeries();
+            case INDEX:
+            default:
+                return numSeries() == 0 ? 0 : get(0).size();
+        }
+    }
+
+    /**
+     * @return the number of elements in the data frame
+     */
+    default int size() {
+        return size(Axis.COLUMN) * size(Axis.INDEX);
+    }
+
+    /**
      * @return an iterator over the names of the series
      */
     @Override
@@ -295,18 +318,6 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
      */
     static DataFrame from(final String name, DataSeries<?>... series) {
         return new DataFrameImpl.OfArray(name, series);
-    }
-
-    /**
-     * Factory method to create a dataset in a functional style
-     *
-     * @param name         the name of the data
-     * @param size         the number of series in the dataset
-     * @param seriesGetter the function used to get a series from a name
-     * @return a dataset that using functional programming to retrieve series
-     */
-    static DataFrame from(final String name, int size, IntFunction<DataSeries<?>> seriesGetter) {
-        return new DataFrameImpl.OfFunctional(name, size, seriesGetter);
     }
 
     /**

@@ -2,10 +2,12 @@ package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.axes.LinearAxis;
 import net.mahdilamb.charts.axes.NumericAxis;
-import net.mahdilamb.charts.graphics.*;
+import net.mahdilamb.charts.graphics.ChartCanvas;
+import net.mahdilamb.charts.graphics.Font;
+import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.colormap.Color;
 
-public abstract class Axis extends ChartComponent {
+public abstract class Axis extends ChartComponent<Object, Object> {
 
 
     double scale;
@@ -104,9 +106,8 @@ public abstract class Axis extends ChartComponent {
     }
 
 
-
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?,?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
         switch (type) {
             case X:
                 return;

@@ -1,4 +1,4 @@
-package net.mahdilamb.charts.series;
+package net.mahdilamb.charts.dataframe;
 
 import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.utils.StringUtils;
@@ -6,8 +6,8 @@ import net.mahdilamb.charts.utils.StringUtils;
 import java.util.*;
 import java.util.function.*;
 
-import static net.mahdilamb.charts.series.DataFrameImpl.COLUMN_SEPARATOR;
-import static net.mahdilamb.charts.series.DataFrameImpl.range;
+import static net.mahdilamb.charts.dataframe.DataFrameImpl.COLUMN_SEPARATOR;
+import static net.mahdilamb.charts.dataframe.DataFrameImpl.range;
 
 /**
  * Implementations of the various different types of series
@@ -482,10 +482,9 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
         final StringBuilder stringBuilder = new StringBuilder();
         if (size() > 1) {
             int width = Math.max(1, String.valueOf(getId(size() - 1)).length());
-            if (size() < MAX_VISIBLE_CELLS) {
+            if (size() <=MAX_VISIBLE_CELLS) {
                 for (int i = 0; i < size(); ++i) {
                     DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
-
                 }
             } else {
                 int halfRows = MAX_VISIBLE_CELLS >>> 1;

@@ -7,7 +7,7 @@ import net.mahdilamb.charts.graphics.HAlign;
 /**
  * A title is text that takes up space in a layout
  */
-public class Title extends ChartComponent {
+public class Title extends ChartComponent<Object, Object> {
     double paddingX = 20, paddingY = 20;
     boolean isVisible = true;
 
@@ -123,7 +123,6 @@ public class Title extends ChartComponent {
         }
         boundsHeight = source.getTextLineHeight(font) + paddingY;
     }
-
 
 
 }

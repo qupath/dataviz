@@ -11,15 +11,16 @@ import java.util.List;
  * @implNote Uses a small list optimisation (only uses a list when there are
  * more than one child). The list remains once created
  */
-public class ChartNode extends ChartComponent {
-    private ChartComponent child;
-    private List<ChartComponent> children;
+public class ChartNode<P, S> extends ChartComponent<P, S> {
+    private ChartComponent<P, S> child;
+    private List<ChartComponent<P, S>> children;
 
     /**
      * Add a child node
+     *
      * @param child the child node to add
      */
-    public void add(final ChartComponent child) {
+    public void add(final ChartComponent<P, S> child) {
 
         if (children == null) {
             if (this.child == null) {
@@ -36,7 +37,6 @@ public class ChartNode extends ChartComponent {
     }
 
     /**
-     *
      * @return the size of the chart node
      */
     public int size() {
@@ -50,7 +50,7 @@ public class ChartNode extends ChartComponent {
      * @param index the index
      * @return the item at the index
      */
-    public ChartComponent get(int index) {
+    public ChartComponent<P, S> get(int index) {
         if (index < 0) {
             throw new IndexOutOfBoundsException("index cannot be less than 0");
         }
@@ -65,10 +65,11 @@ public class ChartNode extends ChartComponent {
 
     /**
      * Remove a component from the node
+     *
      * @param component the component to remove
      * @return whether the component was removed
      */
-    public boolean remove(ChartComponent component) {
+    public boolean remove(ChartComponent<P, S> component) {
         if (children == null) {
             if (child != null && child == component) {
                 child = null;
@@ -80,12 +81,12 @@ public class ChartNode extends ChartComponent {
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<? extends P, ? extends S> source, double minX, double minY, double maxX, double maxY) {
         //TODO
     }
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(ChartCanvas<?> canvas, Chart<? extends P, ? extends S> source, double minX, double minY, double maxX, double maxY) {
         //TODO
     }
 }

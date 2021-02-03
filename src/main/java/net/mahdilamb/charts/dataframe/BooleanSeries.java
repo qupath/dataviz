@@ -1,4 +1,4 @@
-package net.mahdilamb.charts.series;
+package net.mahdilamb.charts.dataframe;
 
 import net.mahdilamb.utils.functions.PrimitiveIterators;
 

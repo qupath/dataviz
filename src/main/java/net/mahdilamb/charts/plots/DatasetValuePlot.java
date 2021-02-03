@@ -1,6 +1,6 @@
 package net.mahdilamb.charts.plots;
 
-import net.mahdilamb.charts.series.DataFrame;
+import net.mahdilamb.charts.dataframe.DataFrame;
 
 public class DatasetValuePlot {
     DataFrame dataset;

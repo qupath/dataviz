@@ -6,7 +6,7 @@ import org.junit.Test;
 import static org.junit.Assert.assertEquals;
 
 public class SmallOptimizedNodeTest {
-    public static final ChartComponent empty = new ChartComponent() {
+    public static final ChartComponent<Object, Object> empty = new ChartComponent<>() {
         @Override
         protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
 
@@ -20,7 +20,7 @@ public class SmallOptimizedNodeTest {
 
     @Test
     public void addWorksCorrectly() {
-        ChartNode node = new ChartNode();
+        ChartNode<Object, Object> node = new ChartNode<>();
         assertEquals(0, node.size());
         node.add(empty);
         assertEquals(1, node.size());
@@ -32,7 +32,7 @@ public class SmallOptimizedNodeTest {
 
     @Test
     public void removeWorksCorrectly() {
-        ChartNode node = new ChartNode();
+        ChartNode<Object, Object> node = new ChartNode<>();
         assertEquals(0, node.size());
         node.add(empty);
         assertEquals(1, node.size());
