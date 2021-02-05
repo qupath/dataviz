@@ -1,8 +1,8 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.dataframe.DataFrame;
-import net.mahdilamb.charts.dataframe.plots.DataframeScatter;
 import net.mahdilamb.charts.plots.Scatter;
+import net.mahdilamb.charts.plots.dataframe.DataframeScatter;
 
 //TODO make series using Pattern matching in datasets e.g. for doing replicates
 public final class PlotFactory {

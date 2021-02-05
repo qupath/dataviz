@@ -3,10 +3,10 @@ package net.mahdilamb.charts.tests;
 import net.mahdilamb.charts.dataframe.Axis;
 import net.mahdilamb.charts.dataframe.DataFrame;
 import net.mahdilamb.charts.dataframe.DoubleSeries;
-import net.mahdilamb.charts.dataframe.plots.DataframeScatter;
 import net.mahdilamb.charts.plots.Bar;
 import net.mahdilamb.charts.plots.Line;
 import net.mahdilamb.charts.plots.Scatter;
+import net.mahdilamb.charts.plots.dataframe.DataframeScatter;
 import org.junit.Test;
 
 import java.io.File;

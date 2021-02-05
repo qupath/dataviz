@@ -1,11 +1,11 @@
 package net.mahdilamb.charts.tests;
 
 import net.mahdilamb.charts.PlotFactory;
+
 import net.mahdilamb.charts.dataframe.DataFrame;
 import net.mahdilamb.charts.dataframe.DoubleSeries;
 import net.mahdilamb.charts.statistics.BinWidthEstimator;
 import net.mahdilamb.charts.statistics.StatUtils;
-import net.mahdilamb.charts.statistics.utils.GroupBy;
 import org.junit.Test;
 
 import java.io.File;

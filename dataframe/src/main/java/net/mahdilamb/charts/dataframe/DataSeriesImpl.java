@@ -1,13 +1,11 @@
 package net.mahdilamb.charts.dataframe;
 
+import net.mahdilamb.charts.dataframe.utils.StringUtils;
 import net.mahdilamb.charts.statistics.utils.GroupBy;
-import net.mahdilamb.charts.utils.StringUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Iterator;
 import java.util.function.*;
-
-import static net.mahdilamb.charts.dataframe.DataFrameImpl.COLUMN_SEPARATOR;
-import static net.mahdilamb.charts.dataframe.DataFrameImpl.range;
 
 /**
  * Implementations of the various different types of series
@@ -457,17 +455,17 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T>,
             int width = Math.max(1, String.valueOf(getId(size() - 1)).length());
             if (size() <=MAX_VISIBLE_CELLS) {
                 for (int i = 0; i < size(); ++i) {
-                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
+                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(DataFrameImpl.COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
                 }
             } else {
                 int halfRows = MAX_VISIBLE_CELLS >>> 1;
                 for (int i = 0; i < halfRows; ++i) {
-                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
+                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(DataFrameImpl.COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
                 }
                 //ellipses
-                DataFrameImpl.alignRight(stringBuilder, StringUtils.repeatCharacter('.', Math.min(3, Math.max(width, 1))), width).append(COLUMN_SEPARATOR).append("...\n");
+                DataFrameImpl.alignRight(stringBuilder, StringUtils.repeatCharacter('.', Math.min(3, Math.max(width, 1))), width).append(DataFrameImpl.COLUMN_SEPARATOR).append("...\n");
                 for (int i = size() - halfRows; i < size(); ++i) {
-                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
+                    DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(DataFrameImpl.COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
                 }
             }
 
@@ -542,7 +540,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T>,
         }
 
         protected DataSeriesView(DataSeries<T> dataSeries, int start, int end) {
-            this(dataSeries, range(start, end));
+            this(dataSeries, DataFrameImpl.range(start, end));
         }
 
         @Override

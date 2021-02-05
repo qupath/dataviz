@@ -43,7 +43,7 @@ public final class Pie extends PlotSeries.Categorical<Pie> {
     }
 
     public Pie setPulls(final Iterable<Double> pulls) {
-        this.pull = fill(new double[values.size()], pulls, 0);
+        this.pull = fill(new double[values.length], pulls, 0);
         return requestDataUpdate();
     }
 }

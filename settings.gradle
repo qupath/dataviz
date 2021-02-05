@@ -3,4 +3,6 @@ rootProject.name = 'charts'
 include ":geom2d-core"
 project(":geom2d-core").projectDir = new File("../../geom2d/geom2d-core/")
 include ':statistics'
+include ':dataframe'
+
 

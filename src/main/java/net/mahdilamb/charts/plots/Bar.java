@@ -54,22 +54,22 @@ public final class Bar extends PlotSeries.Categorical<Bar> {
     }
 
     public Bar setWidths(Iterable<Double> widths) {
-        this.widths = fill(new double[values.size()], widths, DEFAULT_WIDTH);
+        this.widths = fill(new double[values.length], widths, DEFAULT_WIDTH);
         return requestLayout();
     }
 
     public Bar setBases(Iterable<Double> bases) {
-        this.bases = fill(new double[values.size()], bases, 0);
+        this.bases = fill(new double[values.length], bases, 0);
         return requestLayout();
     }
 
     public Bar setErrorUpper(Iterable<Double> error) {
-        this.errorUpper = fill(new double[values.size()], error, Double.NaN);
+        this.errorUpper = fill(new double[values.length], error, Double.NaN);
         return requestLayout();
     }
 
     public Bar setErrorLower(Iterable<Double> error) {
-        this.errorLower = fill(new double[values.size()], error, Double.NaN);
+        this.errorLower = fill(new double[values.length], error, Double.NaN);
         return requestLayout();
     }
 
@@ -94,7 +94,7 @@ public final class Bar extends PlotSeries.Categorical<Bar> {
     }
 
     public Bar setColors(final Iterable<Double> colors) {
-        this.colorScale = fill(new double[values.size()], colors, Double.NaN);
+        this.colorScale = fill(new double[values.length], colors, Double.NaN);
         return requestLayout();
     }
 

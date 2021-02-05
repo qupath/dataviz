@@ -1,4 +1,5 @@
-package net.mahdilamb.charts.dataframe.plots;
+package net.mahdilamb.charts.plots.dataframe;
+
 
 import net.mahdilamb.charts.dataframe.Axis;
 import net.mahdilamb.charts.dataframe.DataFrame;

@@ -1,0 +1,4 @@
+rootProject.name = 'dataframe'
+
+include ':statistics'
+project(":statistics").projectDir = new File("../statistics/")

@@ -4,6 +4,7 @@ import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.dataframe.Axis;
 import net.mahdilamb.charts.dataframe.DataFrame;
 
+
 import static net.mahdilamb.charts.utils.ArrayUtils.fill;
 
 public final class Table extends PlotSeries<Table> {

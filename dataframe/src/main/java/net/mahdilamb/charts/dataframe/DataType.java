@@ -2,7 +2,8 @@ package net.mahdilamb.charts.dataframe;
 
 import java.util.regex.Pattern;
 
-import static net.mahdilamb.charts.utils.StringUtils.*;
+import static net.mahdilamb.charts.dataframe.utils.StringUtils.*;
+
 
 /**
  * Datatype to be used by dataseries

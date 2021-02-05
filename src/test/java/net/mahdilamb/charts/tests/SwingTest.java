@@ -16,7 +16,7 @@ public class SwingTest {
         final DataFrame iris = DataFrame.from(source);
         final Scatter s = new Scatter(null, ((DoubleSeries) iris.getDoubleSeries("sepal_width")).toArray(new double[0]), ((DoubleSeries) iris.getDoubleSeries("sepal_length")).toArray(new double[0]));
         s.setColors("species", iris.getStringSeries("species"));
-       show("Sepal length vs width",
+        show("Sepal length vs width",
                 "Sepal width", "Sepal length",
                 scatter(iris, "sepal_width", "sepal_length", "petal_length")
                         .setMarker('o')

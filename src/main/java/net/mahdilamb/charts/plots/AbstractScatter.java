@@ -28,7 +28,7 @@ abstract class AbstractScatter<S extends AbstractScatter<S>> extends PlotSeries.
 
 
     public S setOpacities(Iterable<Double> alphas) {
-        this.opacities = fill(new double[x.size()], alphas, 1);
+        this.opacities = fill(new double[x.length], alphas, 1);
         return requestLayout();
     }
 

@@ -1,7 +1,8 @@
 package net.mahdilamb.charts.dataframe;
 
 
-import net.mahdilamb.charts.utils.StringUtils;
+
+import net.mahdilamb.charts.dataframe.utils.StringUtils;
 
 import java.io.File;
 import java.nio.charset.Charset;

@@ -1,7 +1,7 @@
 package net.mahdilamb.charts.dataframe;
 
 
-import net.mahdilamb.charts.utils.StringUtils;
+import net.mahdilamb.charts.dataframe.utils.StringUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -13,7 +13,7 @@ import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
 import static net.mahdilamb.charts.dataframe.DataType.*;
-import static net.mahdilamb.charts.utils.StringUtils.iterateLine;
+import static net.mahdilamb.charts.dataframe.utils.StringUtils.iterateLine;
 
 /**
  * Default implementation of datasets

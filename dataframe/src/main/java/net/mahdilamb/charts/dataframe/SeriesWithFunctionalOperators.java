@@ -1,7 +1,7 @@
 package net.mahdilamb.charts.dataframe;
 
+import net.mahdilamb.charts.dataframe.utils.Comparables;
 import net.mahdilamb.charts.statistics.utils.GroupBy;
-import net.mahdilamb.charts.utils.Comparables;
 
 import java.util.Objects;
 import java.util.function.BiConsumer;

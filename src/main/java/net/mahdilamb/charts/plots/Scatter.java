@@ -84,25 +84,25 @@ public class Scatter extends AbstractScatter<Scatter> {
 
     //todo do relative error and constant errors
     public Scatter setAbsoluteErrorX(Iterable<Double> errorX) {
-        this.errorsXLower = fill(new double[x.size()], errorX, Double.NaN);
+        this.errorsXLower = fill(new double[x.length], errorX, Double.NaN);
         this.errorsXUpper = errorsXLower;
         return requestDataUpdate();
     }
 
     public Scatter setAbsoluteErrorX(Iterable<Double> lower, Iterable<Double> upper) {
-        this.errorsXLower = fill(new double[x.size()], lower, Double.NaN);
-        this.errorsXUpper = fill(new double[x.size()], upper, Double.NaN);
+        this.errorsXLower = fill(new double[x.length], lower, Double.NaN);
+        this.errorsXUpper = fill(new double[x.length], upper, Double.NaN);
         return requestDataUpdate();
     }
 
     public Scatter setAbsoluteErrorY(Iterable<Double> lower, Iterable<Double> upper) {
-        this.errorsYLower = fill(new double[y.size()], lower, Double.NaN);
-        this.errorsYUpper = fill(new double[y.size()], upper, Double.NaN);
+        this.errorsYLower = fill(new double[y.length], lower, Double.NaN);
+        this.errorsYUpper = fill(new double[y.length], upper, Double.NaN);
         return requestDataUpdate();
     }
 
     public Scatter setAbsoluteErrorY(Iterable<Double> errorY) {
-        this.errorsYUpper = fill(new double[x.size()], errorY, Double.NaN);
+        this.errorsYUpper = fill(new double[x.length], errorY, Double.NaN);
         this.errorsYLower = errorsYUpper;
         return requestDataUpdate();
     }
@@ -123,7 +123,7 @@ public class Scatter extends AbstractScatter<Scatter> {
     }
 
     public Scatter setMarkerSize(Iterable<Double> size) {
-        this.markerSizes = fill(new double[x.size()], size, DEFAULT_MARKER_SIZE);
+        this.markerSizes = fill(new double[x.length], size, DEFAULT_MARKER_SIZE);
         return requestDataUpdate();
     }
 
@@ -135,7 +135,7 @@ public class Scatter extends AbstractScatter<Scatter> {
         maxSize = (!Double.isFinite(maxSize)) ? DEFAULT_MAX_MARKER_SIZE : maxSize;
         final double sizeRange = maxSize - minSize;
         int i = 0;
-        this.markerSizes = new double[x.size()];
+        this.markerSizes = new double[x.length];
         for (final double size : sizes) {
             markerSizes[i] = (((size - minSizes) / range) * sizeRange) + minSize;
         }
@@ -162,7 +162,7 @@ public class Scatter extends AbstractScatter<Scatter> {
     }
 
     public Scatter setColors(Iterable<Color> colors) {
-        this.markerColor = new Color[x.size()];
+        this.markerColor = new Color[x.length];
         int i = 0;
         for (Color d : colors) {
             this.markerColor[i++] = d;
@@ -171,7 +171,7 @@ public class Scatter extends AbstractScatter<Scatter> {
     }
 
     public Scatter setShapes(Iterable<MarkerShape> shape) {
-        this.markerShapes = fill(new MarkerShape[x.size()], shape, marker.getShape());
+        this.markerShapes = fill(new MarkerShape[x.length], shape, marker.getShape());
         return requestLayout();
     }
 

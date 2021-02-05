@@ -36,22 +36,22 @@ public class Line extends AbstractScatter<Line> {
     }
 
     public Line setBandUpper(Iterable<Double> error) {
-        this.bandUpper = fill(new double[x.size()], error, Double.NaN);
+        this.bandUpper = fill(new double[x.length], error, Double.NaN);
         return requestLayout();
     }
 
     public Line setBandLower(Iterable<Double> error) {
-        this.bandLower = fill(new double[x.size()], error, Double.NaN);
+        this.bandLower = fill(new double[x.length], error, Double.NaN);
         return requestLayout();
     }
 
     public Line setErrorUpper(Iterable<Double> error) {
-        this.errorUpper = fill(new double[x.size()], error, Double.NaN);
+        this.errorUpper = fill(new double[x.length], error, Double.NaN);
         return requestLayout();
     }
 
     public Line setErrorLower(Iterable<Double> error) {
-        this.errorLower = fill(new double[x.size()], error, Double.NaN);
+        this.errorLower = fill(new double[x.length], error, Double.NaN);
         return requestLayout();
     }
 

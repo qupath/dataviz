@@ -1,4 +1,4 @@
-package net.mahdilamb.charts.utils;
+package net.mahdilamb.charts.dataframe.utils;
 
 public final class Comparables {
     private Comparables() {

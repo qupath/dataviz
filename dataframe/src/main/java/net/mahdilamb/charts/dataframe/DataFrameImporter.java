@@ -9,9 +9,9 @@ import java.util.Objects;
 import java.util.Scanner;
 
 import static net.mahdilamb.charts.dataframe.DataType.STRING;
-import static net.mahdilamb.charts.dataframe.DataFrameImpl.EMPTY_COLUMN_PREFIX;
-import static net.mahdilamb.charts.utils.StringUtils.LINE_PATTERN;
-import static net.mahdilamb.charts.utils.StringUtils.iterateLine;
+import static net.mahdilamb.charts.dataframe.utils.StringUtils.LINE_PATTERN;
+import static net.mahdilamb.charts.dataframe.utils.StringUtils.iterateLine;
+
 
 /**
  * Builder for importing data from a file or strong.
@@ -130,7 +130,7 @@ public abstract class DataFrameImporter {
                 if (numColumns > 1) {
                     for (int i = 0, l = 0; i < numColumns; l += headerNameLength[i] + 1, ++i) {
                         if (headerNameLength[i] == 0) {
-                            putativeHeader[i] = EMPTY_COLUMN_PREFIX + i;
+                            putativeHeader[i] = DataFrameImpl.EMPTY_COLUMN_PREFIX + i;
                         } else {
                             int s = l, e = l + headerNameLength[i];
                             if (line.charAt(s) == line.charAt(e - 1) && isQuote(line.charAt(s))) {
@@ -142,7 +142,7 @@ public abstract class DataFrameImporter {
                     }
                 } else {
                     if (line.length() == 0) {
-                        putativeHeader[0] = EMPTY_COLUMN_PREFIX + "0";
+                        putativeHeader[0] = DataFrameImpl.EMPTY_COLUMN_PREFIX + "0";
                     } else {
                         if (isQuote(line.charAt(0)) && line.charAt(0) == line.charAt(line.length() - 1)) {
                             putativeHeader[0] = line.substring(1, line.length() - 1);

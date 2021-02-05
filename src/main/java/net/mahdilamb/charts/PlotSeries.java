@@ -3,7 +3,6 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.charts.plots.MarginalMode;
 import net.mahdilamb.charts.statistics.StatUtils;
-import net.mahdilamb.charts.statistics.utils.DoubleArrayList;
 import net.mahdilamb.charts.statistics.utils.GroupBy;
 import net.mahdilamb.charts.statistics.utils.IntArrayList;
 import net.mahdilamb.colormap.Color;
@@ -11,8 +10,6 @@ import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 import net.mahdilamb.colormap.reference.sequential.Viridis;
 
-import java.util.Arrays;
-import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 
 /**
@@ -51,7 +48,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
             return edge;
         }
 
-        public void setMarkerColor(final Color color) {
+        public void setMarkerColor(final Color color){
             this.markerColor = color;
         }
     }
@@ -115,8 +112,8 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
          * The name of the y data
          */
         String yName;
-        protected final DoubleArrayList x;
-        protected final DoubleArrayList y;
+        protected final double[] x;
+        protected final double[] y;
         /**
          * Stores the min and max of each axis
          */
@@ -137,8 +134,8 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
                 throw new IllegalArgumentException("X and Y must be of the same length");
             }
             this.name = name;
-            this.x = new DoubleArrayList(x);
-            this.y = new DoubleArrayList(y);
+            this.x = x;
+            this.y = y;
             minX = StatUtils.min(x);
             minY = StatUtils.min(y);
             maxX = StatUtils.max(x);
@@ -245,7 +242,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
      * @param <S> the concrete type of this series
      */
     public abstract static class Distribution<S extends Distribution<S>> extends PlotSeries<S> {
-        protected final DoubleArrayList values;
+        protected final double[] values;
 
         /**
          * Create a distribution series from the given series
@@ -253,7 +250,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
          * @param values the values to create the distribution series of
          */
         protected Distribution(double[] values) {
-            this.values = new DoubleArrayList(values);
+            this.values = values;
         }
     }
 
@@ -300,16 +297,16 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
     }
 
     public static abstract class Categorical<S extends Categorical<S>> extends PlotSeries<S> {
-        protected final List<String> categories;
-        protected final DoubleArrayList values;
+        protected final String[] categories;
+        protected final double[] values;
         final double valueMin, valueMax;
 
         public Categorical(String[] names, double[] values) {
             if (names.length != values.length) {
                 throw new IllegalArgumentException();
             }
-            this.categories = Arrays.asList(names);
-            this.values = new DoubleArrayList(values);
+            this.categories = names;
+            this.values = values;
             valueMin = StatUtils.min(values);
             valueMax = StatUtils.max(values);
         }
@@ -317,11 +314,11 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
     }
 
     public static abstract class Matrix<S extends Matrix<S>> extends PlotSeries<S> {
-        protected final List<double[]> data;
+        protected final double[][] data;
 
 
         protected Matrix(double[][] data) {//TODO column or row major?
-            this.data = Arrays.asList(data);
+            this.data = data;
         }
     }
 
