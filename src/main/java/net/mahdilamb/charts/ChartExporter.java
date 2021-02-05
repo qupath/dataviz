@@ -15,7 +15,7 @@ public abstract class ChartExporter {
      * @param dest   the destination canvas
      * @param source the source chart
      */
-    protected static void layoutChart(ChartCanvas<?> dest, Chart<?, ?> source) {
+    protected static void layoutChart(ChartCanvas<?> dest, Chart<?> source) {
         source.layout(dest);
     }
 
@@ -25,7 +25,7 @@ public abstract class ChartExporter {
      * @return the bytes of an image encoded as PNG
      * @throws ClassCastException if the method is used on a chart which uses a different type of image
      */
-    protected static byte[] imageToBytes(Object image, Chart<?, ?> source) throws ClassCastException {
+    protected static byte[] imageToBytes(Object image, Chart<?> source) throws ClassCastException {
         return source.bytesFromImage(image);
     }
 
@@ -35,7 +35,7 @@ public abstract class ChartExporter {
      * @return the width of an image
      * @throws ClassCastException if the method is used on a chart which uses a different type of image
      */
-    protected static double getImageHeight(Object image, Chart<?, ?> source) throws ClassCastException {
+    protected static double getImageHeight(Object image, Chart<?> source) throws ClassCastException {
         return source.getImageHeight(image);
     }
 
@@ -45,7 +45,7 @@ public abstract class ChartExporter {
      * @return the width of an image
      * @throws ClassCastException if the method is used on a chart which uses a different type of image
      */
-    protected static double getImageWidth(Object image, Chart<?, ?> source) throws ClassCastException {
+    protected static double getImageWidth(Object image, Chart<?> source) throws ClassCastException {
         return source.getImageWidth(image);
     }
 

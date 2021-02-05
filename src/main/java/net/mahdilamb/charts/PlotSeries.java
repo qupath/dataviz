@@ -1,434 +1,474 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.charts.plots.*;
-import net.mahdilamb.charts.dataframe.DataFrame;
-import net.mahdilamb.charts.dataframe.DoubleSeries;
-import net.mahdilamb.charts.utils.StringUtils;
+import net.mahdilamb.charts.plots.MarginalMode;
+import net.mahdilamb.charts.statistics.StatUtils;
+import net.mahdilamb.charts.statistics.utils.DoubleArrayList;
+import net.mahdilamb.charts.statistics.utils.GroupBy;
+import net.mahdilamb.charts.statistics.utils.IntArrayList;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.reference.qualitative.Plotly;
 import net.mahdilamb.colormap.reference.sequential.Viridis;
-import net.mahdilamb.geom2d.trees.PointNode;
-import net.mahdilamb.geom2d.trees.RTree;
 
-import java.util.*;
-//TODO deal with grouping and colorscale clash - alpha by iterable
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.DoubleUnaryOperator;
 
 /**
- * Implementations of series
+ * A series of data elements that can be added to a plot area
  *
  * @param <S> the type of the series
  */
-//TODO hide constructor
-public abstract class PlotSeries<S> extends ChartComponent<Object,S> implements PlotWithColorBar<S>, PlotWithLegend<S> {
-
+public abstract class PlotSeries<S extends PlotSeries<S>> {
 
     public static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
+    public static final Colormap DEFAULT_QUALITATIVE_COLORMAP = new Plotly();
 
-    @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ? extends S> source, double minX, double minY, double maxX, double maxY) {
+    Chart<S> chart;
 
+    protected String groupName;
+    protected GroupBy<String> groups;
+    protected GroupAttributes[] groupAttributes;
+    protected int[] groupSort;//todo allow groups to have a custom sort - this stores the indices
+
+    protected static final class GroupAttributes {
+        boolean showInLegend = true;
+        Color markerColor;
+        Stroke edge;
+        String name;
+        Stroke line;
+        GroupBy.Group<String> group;
+        IntArrayList subGroups;
+
+        public GroupAttributes(GroupBy.Group<String> group) {
+            this.group = group;
+            this.name = group.get();
+        }
+
+
+        public Stroke getStroke() {
+            return edge;
+        }
+
+        public void setMarkerColor(final Color color) {
+            this.markerColor = color;
+        }
     }
 
-    private enum ColorMode {
-        SINGLETON,
-        ITERABLE,
-        COLORMAP
-    }
+    SelectedStyle selectedStyle = SelectedStyle.DEFAULT_SELECTED_STYLE;
+    UnselectedStyle unselectedStyle = UnselectedStyle.DEFAULT_UNSELECTED_STYLE;
 
-    protected boolean needsUpdating = true;
-
+    String name;
     /**
      * Series display
      */
-    boolean showInLegend = true, showInColorBars = false;
-
-    String name;
+    protected boolean showInLegend = true, showInColorBars = false;
 
     /**
-     * Edge options
+     * The colormap used for each group when a color hasn't been specified is populated using this colormap
      */
-    Color edgeColor = Color.BLACK;
-    boolean showEdges = false;
-    double edgeSize = 1;
+    protected Colormap groupColormap = DEFAULT_QUALITATIVE_COLORMAP;
 
     /**
-     * Face options
+     * @return this series after firing a redraw request if the chart is specified
      */
-    ColorMode colorMode = ColorMode.SINGLETON;
-
-    Color faceColor;
-    List<Color> faceColors;
-    Colormap colormap;
-    double[] faceColorArray;
-    double minScale, maxScale;
-
+    @SuppressWarnings("unchecked")
+    protected S requestLayout() {
+        if (chart != null) {
+            chart.requestLayout();
+        }
+        return (S) this;
+    }
 
     /**
-     * Called before the series is added to a plot
+     * Request a data update
      *
-     * @param a the first axis
-     * @param b the second axis (may be {@code null})
-     * @return the series
-     */
-    protected abstract S prepare(Axis a, Axis b);
-
-    /**
-     * Called before the series is added to a plot. Shortcut for 1 axis plots
-     *
-     * @param a the axis
      * @return this series
      */
-    protected S prepare(Axis a) {
-        return prepare(a, null);
+    protected S requestDataUpdate() {
+        return requestLayout();
     }
 
-    static void checkAxis(Axis axis) {
-        if (axis.lowerBound > axis.upperBound) {
-            double t = axis.upperBound;
-            axis.upperBound = axis.lowerBound;
-            axis.lowerBound = t;
-        }
-    }
-
-    @SuppressWarnings("unchecked")
+    /**
+     * Set the name of this series
+     *
+     * @param name the name to set
+     * @return this series
+     */
     public S setName(String name) {
         this.name = name;
-        return (S) this;
+        return requestLayout();
     }
 
-    @SuppressWarnings("unchecked")
-    public S setEdgeSize(double size) {
-        if (edgeSize != size) {
-            needsUpdating = true;
-        }
-        edgeSize = size;
-        return (S) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public S setEdgeColor(Color color) {
-        if (!edgeColor.equals(color)) {
-            needsUpdating = true;
-        }
-        edgeColor = color;
-        if (!showEdges && color.alpha() != 0) {
-            showEdges = true;
-        }
-        return (S) this;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public S showLegend(boolean showLegend) {
-        if (showLegend != showInLegend) {
-            needsUpdating = true;
-        }
-        showInLegend = showLegend;
-        return (S) this;
-    }
-
-    @Override
-    @SuppressWarnings("unchecked")
-    public S showColorBar(boolean showColorBar) {
-        if (showColorBar != showInColorBars) {
-            needsUpdating = true;
-        }
-        showInColorBars = showColorBar;
-        return (S) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public S setColor(Color color) {
-        if (!color.equals(faceColor) || colorMode != ColorMode.SINGLETON) {
-            needsUpdating = true;
-        }
-        colorMode = ColorMode.SINGLETON;
-        faceColor = color;
-        return (S) this;
-    }
-
-    List<Color> prepareColorList(int size) {
-        needsUpdating = true;
-
-        if (faceColors == null) {
-            faceColors = new ArrayList<>(size);
-        }
-        faceColors.clear();
-        if (size > 0) {
-            ((ArrayList<Color>) faceColors).ensureCapacity(size);
-        }
-        colorMode = ColorMode.ITERABLE;
-        return faceColors;
-    }
+    /**
+     * An abstract XY series
+     *
+     * @param <S> the concrete type of the series
+     */
+    public static abstract class XY<S extends XY<S>> extends PlotSeries<S> {
+        /**
+         * The name of the x data
+         */
+        String xName;
+        /**
+         * The name of the y data
+         */
+        String yName;
+        protected final DoubleArrayList x;
+        protected final DoubleArrayList y;
+        /**
+         * Stores the min and max of each axis
+         */
+        double minX, maxX, minY, maxY;
+        protected Color color;
 
 
-    @SuppressWarnings("unchecked")
-    public S setColors(String... colorNames) {
-        faceColorArray = null;
-        final List<Color> colors = prepareColorList(colorNames.length);
-        for (final String string : colorNames) {
-            colors.add(Color.get(string));
-        }
-        return (S) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public S setColors(Iterable<String> colorNames) {
-        faceColorArray = null;
-        final List<Color> colors = prepareColorList(-1);
-        for (final String string : colorNames) {
-            colors.add(Color.get(string));
-        }
-        return (S) this;
-    }
-
-    @SuppressWarnings("unchecked")
-    public S setColors(Colormap colormap, Iterable<? extends Number> scalars) {
-        needsUpdating = true;
-        colorMode = ColorMode.COLORMAP;
-        this.colormap = colormap;
-        int size = 0;
-        double min = Double.NaN, max = Double.NaN;
-        for (final Number n : scalars) {
-            if (n != null && (Double.isNaN(min) || n.doubleValue() < min)) {
-                min = n.doubleValue();
+        /**
+         * Create an abstract XY series
+         *
+         * @param name the name of the series
+         * @param x    the x data
+         * @param y    the y data
+         * @throws IllegalArgumentException if the x and y series are not the same length
+         */
+        protected XY(final String name, double[] x, double[] y) {
+            if (x.length != y.length) {
+                throw new IllegalArgumentException("X and Y must be of the same length");
             }
-            if (n != null && (Double.isNaN(max) || n.doubleValue() > max)) {
-                max = n.doubleValue();
-            }
-            ++size;
+            this.name = name;
+            this.x = new DoubleArrayList(x);
+            this.y = new DoubleArrayList(y);
+            minX = StatUtils.min(x);
+            minY = StatUtils.min(y);
+            maxX = StatUtils.max(x);
+            maxY = StatUtils.max(y);
         }
-        faceColors = null;
-        faceColorArray = new double[size];
-        this.minScale = min;
-        this.maxScale = max;
+
+        /**
+         * Create an abstract XY series
+         *
+         * @param x the x data
+         * @param y the y data
+         * @throws IllegalArgumentException if the x and y series are not the same length
+         */
+        protected XY(double[] x, double[] y) {
+            this(null, x, y);
+            showInLegend(false);
+        }
+
+        /**
+         * Create an abstract XY series using a given x series and function that maps x to y
+         *
+         * @param x           the x data
+         * @param toYFunction the function that maps x to y
+         */
+        protected XY(double[] x, DoubleUnaryOperator toYFunction) {
+            this(x, map(x, toYFunction));
+        }
+
+        /**
+         * Create an array of y mapped from x
+         *
+         * @param x           the x data
+         * @param toYFunction the map function
+         * @return the mapped data
+         */
+        private static double[] map(double[] x, DoubleUnaryOperator toYFunction) {
+            double[] y = new double[x.length];
+            for (int i = 0; i < x.length; i++) {
+                y[i] = toYFunction.applyAsDouble(x[i]);
+            }
+            return y;
+        }
+
+        /**
+         * Set whether the series should be present in the legend
+         *
+         * @param showInLegend whether the series should be present in the legend
+         * @return this XY series
+         */
+        public S showInLegend(boolean showInLegend) {
+            this.showInLegend = showInLegend;
+            return requestLayout();
+        }
+
+        /**
+         * Set whether the series should be show in the color (only applicable if there is an associated colormap)
+         *
+         * @param showColorBar whether to show the series as a color bar
+         * @return this series
+         */
+        public S showColorBar(boolean showColorBar) {
+            this.showInColorBars = showColorBar;
+            return requestLayout();
+        }
+
+        /**
+         * Set the label of the x data
+         *
+         * @param name the name of the x data
+         * @return this series
+         */
+        protected S setXLabel(String name) {
+            xName = name;
+            return requestLayout();
+        }
+
+        /**
+         * Set the label of the y data
+         *
+         * @param name the name of the y data
+         * @return this series
+         */
+        protected S setYLabel(String name) {
+            yName = name;
+            return requestLayout();
+        }
+
+        /**
+         * Set the x and y labels at the same time
+         *
+         * @param xLabel the name of the x data
+         * @param yLabel the name of the data
+         * @return this series
+         */
+        public S setLabels(final String xLabel, final String yLabel) {
+            return setXLabel(xLabel).setYLabel(yLabel);
+        }
+
+    }
+
+    /**
+     * A one-dimensional plot series with distribution data
+     *
+     * @param <S> the concrete type of this series
+     */
+    public abstract static class Distribution<S extends Distribution<S>> extends PlotSeries<S> {
+        protected final DoubleArrayList values;
+
+        /**
+         * Create a distribution series from the given series
+         *
+         * @param values the values to create the distribution series of
+         */
+        protected Distribution(double[] values) {
+            this.values = new DoubleArrayList(values);
+        }
+    }
+
+    /**
+     * An abstract 2D distribution series
+     *
+     * @param <S> the concrete type of the series
+     */
+    public static abstract class Distribution2D<S extends Distribution2D<S>> extends XY<S> {
+        MarginalMode marginalModeX = MarginalMode.NONE;
+        MarginalMode marginalModeY = MarginalMode.NONE;
+
+        /**
+         * Create a 2D distribution series
+         *
+         * @param x the x data
+         * @param y the y data
+         */
+        protected Distribution2D(double[] x, double[] y) {
+            super(x, y);
+        }
+
+        /**
+         * Set the marginal mode of the x data
+         *
+         * @param mode the mode
+         * @return this series
+         */
+        public S setMarginalX(MarginalMode mode) {
+            this.marginalModeX = mode;
+            return requestDataUpdate();
+        }
+
+        /**
+         * Set the marginal mode of the y data
+         *
+         * @param mode the mode
+         * @return this series
+         */
+        public S setMarginalY(MarginalMode mode) {
+            this.marginalModeY = mode;
+            return requestDataUpdate();
+        }
+    }
+
+    public static abstract class Categorical<S extends Categorical<S>> extends PlotSeries<S> {
+        protected final List<String> categories;
+        protected final DoubleArrayList values;
+        final double valueMin, valueMax;
+
+        public Categorical(String[] names, double[] values) {
+            if (names.length != values.length) {
+                throw new IllegalArgumentException();
+            }
+            this.categories = Arrays.asList(names);
+            this.values = new DoubleArrayList(values);
+            valueMin = StatUtils.min(values);
+            valueMax = StatUtils.max(values);
+        }
+
+    }
+
+    public static abstract class Matrix<S extends Matrix<S>> extends PlotSeries<S> {
+        protected final List<double[]> data;
+
+
+        protected Matrix(double[][] data) {//TODO column or row major?
+            this.data = Arrays.asList(data);
+        }
+    }
+
+
+    /**
+     * Set the group of each data element
+     *
+     * @param name   the name of the groupings
+     * @param groups the groups
+     * @return this XY series
+     */
+    protected S setColors(String name, Iterable<String> groups) {
+        this.groupName = name;
+        this.groups = new GroupBy<>(groups);
+        groupAttributes = new GroupAttributes[this.groups.numGroups()];
         int i = 0;
-        for (final Number n : scalars) {
-            faceColorArray[i++] = n == null ? Double.NaN : n.doubleValue();
+        for (final GroupBy.Group<String> g : this.groups) {
+            groupAttributes[i++] = new GroupAttributes(g);
         }
-        return (S) this;
+
+        return requestLayout();
     }
 
-    @SuppressWarnings("unchecked")
-    public S setColors(Colormap colormap, double... scalars) {
-        needsUpdating = true;
-        colorMode = ColorMode.COLORMAP;
-        this.colormap = colormap;
-        double min = Double.NaN, max = Double.NaN;
-        for (final Number n : scalars) {
-            if (n != null && (Double.isNaN(min) || n.doubleValue() < min)) {
-                min = n.doubleValue();
-            }
-            if (n != null && (Double.isNaN(max) || n.doubleValue() > max)) {
-                max = n.doubleValue();
-            }
-        }
-        faceColors = null;
-        faceColorArray = scalars;
-        this.minScale = min;
-        this.maxScale = max;
-        return (S) this;
+    protected int numGroups() {
+        return groups == null ? 0 : groups.numGroups();
     }
 
-    static class ScatterImpl extends PlotSeries<Scatter> implements Scatter {
-        @Override
-        protected void layout(ChartCanvas<?> canvas, Chart<?, ? extends Scatter> source, double minX, double minY, double maxX, double maxY) {
-
+    protected GroupAttributes getGroupAttribute(int index) {
+        if (groups == null) {
+            return null;
         }
+        return groupAttributes[index];
+    }
 
-        static final class ScatterPoint extends PointNode<MarkerImpl> {
-
-            ScatterPoint(double x, double y, MarkerImpl data) {
-                super(x, y, data);
+    protected GroupAttributes getGroupAttribute(String name) {
+        if (groups == null) {
+            return null;
+        }
+        for (final GroupAttributes g : groupAttributes) {
+            if (name.equals(g.name)) {
+                return g;
             }
         }
+        return null;
+    }
 
-        MarkerMode mode = MarkerMode.MARKER_ONLY;
-        Iterable<String> groups;
-        Set<String> groupNames;
-        MarkerShape markerShape;
-        double markerSize = 10;
-        private final double[] x;
-        private final double[] y;
-        boolean prepared = false;
-
-        private final RTree<MarkerImpl> points = new RTree<>();
-        private ScatterPoint[] scatterPoints;
-
-        ScatterImpl(double[] x, double[] y) {
-            this.x = x;
-            this.y = y;
+    protected S setGroupName(final int group, final String name) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.name = name;
         }
+        return requestLayout();
+    }
 
-        ScatterImpl(Iterable<? extends Number> x, Iterable<? extends Number> y, int numPoints) {
-            this.x = new double[numPoints];
-            this.y = new double[numPoints];
-            final Iterator<? extends Number> xIterator = x.iterator();
-            final Iterator<? extends Number> yIterator = y.iterator();
-            int i = 0;
-            while (i < numPoints && xIterator.hasNext() && yIterator.hasNext()) {
-                Number xi = xIterator.next();
-                Number yi = yIterator.next();
-                this.x[i] = xi == null ? Double.NaN : xi.doubleValue();
-                this.y[i++] = yi == null ? Double.NaN : yi.doubleValue();
-            }
+    protected S setGroupColormap(final Colormap colormap) {
+        this.groupColormap = colormap;
+        return requestLayout();
+    }
+
+    protected S setGroupColor(final int group, final Color color) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.markerColor = color;
         }
+        return requestLayout();
+    }
 
-        ScatterImpl(final DataFrame dataset, final String x, final String y) {
-            this.x = ((DoubleSeries) dataset.getDoubleSeries(x)).toArray(new double[dataset.get(0).size()]);
-            this.y = ((DoubleSeries) dataset.getDoubleSeries(y)).toArray(new double[dataset.get(0).size()]);
-
+    protected S setGroupStroke(final int group, final Stroke color) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.edge = color;
         }
+        return requestLayout();
+    }
 
-        @Override
-        public Scatter setGroups(Iterable<String> groupings) {
-            this.groups = groupings;
-            return this;
+    protected S showGroupInLegend(final int group, boolean showInLegend) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.showInLegend = showInLegend;
         }
+        return requestLayout();
+    }
 
-
-
-        @Override
-        protected Scatter prepare(final Axis xAxis, final Axis yAxis) {
-
-            return this;
+    protected S setGroupLine(final int group, Stroke line) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.line = line;
         }
+        return requestLayout();
+    }
 
-        @Override
-        public Scatter setMarkerMode(MarkerMode mode) {
-            if (mode != this.mode) {
-                needsUpdating = true;
-            }
-            this.mode = mode;
-            return this;
+    protected S setGroupName(final String group, final String name) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.name = name;
         }
+        return requestLayout();
+    }
 
-
-        @Override
-        public String toString() {
-            //TODO
-            return "Scatter series {" +
-                    "marker: " + StringUtils.snakeToTitleCase(markerShape.name()) +
-                    ", markerSize: " + markerSize +
-                    '}';
+    protected S setGroupColor(final String group, final Color color) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.markerColor = color;
         }
+        return requestLayout();
+    }
 
-        @Override
-        public Scatter setMarkerSize(double size) {
-            if (size != markerSize) {
-                needsUpdating = true;
-            }
-            markerSize = size;
-            return this;
+    protected S setGroupStroke(final String group, final Stroke color) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.edge = color;
         }
+        return requestLayout();
+    }
 
-        @Override
-        public Scatter setMarker(MarkerShape marker) {
-            if (marker != this.markerShape) {
-                needsUpdating = true;
-            }
-            this.markerShape = Objects.requireNonNull(marker);
-            return this;
+    protected S showGroupInLegend(final String group, boolean showInLegend) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.showInLegend = showInLegend;
         }
-
+        return requestLayout();
     }
 
-    static abstract class BarImpl extends PlotSeries<Bar> {
-
-
+    protected S setGroupLine(final String group, Stroke line) {
+        GroupAttributes a = getGroupAttribute(group);
+        if (a != null) {
+            a.line = line;
+        }
+        return requestLayout();
     }
 
-    static abstract class ViolinImpl extends PlotSeries<Violin> {
-
-
-    }
-
-    static abstract class RugImpl extends PlotSeries<Rug> {
-
-
-    }
-
-    static abstract class AreaImpl extends PlotSeries<Area> {
-
-
-    }
-
-    static abstract class BoxImpl extends PlotSeries<BoxAndWhisker> {
-
-
-    }
-
-    static abstract class ContourImpl extends PlotSeries<Contour> {
-
-
-    }
-
-
-
-    static abstract class DensityImpl extends PlotSeries<Density> {
-
-
-    }
-
-    static abstract class KDEImpl extends PlotSeries<KDE> {
-
-    }
-
-    static abstract class DotImpl extends PlotSeries<Dot> {
-
-
-    }
-
-    static abstract class HeatmapImpl extends PlotSeries<Heatmap> {
-
-
-    }
-
-    static abstract class Histogram2DImpl extends PlotSeries<Histogram2D> {
-
-
-    }
-
-    static abstract class HistogramImpl extends PlotSeries<Histogram> {
-
-
-    }
-
-    static abstract class LineImpl extends PlotSeries<Line> {
-
-
-    }
-
-    static abstract class TableImpl extends PlotSeries<TableColumn> {
-
-
-    }
-
-    static abstract class PolarImpl extends PlotSeries<Polar> {
-
-
-    }
-
-    static abstract class PieImpl extends PlotSeries<net.mahdilamb.charts.plots.Pie> {
-
-
-    }
-
-    static final class MarkerImpl implements Marker {
+    protected static final class MarkerImpl implements Marker {
         Fill face;
         Stroke edge;
-        double size, edgeWidth;
+        double size;
         MarkerShape markerShape;
 
         MarkerImpl(MarkerShape markerShape, double size, Color face, double edgeWidth, Color edge) {
-            this.edge = new Stroke(edge, edgeWidth);
-            this.edgeWidth = edgeWidth;
+            this(markerShape, size, face, new Stroke(edge, edgeWidth));
+        }
+
+        public MarkerImpl(MarkerShape markerShape, double size, Color face, final Stroke edge) {
+            this.edge = edge;
             this.markerShape = markerShape;
             this.face = new Fill(face);
             this.size = size;
         }
-
 
         @Override
         public Fill getFill() {

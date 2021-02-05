@@ -7,7 +7,7 @@ import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.colormap.Color;
 
-public abstract class Axis extends ChartComponent<Object, Object> {
+public abstract class Axis extends ChartComponent {
 
 
     double scale;
@@ -107,7 +107,7 @@ public abstract class Axis extends ChartComponent<Object, Object> {
 
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
         switch (type) {
             case X:
                 return;
@@ -119,7 +119,7 @@ public abstract class Axis extends ChartComponent<Object, Object> {
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
         //TODO
     }
 

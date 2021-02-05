@@ -1,4 +1,9 @@
 package net.mahdilamb.charts.plots;
 
-public interface KDE {
+import net.mahdilamb.charts.PlotSeries;
+
+public final class KDE extends PlotSeries.Distribution<KDE> {
+    KDE(double[] values) {
+        super(values);
+    }
 }

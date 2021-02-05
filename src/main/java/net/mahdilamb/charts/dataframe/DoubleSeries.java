@@ -47,7 +47,7 @@ public interface DoubleSeries extends NumericSeries<Double> {
     }
 
     default double[] toArray(double[] output) {
-        if (output.length != size()) {
+        if (output.length < size()) {
             output = new double[size()];
         }
         for (int i = 0; i < size(); ++i) {

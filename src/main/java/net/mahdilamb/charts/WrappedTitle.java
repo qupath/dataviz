@@ -4,14 +4,13 @@ import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.HAlign;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
 /**
  * A title is text that takes up space in a layout
  */
-public class MultiLineTitle extends Title {
+public class WrappedTitle extends Title {
 
     static final int DEFAULT_NUM_LINES = 3;
 
@@ -30,7 +29,7 @@ public class MultiLineTitle extends Title {
      * @param text the text
      * @param font the font to use
      */
-    public MultiLineTitle(String text, Font font) {
+    public WrappedTitle(String text, Font font) {
         super(text, font);
     }
 
@@ -49,7 +48,7 @@ public class MultiLineTitle extends Title {
 
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             return;
         }
@@ -71,7 +70,7 @@ public class MultiLineTitle extends Title {
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
         double maxWidth = maxX - minX;
         double lineHeight = source.getTextLineHeight(font);
         double baselineOffset = source.getTextBaselineOffset(font);

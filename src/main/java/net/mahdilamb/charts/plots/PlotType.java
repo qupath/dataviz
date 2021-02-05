@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.CLASS)
 public @interface PlotType {
-    enum Series {
+    enum DataType  {
         NUMERIC,
         DOUBLE,
         LONG,
@@ -26,6 +26,6 @@ public @interface PlotType {
     /**
      * @return the ordered combination of compatible series.
      */
-    Series[] compatibleSeries();
+    DataType[] compatibleSeries();
 
 }

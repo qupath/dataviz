@@ -25,7 +25,7 @@ public class SVGFile extends ChartExporter {
         final StringBuilder out = new StringBuilder();
         final StringBuilder indent = new StringBuilder("\t");
         SVGDefinitions defs;
-        final Chart<?, ?> chart;
+        final Chart<?> chart;
         private final File output;
 
         boolean isClipped = false;
@@ -36,7 +36,7 @@ public class SVGFile extends ChartExporter {
         private Font font = new Font(Font.Family.SANS_SERIF, 12);
         boolean compressed;
 
-        SVGWriter(File output, Chart<?, ?> chart, boolean compressed) {
+        SVGWriter(File output, Chart<?> chart, boolean compressed) {
             this.compressed = compressed;
             this.chart = chart;
             this.output = output;
@@ -44,7 +44,7 @@ public class SVGFile extends ChartExporter {
 
         }
 
-        SVGWriter(File output, Chart<?, ?> chart) {
+        SVGWriter(File output, Chart<?> chart) {
             this(output, chart, false);
         }
 
@@ -250,11 +250,11 @@ public class SVGFile extends ChartExporter {
 
     }
 
-    public static void to(final File output, final Chart<?, ?> chart)  {
+    public static void to(final File output, final Chart<?> chart)  {
         new SVGWriter(output, chart);
     }
 
-    public static void toCompressed(File file, Chart<?, ?> chart) {
+    public static void toCompressed(File file, Chart<?> chart) {
         new SVGWriter(file, chart, true);
     }
 

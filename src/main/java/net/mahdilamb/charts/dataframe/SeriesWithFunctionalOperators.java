@@ -1,5 +1,6 @@
 package net.mahdilamb.charts.dataframe;
 
+import net.mahdilamb.charts.statistics.utils.GroupBy;
 import net.mahdilamb.charts.utils.Comparables;
 
 import java.util.Objects;
@@ -57,6 +58,25 @@ interface SeriesWithFunctionalOperators<T extends Comparable<T>> extends DataSer
         }
         return out;
     }
+    /* todo
+    default T reduce(ToDoubleFunction<T> test) {
+        T current = get(0);
+        double score = test.applyAsDouble(current);
+        T best = current;
+        if (size() > 1) {
+            for (int i = 1; i < size(); ++i) {
+                if (get(i) == null) {
+                    continue;
+                }
+                double t = test.applyAsDouble(get(i));
+                if (t >= score) {
+                    best = get(i);
+                    score = t;
+                }
+            }
+        }
+        return best;
+    }*/
 
     /**
      * Reduce the series down to a external type
@@ -112,6 +132,10 @@ interface SeriesWithFunctionalOperators<T extends Comparable<T>> extends DataSer
             }
         }
         return out;
+    }
+
+    default GroupBy<T> groups() {
+        return new GroupBy<>(this);
     }
 
 }

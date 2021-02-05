@@ -7,7 +7,7 @@ import net.mahdilamb.charts.graphics.HAlign;
 /**
  * A title is text that takes up space in a layout
  */
-public class Title extends ChartComponent<Object, Object> {
+public class Title extends ChartComponent {
     double paddingX = 20, paddingY = 20;
     boolean isVisible = true;
 
@@ -97,7 +97,7 @@ public class Title extends ChartComponent<Object, Object> {
 
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             return;
         }
@@ -114,7 +114,7 @@ public class Title extends ChartComponent<Object, Object> {
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
         baselineOffset = source.getTextBaselineOffset(font);
         int i = 0;
         boundsWidth = paddingX;

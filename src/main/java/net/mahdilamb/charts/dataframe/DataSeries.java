@@ -1,12 +1,12 @@
 package net.mahdilamb.charts.dataframe;
 
 
-import net.mahdilamb.charts.PlotSeries;
-
-import java.util.*;
+import java.util.Arrays;
+import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.function.IntPredicate;
 import java.util.function.IntToDoubleFunction;
-import java.util.function.Predicate;
 
 /**
  * A series of values
@@ -225,24 +225,6 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      */
     static NumericSeries<Double> of(final String name, int size, IntToDoubleFunction dataGetter) {
         return new DataSeriesImpl.OfFunctionalDouble(name, size, dataGetter);
-    }
-
-    /**
-     * Get an iterable over the possible plots that can be created from a list of series
-     *
-     * @param series the series of interest
-     * @return an iterable (set) of the possible plots from the given combinations of series
-     */
-    static Iterable<PlotSeries<?>> getPlotsForSeries(DataSeries<?>... series) {
-        if (DataSeriesImpl.seriesToPlotMap.isEmpty()) {
-            //TODO look at the arguments in the constructors in plots and match to interfaces and add to map
-            //TODO Ignore Series.java. Only use interfaces
-        }
-        final DataType[] arr = new DataType[series.length];
-        for (int i = 0; i < series.length; ++i) {
-            arr[i] = series[i].getType();
-        }
-        return DataSeriesImpl.seriesToPlotMap.get(new DataSeriesImpl.CompatibleSeries(arr));
     }
 
     /**

@@ -1,4 +1,9 @@
 package net.mahdilamb.charts.plots;
 
-public interface Rug{
+import net.mahdilamb.charts.PlotSeries;
+
+public final class Rug extends PlotSeries.Distribution<Rug> {
+    Rug(double[] values) {
+        super(values);
+    }
 }

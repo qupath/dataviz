@@ -1,6 +1,7 @@
 package net.mahdilamb.charts.io;
 
 import net.mahdilamb.charts.Chart;
+import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
@@ -16,18 +17,18 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 //TODO come back to this
-public abstract class HeadlessChart<P extends Chart.PlotLayout<S>, S> extends Chart<P, S> {
+public abstract class HeadlessChart< S extends PlotSeries<S>> extends Chart<S> {
 
 
-    protected HeadlessChart(String title, double width, double height, PlotLayout<S> plot, HeadlessChartCanvas<P, S> canvas) {
+    protected HeadlessChart(String title, double width, double height, PlotLayout<S> plot, HeadlessChartCanvas<S> canvas) {
         super(title, width, height, plot);
         this.canvas = canvas;
     }
 
-    private static final class HeadlessChartCanvas<P extends Chart.PlotLayout<S>, S> extends Component implements ChartCanvas<BufferedImage> {
+    private static final class HeadlessChartCanvas<S extends PlotSeries<S>> extends Component implements ChartCanvas<BufferedImage> {
 
         private Graphics2D g;
-        private Chart<P, S> chart;
+        private Chart<S> chart;
         private final Path2D path = new Path2D.Double();
         private final Rectangle2D rect = new Rectangle2D.Double();
         private final RoundRectangle2D roundedRect = new RoundRectangle2D.Double();
@@ -44,7 +45,7 @@ public abstract class HeadlessChart<P extends Chart.PlotLayout<S>, S> extends Ch
 
         }
 
-        void setChart(Chart<P, S> chart, boolean supportTransparency) {
+        void setChart(Chart<S> chart, boolean supportTransparency) {
             this.chart = chart;
             this.image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), supportTransparency ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
             this.g = (Graphics2D) this.image.getGraphics();
@@ -282,7 +283,7 @@ public abstract class HeadlessChart<P extends Chart.PlotLayout<S>, S> extends Ch
         }
     }
 
-    private final HeadlessChartCanvas<P, S> canvas;
+    private final HeadlessChartCanvas<S> canvas;
 /*
     @SuppressWarnings("unchecked")
     protected HeadlessChart(String title, double width, double height, P plot) {

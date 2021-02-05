@@ -1,6 +1,6 @@
 package net.mahdilamb.charts.dataframe;
 
-import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.statistics.utils.GroupBy;
 import net.mahdilamb.charts.utils.StringUtils;
 
 import java.util.*;
@@ -14,7 +14,7 @@ import static net.mahdilamb.charts.dataframe.DataFrameImpl.range;
  *
  * @param <T> the type of the elements in the series
  */
-abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> {
+abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T>, SeriesWithFunctionalOperators<T> {
     static int MAX_VISIBLE_CELLS = 10;
 
     static final class AsTypeArray<S extends Comparable<S>, T extends Comparable<T>> extends DataSeriesImpl<T> {
@@ -409,45 +409,18 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T> 
 
     }
 
-    /**
-     * Key used to find compatible series
-     */
-    static final class CompatibleSeries {
-        private final DataType[] plotType;
-
-        public CompatibleSeries(DataType[] plotType) {
-            this.plotType = plotType;
-        }
-
-        @Override
-        public int hashCode() {
-            return Arrays.hashCode(plotType);
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
-            }
-            if (obj.getClass() != CompatibleSeries.class) {
-                return false;
-            }
-            return Arrays.equals(plotType, ((CompatibleSeries) obj).plotType);
-        }
-    }
-
-    /**
-     * Map of the plot to compatible series
-     */
-    static final Map<CompatibleSeries, Set<PlotSeries<?>>> seriesToPlotMap = new HashMap<>();
-
-    static {
-        //TODO go through plots and add to the map
-    }
-
+    private GroupBy<T> group;
     private final String name;
     int start = 0;
     int end;
+
+    @Override
+    public GroupBy<T> groups() {
+        if (group == null){
+            group = new GroupBy<>(this);
+        }
+        return group;
+    }
 
     /**
      * Create an abstract named series

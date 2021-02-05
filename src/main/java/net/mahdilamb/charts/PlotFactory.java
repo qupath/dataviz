@@ -1,10 +1,8 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.plots.Scatter;
 import net.mahdilamb.charts.dataframe.DataFrame;
-import net.mahdilamb.colormap.Colormap;
-
-import static net.mahdilamb.charts.PlotSeries.DEFAULT_SEQUENTIAL_COLORMAP;
+import net.mahdilamb.charts.dataframe.plots.DataframeScatter;
+import net.mahdilamb.charts.plots.Scatter;
 
 //TODO make series using Pattern matching in datasets e.g. for doing replicates
 public final class PlotFactory {
@@ -20,7 +18,7 @@ public final class PlotFactory {
      * @return the scatter series
      */
     public static Scatter scatter(double[] x, double[] y) {
-        return new PlotSeries.ScatterImpl(x, y);
+        return new Scatter(null, x, y);
     }
 
     /**
@@ -33,16 +31,13 @@ public final class PlotFactory {
      * @throws UnsupportedOperationException of either series is not numeric
      * @throws NullPointerException          if the series cannot be found
      */
-    public static Scatter scatter(DataFrame dataset, String x, String y) {
-        return new PlotSeries.ScatterImpl(dataset, x, y);
+    public static DataframeScatter scatter(DataFrame dataset, String x, String y) {
+        return new DataframeScatter(dataset, x, y);
     }
 
-    public static Scatter scatter(DataFrame dataset, String x, String y, String colorBy, Colormap colormap) {
-        return scatter(dataset, x, y).setColors(colormap, dataset.getDoubleSeries(colorBy));
+    public static DataframeScatter scatter(DataFrame dataset, String x, String y, String colorBy) {
+        return scatter(dataset, x, y).setColors(colorBy);
     }
 
-    public static Scatter scatter(DataFrame dataset, String x, String y, String colorBy) {
-        return scatter(dataset, x, y, colorBy, DEFAULT_SEQUENTIAL_COLORMAP);
-    }
 
 }

@@ -38,6 +38,14 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
      */
     DataSeries<?> get(final int series);
 
+    default DataType getType(int series) {
+        return get(series).getType();
+    }
+
+    default DataType getType(final String series) {
+        return get(series).getType();
+    }
+
     /**
      * @return the number of series in this dataset
      */
