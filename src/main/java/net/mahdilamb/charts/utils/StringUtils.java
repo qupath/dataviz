@@ -108,6 +108,12 @@ public final class StringUtils {
     }
 
     public static String longerString(final String a, final String b) {
+        if (a == null) {
+            return b;
+        }
+        if (b == null) {
+            return a;
+        }
         return a.length() >= b.length() ? a : b;
     }
 

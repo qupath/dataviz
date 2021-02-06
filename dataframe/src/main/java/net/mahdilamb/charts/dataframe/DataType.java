@@ -16,21 +16,19 @@ public enum DataType {
      * @apiNote Series that contain longs should also contain a {@code #isNaN(int index)} method to test whether it has
      * been zeroed during parse.
      */
-    LONG(Long.class, 10, LONG_PATTERN),
+    LONG(10, LONG_PATTERN),
     /**
      * A 64-bit float. If a value cannot be parsed, it will be {@code NaN}.
      */
-    DOUBLE(Double.class, 9, FLOATING_POINT_PATTERN_WITHOUT_HEX),
+    DOUBLE(9, FLOATING_POINT_PATTERN_WITHOUT_HEX),
     /**
      * Values are either true or false. If a value cannot be parsed, it will be false.
      */
-    BOOLEAN(Boolean.class, 8, BOOLEAN_PATTERN),
+    BOOLEAN(8, BOOLEAN_PATTERN),
     /**
      * String type
      */
-    STRING(String.class, 0, Pattern.compile("(?:.*)"));
-
-    private final Class<?> referenceType;
+    STRING(0, Pattern.compile("(?:.*)"));
 
     /**
      * Test if a data type is numeric
@@ -204,8 +202,7 @@ public enum DataType {
         return Long.toString(value);
     }
 
-    DataType(Class<?> referenceType, int score, Pattern matcher) {
-        this.referenceType = referenceType;
+    DataType(int score, Pattern matcher) {
         this.score = score;
         this.matcher = matcher;
     }

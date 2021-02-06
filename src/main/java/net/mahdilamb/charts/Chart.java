@@ -75,6 +75,22 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
 
         }
 
+        protected Axis getAxis(final String name) {
+            if (hasXAxis() && getXAxis().title != null && getXAxis().title.getText().equals(name)) {
+                return getXAxis();
+            }
+            if (hasYAxis() && getYAxis().title != null && getYAxis().title.getText().equals(name)) {
+                return getYAxis();
+            }
+            if (hasAngularAxis() && getAngularAxis().title != null && getAngularAxis().title.getText().equals(name)) {
+                return getAngularAxis();
+            }
+            if (hasRadialAxis() && getRadialAxis().title != null && getRadialAxis().title.getText().equals(name)) {
+                return getRadialAxis();
+            }
+            return null;
+        }
+
 
         /**
          * An XY plot layout
@@ -112,7 +128,7 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
                 //yAxis
                 double yAxisWidth = 0;
                 final double yTitleWidth;
-                final String longerLabel = StringUtils.longerString(yAxis.getLabel(yAxis.lowerBound), yAxis.getLabel(yAxis.upperBound));
+                final String longerLabel = StringUtils.longerString(yAxis.getLabel(yAxis.lowerLimit), yAxis.getLabel(yAxis.upperLimit));
                 if (xAxis.showLabels) {
                     yAxisWidth += chart.getTextWidth(xAxis.labelFont, longerLabel);
                 }
@@ -131,13 +147,11 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
                 xAxis.boundsY = minY + availableHeight - xAxisHeight;
                 xAxis.boundsWidth = availableWidth - yAxisWidth;
                 xAxis.boundsHeight = xAxisHeight;
-                xAxis.type = Axis.AxisType.X;
 
                 yAxis.boundsX = minX;
                 yAxis.boundsY = minY;
                 yAxis.boundsWidth = yAxisWidth;
                 yAxis.boundsHeight = availableHeight - xAxisHeight;
-                yAxis.type = Axis.AxisType.Y;
 
                 this.boundsX = xAxis.boundsX;
                 this.boundsY = yAxis.boundsY;
@@ -184,7 +198,60 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
             }
         }
 
+        protected static final class MultiPlotArea<S extends PlotSeries<S>> extends ChartComponent implements PlotArea<S> {
+            String[] rows;
+            String[] cols;
+
+            //todo
+            @Override
+            protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+
+            }
+
+            @Override
+            protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+
+            }
+
+            @Override
+            public Axis getXAxis() {
+                //TODO
+                return null;
+            }
+
+            @Override
+            public Axis getYAxis() {
+                //TODO
+                return null;
+            }
+
+            @Override
+            public Axis getRadialAxis() {
+                //TODO
+                return null;
+            }
+
+            @Override
+            public Axis getAngularAxis() {
+                //TODO
+                return null;
+            }
+
+            @Override
+            public int numSeries() {
+                //TODO
+                return 0;
+            }
+
+            @Override
+            public S getSeries(int index) {
+                //TODO
+                return null;
+            }
+        }
+
     }
+
 
     protected static double DEFAULT_WIDTH = 800;
     protected static double DEFAULT_HEIGHT = 640;
@@ -275,6 +342,15 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
     public final void setTitle(String text) {
         this.title.setTitle(text);
         requestLayout();
+    }
+
+    public final boolean setAxisTitle(final String oldTitle, final String newTitle) {
+        final Axis axis = plotArea.getAxis(oldTitle);
+        if (axis == null) {
+            return false;
+        }
+        axis.setTitle(newTitle);
+        return true;
     }
 
     /**
@@ -415,8 +491,9 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
     /**
      * Layout the chart locally
      */
-    protected final void requestLayout() {
+    protected final Chart requestLayout() {
         layout(getCanvas());
+        return this;
     }
 
     @Override
@@ -532,19 +609,6 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         assignToChart(chart, a);
         assignToChart(chart, b);
     }
-
-    protected static <S extends PlotSeries<S>> PlotLayout.RectangularPlot<S> toPlot(final String xAxisLabel, Axis xAxis, final Axis yAxis, S series) {
-        return new PlotLayout.RectangularPlot<>(xAxis, yAxis);
-
-    }
-/*
-    TODO
-    @SuppressWarnings("unchecked")
-    protected static <P extends PlotLayoutImpl.XYMarginal<S>, S> P toPlot(double xMin, double xMax, double yMin, double yMax, MarginalMode xMarginal, MarginalMode yMarginal, S series) {
-        return (P) new PlotLayoutImpl.XYMarginal<>(new LinearAxis(xMin, xMax), new LinearAxis(yMin, yMax), ((PlotSeries<S>) series).prepare());
-
-    }
-*/
 
 
 }

@@ -9,7 +9,7 @@ public interface StringSeries extends DataSeries<String> , SeriesWithFunctionalO
     }
 
     default BooleanSeries matches(Pattern pattern) {
-        return asBoolean(el -> pattern.matcher(el).matches());
+        return map(el -> pattern.matcher(el).matches());
     }
 
 }

@@ -21,7 +21,7 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
 public final class SwingChart<P, S extends PlotSeries<S>> extends Chart<S> {
     private static <S extends PlotSeries<S>> SwingChart<PlotLayout.RectangularPlot<S>, S> chart(final String title, double width, double height, final String xAxisLabel, double xAxisMin, double xAxisMax, final String yAxisLabel, double yAxisMin, double yAxisMax, final S series) {
-        final SwingChart<PlotLayout.RectangularPlot<S>, S> chart = new SwingChart<>(title, width, height, new PlotLayout.RectangularPlot<>(Axis.linear(xAxisLabel, xAxisMin, xAxisMax), Axis.linear(yAxisLabel, yAxisMin, yAxisMax), series));
+        final SwingChart<PlotLayout.RectangularPlot<S>, S> chart = new SwingChart<>(title, width, height, new PlotLayout.RectangularPlot<>(new Axis(xAxisLabel, xAxisMin, xAxisMax), new Axis(yAxisLabel, yAxisMin, yAxisMax), series));
         //todo assignToChart(chart, plot.getXAxis(), plot.getYAxis());
         return chart;
     }

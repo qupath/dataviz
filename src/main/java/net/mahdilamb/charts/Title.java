@@ -3,6 +3,7 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.HAlign;
+import net.mahdilamb.colormap.Color;
 
 /**
  * A title is text that takes up space in a layout
@@ -14,6 +15,7 @@ public class Title extends ChartComponent {
     HAlign textAlign = HAlign.LEFT;
     String text;
     Font font;
+    Color color;
 
     boolean metricsSet = false;
     double baselineOffset;
@@ -58,7 +60,17 @@ public class Title extends ChartComponent {
      */
     public void setTitle(String text) {
         this.text = text;
-        //TODO either change in chart, or queue change, and clear metrics
+        requestLayout();
+    }
+
+    public void setFont(final Font font) {
+        this.font = font;
+        requestLayout();
+    }
+
+    public void setVisible(boolean visible) {
+        this.isVisible = visible;
+        requestLayout();
     }
 
     /**

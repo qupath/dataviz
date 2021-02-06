@@ -414,7 +414,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T>,
 
     @Override
     public GroupBy<T> groups() {
-        if (group == null){
+        if (group == null) {
             group = new GroupBy<>(this);
         }
         return group;
@@ -453,7 +453,7 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T>,
         final StringBuilder stringBuilder = new StringBuilder();
         if (size() > 1) {
             int width = Math.max(1, String.valueOf(getId(size() - 1)).length());
-            if (size() <=MAX_VISIBLE_CELLS) {
+            if (size() <= MAX_VISIBLE_CELLS) {
                 for (int i = 0; i < size(); ++i) {
                     DataFrameImpl.alignRight(stringBuilder, String.valueOf(getId(i)), width).append(DataFrameImpl.COLUMN_SEPARATOR).append(formatCell(this, i)).append('\n');
                 }
@@ -545,7 +545,6 @@ abstract class DataSeriesImpl<T extends Comparable<T>> implements DataSeries<T>,
 
         @Override
         int getId(int i) {
-
             return rows[i];
         }
 

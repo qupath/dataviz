@@ -1,7 +1,5 @@
 package net.mahdilamb.charts.dataframe;
 
-
-
 import net.mahdilamb.charts.dataframe.utils.StringUtils;
 
 import java.io.File;
@@ -31,14 +29,6 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
      */
     String getName();
 
-    /**
-     * Get a series from an index
-     *
-     * @param series the index of interest
-     * @return the series at the index
-     */
-    DataSeries<?> get(final int series);
-
     default DataType getType(int series) {
         return get(series).getType();
     }
@@ -53,10 +43,18 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
     int numSeries();
 
     /**
+     * Get a series from an index.
+     *
+     * @param series the index of interest
+     * @return the series at the index
+     */
+    DataSeries<?> get(final int series);
+
+    /**
      * @param name name of the series
      * @return series by its name or {@code null} if series not found
      */
-    default DataSeries<? extends Comparable<?>> get(final String name) {
+    default DataSeries<?> get(final String name) {
         for (int i = 0; i < numSeries(); ++i) {
             final DataSeries<?> s = get(i);
             if (s.getName().compareTo(name) == 0) {
@@ -72,7 +70,7 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
      * @return a new data frame with the column names as specified
      */
     default DataFrame subset(String... names) {
-        final DataSeries<?>[] series = new DataSeries[names.length];
+        @SuppressWarnings("unchecked") final DataSeries<?>[] series = new DataSeries[names.length];
         for (int j = 0; j < names.length; ++j) {
             boolean found = false;
             for (int i = 0; i < numSeries(); ++i) {

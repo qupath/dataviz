@@ -55,21 +55,19 @@ abstract class DataFrameImpl implements DataFrame {
         int numSeries;
         int[] seriesIDs;
         DataSeries<?>[] series;
-        int rows[];
+        int[] rows;
         int numRows = -1;
 
         public DataFrameView(DataFrame dataFrame, int[] ids) {
-            //TODO what if dataframe is dataframe view?
             super(dataFrame.getName());
-            this.dataFrame = dataFrame;
+            this.dataFrame = extract(dataFrame);
             this.numSeries = ids.length;
             seriesIDs = ids;
         }
 
         public DataFrameView(DataFrame dataFrame, IntPredicate test) {
-            //TODO what if dataframe is dataframe view?
             super(dataFrame.getName());
-            this.dataFrame = dataFrame;
+            this.dataFrame = extract(dataFrame);
             this.seriesIDs = new int[dataFrame.numSeries()];
             int j = 0;
             int i = 0;
@@ -83,9 +81,8 @@ abstract class DataFrameImpl implements DataFrame {
         }
 
         public DataFrameView(DataFrame dataFrame, Predicate<String> test) {
-            //TODO what if dataframe is dataframe view?
             super(dataFrame.getName());
-            this.dataFrame = dataFrame;
+            this.dataFrame = extract(dataFrame);
             this.seriesIDs = new int[dataFrame.numSeries()];
             int j = 0;
             int i = 0;
@@ -102,6 +99,13 @@ abstract class DataFrameImpl implements DataFrame {
             this(dataFrame, range(start, end));
         }
 
+        private static DataFrame extract(DataFrame d) {
+            while (d.getClass() == DataFrameView.class) {
+                d = ((DataFrameView) d).dataFrame;
+            }
+            return d;
+        }
+
         @Override
         public DataSeries<?> get(int series) {
             if (this.series == null) {
@@ -110,7 +114,7 @@ abstract class DataFrameImpl implements DataFrame {
             if (this.series[series] == null) {
                 this.series[series] = new DataSeriesImpl.DataSeriesView<>(dataFrame.get(series), rows);
             }
-            //todo bounds checking
+            //todo bounds checking incorporating what is visible
             return this.series[series];
         }
 
@@ -418,5 +422,12 @@ abstract class DataFrameImpl implements DataFrame {
 
     static int[] range(int start, int end) {
         return range(new int[end - start], start, end);
+    }
+
+    static <T extends Comparable<T>> DataSeries<T> extract(DataSeries<T> d) {
+        while (d.getClass() == DataSeriesImpl.DataSeriesView.class) {
+            d = ((DataSeriesImpl.DataSeriesView<T>) d).dataSeries;
+        }
+        return d;
     }
 }

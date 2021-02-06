@@ -269,26 +269,35 @@ public final class StringUtils {
 
 
     public static <T> T slice(AndBiIntFunction<T> object, String slice, int defaultEnd) {
-        //TODO deal with negatives
         if (slice.length() == 0) {
             throw new IllegalArgumentException("slice must not be empty");
         }
-        int start = 0, end = defaultEnd;
+        int start = 0, end = defaultEnd, lastColonPos = slice.length();
         int i = slice.length();
-        int l = i - 1;
         int e = 1;
         int j = 0;
         int k = 0;
         while (i > 0) {
             final char c = slice.charAt(--i);
+            if (c == '-') {
+                if (k < 0) {
+                    throw new IllegalArgumentException("slice has two negatives");
+                }
+                k *= -1;
+                continue;
+            }
             if (Character.isWhitespace(c)) {
                 throw new IllegalArgumentException("slice must not contain white space characters");
             }
             if (c == ':') {
-                if (j == 0) {
-                    end =  k;
-                }
                 e = 1;
+                lastColonPos = i;
+                if (j == 0) {
+                    end = k;
+                    k = 0;
+                } else {
+                    end = defaultEnd;
+                }
                 ++j;
                 if (j >= 2) {
                     throw new IllegalArgumentException("Only start and end supported");
@@ -299,14 +308,17 @@ public final class StringUtils {
                 e *= 10;
             }
         }
-        if (j == 0) {
-            //no colon
-            return object.apply(k, k + 1);
-        } else if (j == 1) {
-            return object.apply(k, defaultEnd);
+        if (lastColonPos != 0 && j != 0) {
+            start = k;
         }
-        return object.apply(start, end);
+        if (j == 0) {
+            start = k;
+            end = k + 1;
+        }
+        if (start >= end) {
+            return object.apply(0, 0);
+        }
+        return object.apply(start < 0 ? (defaultEnd + start) : start, end < 0 ? (defaultEnd + end) : end);
     }
-
 
 }

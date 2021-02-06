@@ -23,7 +23,7 @@ interface SeriesWithFunctionalOperators<T extends Comparable<T>> extends DataSer
      * @param converter the test
      * @return a new boolean series produced from using the predicate on every element
      */
-    default BooleanSeries asBoolean(Predicate<T> converter) {
+    default BooleanSeries map(Predicate<T> converter) {
         return new DataSeriesImpl.OfBooleanArray(this, converter);
     }
 
@@ -37,7 +37,7 @@ interface SeriesWithFunctionalOperators<T extends Comparable<T>> extends DataSer
      * @return a boolean series containing the results of the equality operation
      */
     default BooleanSeries eq(T other) {
-        return asBoolean(el -> Objects.equals(other, el));
+        return map(el -> Objects.equals(other, el));
     }
 
     /**

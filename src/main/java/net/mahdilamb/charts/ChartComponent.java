@@ -14,12 +14,11 @@ public abstract class ChartComponent {
     /**
      * Request a layout to the chart, if one has been assigned
      */
-    protected void requestLayout() {
+    protected Object requestLayout() {
         if (chart != null) {
             chart.requestLayout();
-            return;
         }
-        System.err.println("Chart has not been set for " + this);
+        return this;
     }
 
     /**
