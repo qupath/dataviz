@@ -17,7 +17,7 @@ public class DataframeScatter extends Scatter {
     String title;
 
     public DataframeScatter(final DataFrame dataFrame, final String x, final String y) {
-        super(((DoubleSeries) dataFrame.getDoubleSeries(x)).toArray(new double[dataFrame.size(Axis.INDEX)]), ((DoubleSeries) dataFrame.getDoubleSeries(y)).toArray(new double[dataFrame.size(Axis.INDEX)]));
+        super(dataFrame.getDoubleSeries(x).toArray(new double[dataFrame.size(Axis.INDEX)]), dataFrame.getDoubleSeries(y).toArray(new double[dataFrame.size(Axis.INDEX)]));
         this.dataFrame = dataFrame;
         setXLabel(x).setYLabel(y);
     }
@@ -206,7 +206,7 @@ public class DataframeScatter extends Scatter {
         if (dataFrame.getType(colorSeries) == DataType.STRING) {
             return this.setColors(colorSeries, dataFrame.getStringSeries(colorSeries));
         }
-        return setColors(((DoubleSeries) dataFrame.getDoubleSeries(colorSeries)).toArray(new double[dataFrame.size(Axis.INDEX)]));
+        return setColors(dataFrame.getDoubleSeries(colorSeries).toArray(new double[dataFrame.size(Axis.INDEX)]));
     }
 
     public DataframeScatter setMarkerSizes(final String sizeSeries) {

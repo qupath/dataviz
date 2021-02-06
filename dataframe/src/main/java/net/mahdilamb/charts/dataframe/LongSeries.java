@@ -54,4 +54,5 @@ public interface LongSeries extends NumericSeries<Long> {
         }
         return output;
     }
+
 }

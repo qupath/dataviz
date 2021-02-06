@@ -1,7 +1,5 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.ChartCanvas;
-
 import java.util.ArrayList;
 import java.util.List;
 
@@ -11,7 +9,7 @@ import java.util.List;
  * @implNote Uses a small list optimisation (only uses a list when there are
  * more than one child). The list remains once created
  */
-public class ChartNode extends ChartComponent {
+public abstract class ChartNode extends ChartComponent {
     private ChartComponent child;
     private List<ChartComponent> children;
 
@@ -20,7 +18,7 @@ public class ChartNode extends ChartComponent {
      *
      * @param child the child node to add
      */
-    public void add(final ChartComponent child) {
+    protected void add(final ChartComponent child) {
 
         if (children == null) {
             if (this.child == null) {
@@ -39,7 +37,7 @@ public class ChartNode extends ChartComponent {
     /**
      * @return the size of the chart node
      */
-    public int size() {
+    protected int size() {
         if (children == null) {
             return this.child == null ? 0 : 1;
         }
@@ -50,7 +48,7 @@ public class ChartNode extends ChartComponent {
      * @param index the index
      * @return the item at the index
      */
-    public ChartComponent get(int index) {
+    protected ChartComponent get(int index) {
         if (index < 0) {
             throw new IndexOutOfBoundsException("index cannot be less than 0");
         }
@@ -69,7 +67,7 @@ public class ChartNode extends ChartComponent {
      * @param component the component to remove
      * @return whether the component was removed
      */
-    public boolean remove(ChartComponent component) {
+    protected boolean remove(ChartComponent component) {
         if (children == null) {
             if (child != null && child == component) {
                 child = null;
@@ -80,13 +78,5 @@ public class ChartNode extends ChartComponent {
         return children.remove(component);
     }
 
-    @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
-        //TODO
-    }
 
-    @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
-        //TODO
-    }
 }

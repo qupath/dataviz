@@ -21,7 +21,7 @@ public class DataFrameTests {
                         .setColor("red")
         );
         System.out.println(iris.subset(s -> s.startsWith("sepal")).first().subset(i -> i > 130));
-        System.out.println(StatUtils.histogram(BinWidthEstimator.NUMPY_AUTO, ((DoubleSeries) iris.getDoubleSeries("sepal_length")).toArray(new double[0])));
+        System.out.println(StatUtils.histogram(BinWidthEstimator.NUMPY_AUTO, iris.getDoubleSeries("sepal_length").toArray(new double[0])));
         System.out.println(DataFrame.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("gapminder.csv")).getFile())).getStringSeries("iso_alpha").groups());
 
     }

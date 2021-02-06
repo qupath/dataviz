@@ -224,11 +224,11 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
      * @param index the index of the series
      * @return the series
      */
-    default NumericSeries<Double> getDoubleSeries(final int index) throws DataSeriesCastException {
+    default DoubleSeries getDoubleSeries(final int index) throws DataSeriesCastException {
         return get(index).asDouble();
     }
 
-    default NumericSeries<Double> getDoubleSeries(final String seriesName) throws DataSeriesCastException {
+    default DoubleSeries getDoubleSeries(final String seriesName) throws DataSeriesCastException {
         return get(seriesName).asDouble();
     }
 
@@ -236,7 +236,7 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
         return get(seriesName).asString();
     }
 
-    default NumericSeries<Long> getLongSeries(final String seriesName) throws DataSeriesCastException {
+    default LongSeries getLongSeries(final String seriesName) throws DataSeriesCastException {
         return get(seriesName).asLong();
     }
 
@@ -258,7 +258,7 @@ public interface DataFrame extends Iterable<DataSeries<?>> {
      * @return the series
      * @throws DataSeriesCastException if the series cannot be cast to a long series
      */
-    default NumericSeries<Long> getLongSeries(final int index) throws DataSeriesCastException {
+    default LongSeries getLongSeries(final int index) throws DataSeriesCastException {
         return get(index).asLong();
     }
 

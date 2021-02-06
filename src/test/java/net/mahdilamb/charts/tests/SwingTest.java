@@ -14,7 +14,7 @@ public class SwingTest {
     public static void main(String[] args) {
         final File source = new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("iris.csv")).getFile());
         final DataFrame iris = DataFrame.from(source);
-        final Scatter s = new Scatter(null, ((DoubleSeries) iris.getDoubleSeries("sepal_width")).toArray(new double[0]), ((DoubleSeries) iris.getDoubleSeries("sepal_length")).toArray(new double[0]));
+        final Scatter s = new Scatter(null, iris.getDoubleSeries("sepal_width").toArray(new double[0]), iris.getDoubleSeries("sepal_length").toArray(new double[0]));
         s.setColors("species", iris.getStringSeries("species"));
         show("Sepal length vs width",
                 "Sepal width", "Sepal length",

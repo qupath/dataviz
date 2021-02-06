@@ -1,11 +1,11 @@
 package net.mahdilamb.charts.dataframe;
-//TODO make this package private
+
 /**
- * A dataseries that contains
+ * A dataseries that contains numbers
  *
  * @param <T> the type of the data in the series
  */
-public interface NumericSeries<T extends Number & Comparable<T>> extends DataSeries<T>, SeriesWithFunctionalOperators<T> {
+interface NumericSeries<T extends Number & Comparable<T>> extends DataSeries<T>, SeriesWithFunctionalOperators<T> {
     /**
      * Returns whether the value at the index is NaN
      *

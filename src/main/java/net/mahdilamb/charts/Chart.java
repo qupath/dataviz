@@ -470,7 +470,7 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
      * Get the height of a line
      *
      * @param title the text
-     * @return the height of a line of the given texty
+     * @return the height of a line of the given text
      */
     protected abstract double getTextLineHeight(Title title);
 
@@ -491,7 +491,7 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
     /**
      * Layout the chart locally
      */
-    protected final Chart requestLayout() {
+    protected final Chart<S> requestLayout() {
         layout(getCanvas());
         return this;
     }

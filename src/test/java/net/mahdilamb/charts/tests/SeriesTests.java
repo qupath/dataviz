@@ -31,10 +31,10 @@ public class SeriesTests {
         final Line u = new Line(linearlySpaced(0, 2 * Math.PI, 100), Math::cos)
                 .setXLabel("t")
                 .setYLabel("cos(t)");
-        final Bar v = new Bar(tips.getStringSeries("sex").toArray(new String[tips.size(Axis.INDEX)]), ((DoubleSeries) tips.getDoubleSeries("total_bill")).toArray(new double[tips.size(Axis.INDEX)]))
+        final Bar v = new Bar(tips.getStringSeries("sex").toArray(new String[tips.size(Axis.INDEX)]), tips.getDoubleSeries("total_bill").toArray(new double[tips.size(Axis.INDEX)]))
                 .setMode(Bar.Mode.GROUPED)
                 .setColors("smoker", tips.getStringSeries("smoker"));
-        final Line w = new Line(((DoubleSeries) gapminder.getDoubleSeries("year")).toArray(new double[tips.size(Axis.INDEX)]), ((DoubleSeries) gapminder.getDoubleSeries("lifeExp")).toArray(new double[tips.size(Axis.INDEX)]))
+        final Line w = new Line(gapminder.getDoubleSeries("year").toArray(new double[tips.size(Axis.INDEX)]), gapminder.getDoubleSeries("lifeExp").toArray(new double[tips.size(Axis.INDEX)]))
                 .setColors("continent", gapminder.getStringSeries("continent"))
                 .setGroups("country", gapminder.getStringSeries("country"));
         System.out.println(w);

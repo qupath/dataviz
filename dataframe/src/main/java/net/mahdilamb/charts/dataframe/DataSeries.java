@@ -73,14 +73,14 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
     }
 
     @SuppressWarnings("unchecked")
-    default NumericSeries<Double> asDouble() {
+    default DoubleSeries asDouble() {
         switch (getType()) {
             case DOUBLE:
-                return (NumericSeries<Double>) this;
+                return (DoubleSeries) this;
             case BOOLEAN:
                 return new DataSeriesImpl.OfDoubleArray(this, el -> DataType.toDouble((Boolean) el));
             case LONG:
-                return new DataSeriesImpl.OfDoubleArray((NumericSeries<Long>) this, DataType::toDouble);
+                return new DataSeriesImpl.OfDoubleArray((LongSeries) this, DataType::toDouble);
             case STRING:
                 return new DataSeriesImpl.OfDoubleArray(this, el -> DataType.toDouble((String) el));
             default:
@@ -89,10 +89,10 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
     }
 
     @SuppressWarnings("unchecked")
-    default NumericSeries<Long> asLong() {
+    default LongSeries asLong() {
         switch (getType()) {
             case LONG:
-                return (NumericSeries<Long>) this;
+                return (LongSeries) this;
             case DOUBLE:
                 return new DataSeriesImpl.OfLongArray(this, el -> DataType.toLong((Double) el), v -> !Double.isNaN((Double) v));
             case BOOLEAN:
@@ -198,7 +198,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @param data the data to use in the series
      * @return the default series wrapping the data
      */
-    static NumericSeries<Double> of(final String name, double... data) {
+    static DoubleSeries of(final String name, double... data) {
         return new DataSeriesImpl.OfDoubleArray(name, data);
     }
 
@@ -209,7 +209,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @param data the data to use in the series
      * @return the default series wrapping the data
      */
-    static NumericSeries<Long> of(final String name, long... data) {
+    static LongSeries of(final String name, long... data) {
         return new DataSeriesImpl.OfNonNaNLongArray(name, data);
     }
 
@@ -223,7 +223,7 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @param dataGetter a function which gets a double element at a position in the series
      * @return a series from a collection of objects
      */
-    static NumericSeries<Double> of(final String name, int size, IntToDoubleFunction dataGetter) {
+    static DoubleSeries of(final String name, int size, IntToDoubleFunction dataGetter) {
         return new DataSeriesImpl.OfFunctionalDouble(name, size, dataGetter);
     }
 
@@ -277,4 +277,24 @@ public interface DataSeries<T extends Comparable<T>> extends Iterable<T> {
      * @return a sliced view of this series based on the test
      */
     DataSeries<T> subset(IntPredicate test);
+
+    static boolean isNumericSeries(DataSeries<?> series) {
+        return DataType.isNumeric(series.getType());
+    }
+
+    static boolean isDoubleSeries(DataSeries<?> series) {
+        return series.getType() == DataType.DOUBLE;
+    }
+
+    static boolean isStringSeries(DataSeries<?> series) {
+        return series.getType() == DataType.STRING;
+    }
+
+    static boolean isLongSeries(DataSeries<?> series) {
+        return series.getType() == DataType.LONG;
+    }
+
+    static boolean isBooleanSeries(DataSeries<?> series) {
+        return series.getType() == DataType.BOOLEAN;
+    }
 }

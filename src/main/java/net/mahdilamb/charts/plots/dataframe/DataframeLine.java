@@ -13,7 +13,7 @@ public class DataframeLine extends Line {
     String title;
 
     public DataframeLine(final DataFrame dataFrame, final String x, final String y) {
-        super(((DoubleSeries) dataFrame.getDoubleSeries(x)).toArray(new double[dataFrame.size(Axis.INDEX)]), ((DoubleSeries) dataFrame.getDoubleSeries(y)).toArray(new double[dataFrame.size(Axis.INDEX)]));
+        super(dataFrame.getDoubleSeries(x).toArray(new double[dataFrame.size(Axis.INDEX)]), dataFrame.getDoubleSeries(y).toArray(new double[dataFrame.size(Axis.INDEX)]));
         this.dataFrame = dataFrame;
         setXLabel(x).setYLabel(y);
     }
