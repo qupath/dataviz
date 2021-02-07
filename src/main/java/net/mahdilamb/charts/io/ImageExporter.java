@@ -16,6 +16,9 @@ import java.io.IOException;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
+/**
+ * Main class for exporting to bitmap types via AWT
+ */
 public class ImageExporter extends ChartExporter {
 
 
@@ -25,7 +28,7 @@ public class ImageExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart
      */
-    public static void toPNG(File file, Chart<?> chart)  {
+    public static void toPNG(File file, Chart<?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "png", file);
         } catch (IOException e) {
@@ -33,7 +36,14 @@ public class ImageExporter extends ChartExporter {
         }
 
     }
-    public static void toTIFF(File file, Chart<?> chart)  {
+
+    /**
+     * Create a TIFF version of a chart
+     *
+     * @param file  the output file
+     * @param chart the chart
+     */
+    public static void toTIFF(File file, Chart<?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "tiff", file);
         } catch (IOException e) {
@@ -41,13 +51,14 @@ public class ImageExporter extends ChartExporter {
         }
 
     }
+
     /**
      * Create a JPEG version of a chart
      *
      * @param file  the output file
      * @param chart the chart
      */
-    public static void toJPEG(File file, Chart<?> chart)  {
+    public static void toJPEG(File file, Chart<?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "jpeg", file);
         } catch (IOException e) {
@@ -61,7 +72,7 @@ public class ImageExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart
      */
-    public static void toBMP(File file, Chart<?> chart)  {
+    public static void toBMP(File file, Chart<?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "bmp", file);
         } catch (IOException e) {
@@ -88,6 +99,11 @@ public class ImageExporter extends ChartExporter {
             this.g = graphics;
             this.chart = chart;
             this.fillWhite = fillWhite;
+        }
+
+        @Override
+        public void resetRect(double x, double y, double width, double height) {
+            //ignored
         }
 
         @Override
@@ -128,8 +144,6 @@ public class ImageExporter extends ChartExporter {
                 g.setColor(convert(this.currentStroke.getColor()));
                 usingFill = false;
             }
-
-
         }
 
         @Override

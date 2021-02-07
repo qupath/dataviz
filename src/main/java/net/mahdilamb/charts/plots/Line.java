@@ -6,18 +6,12 @@ import net.mahdilamb.colormap.Color;
 
 import java.util.function.DoubleUnaryOperator;
 
-import static net.mahdilamb.charts.utils.ArrayUtils.fill;
-
-public class Line extends AbstractScatter<Line> {
+public class Line extends AbstractScatter<Line> implements RectangularPlot{
     boolean fillGaps = false;
 
-    double[] errorLower;
-    double[] errorUpper;
     Stroke errorUpperStroke;
     Stroke errorLowerStroke;
 
-    double[] bandLower;
-    double[] bandUpper;
     Stroke bandStroke;
     Color bandFill;
 
@@ -36,22 +30,22 @@ public class Line extends AbstractScatter<Line> {
     }
 
     public Line setBandUpper(Iterable<Double> error) {
-        this.bandUpper = fill(new double[x.length], error, Double.NaN);
+        fillDoubles((p, x) -> p.bandUpper = x, error);
         return requestLayout();
     }
 
     public Line setBandLower(Iterable<Double> error) {
-        this.bandLower = fill(new double[x.length], error, Double.NaN);
+        fillDoubles((p, x) -> p.bandLower = x, error);
         return requestLayout();
     }
 
     public Line setErrorUpper(Iterable<Double> error) {
-        this.errorUpper = fill(new double[x.length], error, Double.NaN);
+        fillDoubles((p, x) -> p.errorXUpper = x, error);
         return requestLayout();
     }
 
     public Line setErrorLower(Iterable<Double> error) {
-        this.errorLower = fill(new double[x.length], error, Double.NaN);
+        fillDoubles((p, x) -> p.errorXLower = x, error);
         return requestLayout();
     }
 

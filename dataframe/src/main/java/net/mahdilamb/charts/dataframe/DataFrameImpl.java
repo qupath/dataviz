@@ -2,6 +2,7 @@ package net.mahdilamb.charts.dataframe;
 
 
 import net.mahdilamb.charts.dataframe.utils.StringUtils;
+import net.mahdilamb.charts.statistics.utils.GroupBy;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,6 +10,7 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Scanner;
+import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 
@@ -21,6 +23,35 @@ import static net.mahdilamb.charts.dataframe.utils.StringUtils.iterateLine;
 //TODO use correct id column
 //todo check formatting when number of rows equals MAX_ROWS
 abstract class DataFrameImpl implements DataFrame {
+    public static final class DataFrameGroupBy {
+        public int column;
+        private DataFrame dataFrame;
+        private GroupBy<?> groups;
+
+        DataFrameGroupBy(final DataFrame data, int series) {
+            this.column = series;
+            this.dataFrame = data;
+            switch (data.getType(series)) {
+                case DOUBLE:
+                    this.groups = new GroupBy<>(data.getDoubleSeries(series), data.size(Axis.INDEX));
+                    break;
+                case LONG:
+                    this.groups = new GroupBy<>(data.getLongSeries(series), data.size(Axis.INDEX));
+                    break;
+                case STRING:
+                    this.groups = new GroupBy<>(data.getStringSeries(series), data.size(Axis.INDEX));
+                    break;
+                case BOOLEAN:
+                    this.groups = new GroupBy<>(data.getBooleanSeries(series), data.size(Axis.INDEX));
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+
+
+    }
+
     /**
      * The prefix to use for unnamed columns
      */
@@ -171,6 +202,8 @@ abstract class DataFrameImpl implements DataFrame {
      * The name of the dataset
      */
     private final String name;
+
+    protected DataFrameGroupBy groupBy;
 
     /**
      * Create an abstract named dataset
@@ -419,7 +452,15 @@ abstract class DataFrameImpl implements DataFrame {
         }
         return out;
     }
-
+/*
+    @Override
+    public DataFrameGroupBy groupBy(int column) {
+        if (groupBy == null || groupBy.column != column) {
+            groupBy = new DataFrameGroupBy(this, column);
+        }
+        return groupBy;
+    }
+*/
     static int[] range(int start, int end) {
         return range(new int[end - start], start, end);
     }

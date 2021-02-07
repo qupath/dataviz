@@ -2,7 +2,7 @@ package net.mahdilamb.charts.plots;
 
 import net.mahdilamb.charts.PlotSeries;
 
-public class HexBinned extends PlotSeries.Distribution2D<HexBinned> {
+public class HexBinned extends PlotSeries.Distribution2D<HexBinned> implements RectangularPlot{
     int nBinsX = -1, nBinsY = 1;
 
     public HexBinned(double[] x, double[] y) {

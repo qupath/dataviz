@@ -21,4 +21,12 @@ public final class ArrayUtils {
         }
         return dest;
     }
+    public static double[] toArray(Iterable<Double> data, int size) {
+        final double[] out = new double[size];
+        final Iterator<Double> it = data.iterator();
+        for (int i = 0; i < size && it.hasNext(); ++i) {
+            out[i] = it.next();
+        }
+        return out;
+    }
 }

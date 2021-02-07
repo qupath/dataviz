@@ -57,7 +57,7 @@ public class Axis extends ChartComponent {
     String[] tickLabels;
 
     double scale;
-    Position position;
+    Side side;
 
     /**
      * Create a new axis with the given initial min and max
@@ -93,7 +93,7 @@ public class Axis extends ChartComponent {
         return requestLayout();
     }
 
-    public Axis setTitleVisible(boolean visible) {
+    public Axis showTitle(boolean visible) {
         title.setVisible(visible);
         return requestLayout();
     }
@@ -108,7 +108,7 @@ public class Axis extends ChartComponent {
         return requestLayout();
     }
 
-    public Axis setMajorTicksVisible(boolean visible) {
+    public Axis showMajorTicks(boolean visible) {
         this.showMajorTicks = visible;
         return requestLayout();
     }
@@ -137,7 +137,7 @@ public class Axis extends ChartComponent {
         return requestLayout();
     }
 
-    public Axis setMajorGridVisible(boolean visible) {
+    public Axis showMajorGridLines(boolean visible) {
         showMajorGridLines = visible;
         return requestLayout();
     }
@@ -152,12 +152,12 @@ public class Axis extends ChartComponent {
         return requestLayout();
     }
 
-    public Axis setMinorGridVisible(boolean visible) {
+    public Axis showMinorGridLines(boolean visible) {
         showMinorGridLines = visible;
         return requestLayout();
     }
 
-    public Axis setZeroLineVisible(boolean visible) {
+    public Axis showZeroLine(boolean visible) {
         showZeroLine = visible;
         return requestLayout();
     }
@@ -177,7 +177,7 @@ public class Axis extends ChartComponent {
         return requestLayout();
     }
 
-    public Axis setMinorTicksVisible(boolean visible) {
+    public Axis showMinorTicks(boolean visible) {
         this.showMinorTicks = visible;
         return requestLayout();
     }
@@ -202,7 +202,7 @@ public class Axis extends ChartComponent {
         return requestLayout();
     }
 
-    public Axis setLabelVisible(boolean visible) {
+    public Axis showLabels(boolean visible) {
         showLabels = visible;
         return requestLayout();
     }

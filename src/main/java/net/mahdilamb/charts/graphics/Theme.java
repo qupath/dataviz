@@ -1,6 +1,5 @@
 package net.mahdilamb.charts.graphics;
 
-import net.mahdilamb.charts.Chart;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 
@@ -9,7 +8,6 @@ import net.mahdilamb.colormap.Colormap;
  */
 //TODO builder
 public interface Theme {
-    Theme DEFAULT = Chart.DEFAULT_THEME;
 
     /**
      * @return the "page" background color

@@ -4,9 +4,11 @@ import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.graphics.Orientation;
 import net.mahdilamb.charts.statistics.utils.GroupBy;
 
-public class Strip extends PlotSeries.Distribution<Strip> {
+public class Strip extends PlotSeries.Distribution<Strip>  {
 
     Orientation orientation = Orientation.VERTICAL;
+
+    String xLabel, yLabel;
 
     String subGroupName;
     GroupBy<String> subGroups;
@@ -40,4 +42,16 @@ public class Strip extends PlotSeries.Distribution<Strip> {
         showInLegend = true;
         return requestDataUpdate();
     }
+
+    @Override
+    public String getXLabel() {
+        return xLabel;
+    }
+
+    @Override
+    public String getYLabel() {
+        return yLabel;
+    }
+
+
 }

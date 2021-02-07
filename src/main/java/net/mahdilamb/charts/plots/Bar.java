@@ -7,7 +7,8 @@ import net.mahdilamb.charts.statistics.utils.GroupBy;
 
 import static net.mahdilamb.charts.utils.ArrayUtils.fill;
 
-public final class Bar extends PlotSeries.Categorical<Bar> {
+public final class Bar extends PlotSeries.Categorical<Bar> implements RectangularPlot {
+
 
     public enum Mode {
         STACKED,
@@ -23,6 +24,8 @@ public final class Bar extends PlotSeries.Categorical<Bar> {
     static final double DEFAULT_OFFSET = 0;
 
     Orientation orientation = Orientation.VERTICAL;
+
+    String xLabel, yLabel;
 
     String subGroupName;
     GroupBy<String> subGroups;
@@ -114,4 +117,35 @@ public final class Bar extends PlotSeries.Categorical<Bar> {
         showInLegend = true;
         return requestDataUpdate();
     }
+
+    @Override
+    public String getXLabel() {
+        return xLabel;
+    }
+
+    @Override
+    public String getYLabel() {
+        return yLabel;
+    }
+
+    @Override
+    public double getMinX() {
+        return super.getMinX();
+    }
+
+    @Override
+    public double getMaxX() {
+        return super.getMaxX();
+    }
+
+    @Override
+    public double getMinY() {
+        return super.getMinY();
+    }
+
+    @Override
+    public double getMaxY() {
+        return super.getMaxY();
+    }
+
 }

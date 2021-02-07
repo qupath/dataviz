@@ -1,6 +1,5 @@
 package net.mahdilamb.charts.plots;
 
-import net.mahdilamb.charts.graphics.Marker;
 import net.mahdilamb.charts.graphics.MarkerShape;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.statistics.StatUtils;
@@ -9,10 +8,10 @@ import net.mahdilamb.colormap.Colormap;
 
 import java.util.function.DoubleUnaryOperator;
 
-import static net.mahdilamb.charts.utils.ArrayUtils.fill;
+import static net.mahdilamb.charts.utils.ArrayUtils.toArray;
 
 @PlotType(name = "Scatter", compatibleSeries = {PlotType.DataType.NUMERIC, PlotType.DataType.NUMERIC})
-public class Scatter extends AbstractScatter<Scatter> {
+public class Scatter extends AbstractScatter<Scatter>implements RectangularPlot {
     public static double DEFAULT_MARKER_SIZE = 10;
     public static double DEFAULT_MAX_MARKER_SIZE = 20;
 
@@ -40,35 +39,23 @@ public class Scatter extends AbstractScatter<Scatter> {
     Marker fields
      */
     Mode markerMode = Mode.MARKER_ONLY;
-    Marker marker;
-    Marker[] markers;
+    MarkerShape marker;
     double markerSize = DEFAULT_MARKER_SIZE;
-    double[] markerSizes;
-    Color[] markerColor;
-    MarkerShape[] markerShapes;
     Stroke edge = Stroke.BLACK_STROKE;
 
+    Colormap colormap = DEFAULT_QUALITATIVE_COLORMAP;
 
     /*
     Colormap fields
      */
-    Colormap colormap = DEFAULT_QUALITATIVE_COLORMAP;
+    ColorScaleAttributes colorScale;
     double[] colors;
-    double minCol, maxCol;
 
-    /*
-    Errors
-     */
-    double[] errorsXUpper;
-    double[] errorsYUpper;
-    double[] errorsXLower;
-    double[] errorsYLower;
     /*
     Marginal modes
      */
     MarginalMode marginalModeX = MarginalMode.NONE;
     MarginalMode marginalModeY = MarginalMode.NONE;
-
 
     public Scatter(double[] x, DoubleUnaryOperator toYFunction) {
         super(x, toYFunction);
@@ -82,29 +69,48 @@ public class Scatter extends AbstractScatter<Scatter> {
         this(null, x, y);
     }
 
-    //todo do relative error and constant errors
-    public Scatter setAbsoluteErrorX(Iterable<Double> errorX) {
-        this.errorsXLower = fill(new double[x.length], errorX, Double.NaN);
-        this.errorsXUpper = errorsXLower;
+    public Scatter(Iterable<Double> x, Iterable<Double> y, int size) {
+        super(toArray(x, size), toArray(y, size));
+    }
+
+    public Scatter setConstantErrorX(Iterable<Double> constantErrorX) {
+        return setConstantErrorX(constantErrorX, constantErrorX);
+    }
+
+    public Scatter setConstantErrorX(Iterable<Double> constantLowerX, Iterable<Double> constantUpperX) {
+        fillDoubles((p, it) -> p.errorXLower = p.getMidX() - it, constantLowerX);
+        fillDoubles((p, it) -> p.errorXUpper = p.getMidX() + it, constantUpperX);
         return requestDataUpdate();
     }
 
-    public Scatter setAbsoluteErrorX(Iterable<Double> lower, Iterable<Double> upper) {
-        this.errorsXLower = fill(new double[x.length], lower, Double.NaN);
-        this.errorsXUpper = fill(new double[x.length], upper, Double.NaN);
+    public Scatter setConstantErrorY(Iterable<Double> constantErrorY) {
+        return setConstantErrorY(constantErrorY, constantErrorY);
+    }
+
+    public Scatter setConstantErrorY(Iterable<Double> constantLowerY, Iterable<Double> constantUpperY) {
+        fillDoubles((p, it) -> p.errorYLower = p.getMidY() - it, constantLowerY);
+        fillDoubles((p, it) -> p.errorYUpper = p.getMidY() + it, constantUpperY);
         return requestDataUpdate();
     }
 
-    public Scatter setAbsoluteErrorY(Iterable<Double> lower, Iterable<Double> upper) {
-        this.errorsYLower = fill(new double[y.length], lower, Double.NaN);
-        this.errorsYUpper = fill(new double[y.length], upper, Double.NaN);
+    public Scatter setErrorX(Iterable<Double> errorX) {
+        return setErrorX(errorX, errorX);
+    }
+
+    public Scatter setErrorX(Iterable<Double> lower, Iterable<Double> upper) {
+        fillDoubles((p, x) -> p.errorXLower = x, lower);
+        fillDoubles((p, x) -> p.errorXUpper = x, upper);
         return requestDataUpdate();
     }
 
-    public Scatter setAbsoluteErrorY(Iterable<Double> errorY) {
-        this.errorsYUpper = fill(new double[x.length], errorY, Double.NaN);
-        this.errorsYLower = errorsYUpper;
+    public Scatter setErrorY(Iterable<Double> lower, Iterable<Double> upper) {
+        fillDoubles((p, it) -> p.errorYLower = it, lower);
+        fillDoubles((p, it) -> p.errorYUpper = it, upper);
         return requestDataUpdate();
+    }
+
+    public Scatter setErrorY(Iterable<Double> errorY) {
+        return setErrorY(errorY, errorY);
     }
 
     public Scatter setMode(Mode markerMode) {
@@ -123,7 +129,7 @@ public class Scatter extends AbstractScatter<Scatter> {
     }
 
     public Scatter setMarkerSize(Iterable<Double> size) {
-        this.markerSizes = fill(new double[x.length], size, DEFAULT_MARKER_SIZE);
+        fillDoubles((p, it) -> p.size = it, size);
         return requestDataUpdate();
     }
 
@@ -134,17 +140,14 @@ public class Scatter extends AbstractScatter<Scatter> {
         minSize = (!Double.isFinite(minSize)) ? DEFAULT_MARKER_SIZE : minSize;
         maxSize = (!Double.isFinite(maxSize)) ? DEFAULT_MAX_MARKER_SIZE : maxSize;
         final double sizeRange = maxSize - minSize;
-        int i = 0;
-        this.markerSizes = new double[x.length];
-        for (final double size : sizes) {
-            markerSizes[i] = (((size - minSizes) / range) * sizeRange) + minSize;
-        }
+        double finalMinSize = minSize;
+        fillDoubles((p, it) -> p.size = (((it - minSizes) / range) * sizeRange) + finalMinSize, sizes);
+
         return requestDataUpdate();
     }
 
     public Scatter setMarker(char marker) {
-        markers = null;
-        this.marker = new MarkerImpl(MarkerShape.get(marker), markerSize, null, edge);
+        this.marker = MarkerShape.get(marker);
         return requestLayout();
     }
 
@@ -162,16 +165,12 @@ public class Scatter extends AbstractScatter<Scatter> {
     }
 
     public Scatter setColors(Iterable<Color> colors) {
-        this.markerColor = new Color[x.length];
-        int i = 0;
-        for (Color d : colors) {
-            this.markerColor[i++] = d;
-        }
+        fill((p, it) -> p.markerColor = it, colors);
         return requestLayout();
     }
 
     public Scatter setShapes(Iterable<MarkerShape> shape) {
-        this.markerShapes = fill(new MarkerShape[x.length], shape, marker.getShape());
+        fill((p, it) -> p.markerShape = it, shape);
         return requestLayout();
     }
 
@@ -180,18 +179,19 @@ public class Scatter extends AbstractScatter<Scatter> {
     }
 
     public Scatter setColormap(final Colormap colormap) {
-        this.colormap = colormap;
+        if (colorScale == null) {
+            colorScale = new ColorScaleAttributes();
+        }
+        colorScale.colormap = colormap;
         return requestLayout();
     }
 
     public Scatter setColors(double[] colors) {
         this.colors = colors;
-        this.minCol = StatUtils.min(colors);
-        this.maxCol = StatUtils.max(colors);
         return requestLayout();
     }
 
-    public Scatter setEdgeVisible(final boolean edgeVisible) {
+    public Scatter showEdges(final boolean edgeVisible) {
         showEdges = edgeVisible;
         return requestLayout();
     }

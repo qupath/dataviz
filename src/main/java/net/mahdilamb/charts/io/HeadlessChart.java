@@ -17,10 +17,10 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 //TODO come back to this
-public abstract class HeadlessChart< S extends PlotSeries<S>> extends Chart<S> {
+public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S> {
 
-
-    protected HeadlessChart(String title, double width, double height, PlotLayout<S> plot, HeadlessChartCanvas<S> canvas) {
+    @SafeVarargs
+    protected HeadlessChart(String title, double width, double height, HeadlessChartCanvas<S> canvas, S... plot) {
         super(title, width, height, plot);
         this.canvas = canvas;
     }
@@ -51,6 +51,11 @@ public abstract class HeadlessChart< S extends PlotSeries<S>> extends Chart<S> {
             this.g = (Graphics2D) this.image.getGraphics();
             this.supportTransparency = supportTransparency;
 
+        }
+
+        @Override
+        public void resetRect(double x, double y, double width, double height) {
+            //  g.clearRect(convert(x), convert(y), convert(width), convert(height));
         }
 
         @Override
@@ -284,13 +289,14 @@ public abstract class HeadlessChart< S extends PlotSeries<S>> extends Chart<S> {
     }
 
     private final HeadlessChartCanvas<S> canvas;
-/*
-    @SuppressWarnings("unchecked")
-    protected HeadlessChart(String title, double width, double height, P plot) {
-        super(title, width, height, (PlotLayoutImpl<S>) plot);
-        this.canvas = new HeadlessChartCanvas<>();
-    }
-*/
+
+    /*
+        @SuppressWarnings("unchecked")
+        protected HeadlessChart(String title, double width, double height, P plot) {
+            super(title, width, height, (PlotLayoutImpl<S>) plot);
+            this.canvas = new HeadlessChartCanvas<>();
+        }
+    */
     @Override
     protected ChartCanvas<?> getCanvas() {
         return canvas;

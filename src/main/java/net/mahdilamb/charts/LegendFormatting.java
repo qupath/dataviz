@@ -23,10 +23,10 @@ public interface LegendFormatting extends KeyAreaFormatting<LegendFormatting> {
     LegendFormatting setTitleColor(Color color);
 
     @Override
-    LegendFormatting setTextColor(Color color);
+    LegendFormatting setValueColor(Color color);
 
     @Override
-    LegendFormatting setTextFont(final Font font);
+    LegendFormatting setValueFont(final Font font);
 
     @Override
     LegendFormatting setXOffset(double x);

@@ -12,12 +12,11 @@ import java.util.TreeMap;
 /**
  * A fill - supports a single fill color, linear or radial gradient
  */
-//todo make immutable
 public class Fill {
     /**
      * A default black fill
      */
-    public static final Fill BLACK_FILL = new UnmodifiableFill(Color.BLACK);
+    public static final Fill BLACK_FILL = new Fill(Color.BLACK);
 
     /**
      * Enum for the types of gradients
@@ -33,7 +32,7 @@ public class Fill {
         RADIAL
     }
 
-    private Object fill;
+    private final Object fill;
 
     /**
      * An object representing a gradient
@@ -187,10 +186,6 @@ public class Fill {
         return (Color) fill;
     }
 
-    public void set(final Color color){
-        this.fill = color;
-    }
-
     /**
      * @return a shallow copy of this fill
      */
@@ -252,22 +247,6 @@ public class Fill {
     @Override
     public final int hashCode() {
         return Objects.hash(fill);
-    }
-
-    private static final class UnmodifiableFill extends Fill {
-
-        public UnmodifiableFill(Color color) {
-            super(color);
-        }
-
-        public UnmodifiableFill(GradientType gradientType, Colormap colorMap, double startX, double startY, double endX, double endY) {
-            super(gradientType, colorMap, startX, startY, endX, endY);
-        }
-
-        public UnmodifiableFill(GradientType gradientType, Colormap colorMap, Point start, Point end) {
-            super(gradientType, colorMap, start, end);
-        }
-
     }
 
 }

@@ -12,6 +12,30 @@ public abstract class ChartComponent {
     }
 
     /**
+     * Calculate the minimum display area
+     *
+     * @param canvas the canvas that will eventually be drawn on
+     * @param source the source of the request
+     * @param minX   the requested minX
+     * @param minY   the requested minY
+     * @param maxX   the requested maxX
+     * @param maxY   the requested maxY
+     */
+    protected abstract void calculateBounds(ChartCanvas<?> canvas, Chart<? extends Object> source, double minX, double minY, double maxX, double maxY);
+
+    /**
+     * Draw the elements
+     *
+     * @param canvas the canvas to draw on
+     * @param source the source of the draw request
+     * @param minX   the requested minX
+     * @param minY   the requested minY
+     * @param maxX   the requested maxX
+     * @param maxY   the requested maxY
+     */
+    protected abstract void layout(ChartCanvas<?> canvas, Chart<? extends Object> source, double minX, double minY, double maxX, double maxY);
+
+    /**
      * Request a layout to the chart, if one has been assigned
      */
     protected Object requestLayout() {
@@ -64,29 +88,5 @@ public abstract class ChartComponent {
         canvas.setStroke(Stroke.BLACK_STROKE);
         canvas.strokeRect(component.boundsX, component.boundsY, component.boundsWidth, component.boundsHeight);
     }
-
-    /**
-     * Calculate the minimum display area
-     *
-     * @param canvas the canvas that will eventually be drawn on
-     * @param source the source of the request
-     * @param minX   the requested minX
-     * @param minY   the requested minY
-     * @param maxX   the requested maxX
-     * @param maxY   the requested maxY
-     */
-    protected abstract void calculateBounds(ChartCanvas<?> canvas, Chart<? extends Object> source, double minX, double minY, double maxX, double maxY);
-
-    /**
-     * Draw the elements
-     *
-     * @param canvas the canvas to draw on
-     * @param source the source of the draw request
-     * @param minX   the requested minX
-     * @param minY   the requested minY
-     * @param maxX   the requested maxX
-     * @param maxY   the requested maxY
-     */
-    protected abstract void layout(ChartCanvas<?> canvas, Chart<? extends Object> source, double minX, double minY, double maxX, double maxY);
 
 }

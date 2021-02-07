@@ -66,7 +66,7 @@ public final class SVGUtils {
      * @param fill fill to convert
      * @return SVG representation of the fill
      */
-    public static String convertToString(final SVGDefinitions defs, final Fill fill) {
+    public static String convertToString(final SVGExporter.SVGDefinitions defs, final Fill fill) {
         if (Fill.isNull(fill)) {
             return "fill:none; ";
         }
@@ -98,7 +98,7 @@ public final class SVGUtils {
      * @param stroke stroke
      * @return style string representing the style
      */
-    static String convertToString(final SVGDefinitions defs, final Fill fill, final Stroke stroke) {
+    static String convertToString(final SVGExporter.SVGDefinitions defs, final Fill fill, final Stroke stroke) {
         return String.format("style=\"%s%s\" ", convertToString(defs, fill), convertToString(stroke));
     }
 
@@ -145,7 +145,20 @@ public final class SVGUtils {
         }
     }
 
-    static String rectangleToString(double x, double y, double width, double height, final SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    /**
+     * Convert a rectangle to an SVG element representation
+     *
+     * @param x      top-left x of rectangle
+     * @param y      top-left y of rectangle
+     * @param width  width of rectangle
+     * @param height height of rectangle
+     * @param defs   the SVG definitions to add to, if required
+     * @param indent the current indent
+     * @param stroke the stroke of the rectangle
+     * @param fill   the fill of the rectangle
+     * @return the SVG element of the rectangle
+     */
+    static String rectangleToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
         return String.format(
                 "%s<rect x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" %s/>%n",
                 indent.toString(),
@@ -157,7 +170,20 @@ public final class SVGUtils {
         );
     }
 
-    static String ellipseToString(double x, double y, double width, double height, final SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    /**
+     * Convert an ellipse to an SVG element
+     *
+     * @param x      top-left x of ellipse
+     * @param y      top-left y of ellipse
+     * @param width  width of ellipse
+     * @param height height of ellipse
+     * @param defs   the SVG definitions to add to, if required
+     * @param indent the current indent
+     * @param stroke the stroke of the ellipse
+     * @param fill   the fill of the ellipse
+     * @return the SVG element of the ellipse
+     */
+    static String ellipseToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
         final double rx = width * .5;
         final double ry = height * .5;
         return String.format(
@@ -171,7 +197,22 @@ public final class SVGUtils {
         );
     }
 
-    static String roundedRectangleToString(double x, double y, double width, double height, double arcWidth, double arcHeight, final SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    /**
+     * Convert a rounded rectangle to an SVG element representation
+     *
+     * @param x         top-left x of rounded rectangle
+     * @param y         top-left y of rounded rectangle
+     * @param width     width of rounded rectangle
+     * @param height    height of rounded rectangle
+     * @param arcHeight the arc-height of the rounded rectangle
+     * @param arcWidth  the arc-width of the rounded rectangle
+     * @param defs      the SVG definitions to add to, if required
+     * @param indent    the current indent
+     * @param stroke    the stroke of the rounded rectangle
+     * @param fill      the fill of the rounded rectangle
+     * @return the SVG element of the rounded rectangle
+     */
+    static String roundedRectangleToString(double x, double y, double width, double height, double arcWidth, double arcHeight, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
         return String.format(
                 "%s<rect x=\"%s\" y=\"%s\" rx=\"%s\" ry=\"%s\" width=\"%s\" height=\"%s\" %s/>%n",
                 indent.toString(),
@@ -183,10 +224,21 @@ public final class SVGUtils {
                 convertToString(height),
                 convertToString(defs, fill, stroke)
         );
-
     }
 
-    static String lineToString(double x0, double y0, double x1, double y1, final SVGDefinitions defs, final StringBuilder indent, final Stroke stroke) {
+    /**
+     * Convert a line to an SVG element
+     *
+     * @param x0     the start x
+     * @param y0     the start y
+     * @param x1     the end x
+     * @param y1     the end y
+     * @param defs   the SVG definitions to add to, if required
+     * @param indent the current indent
+     * @param stroke the stroke of the rounded rectangle
+     * @return an SVG element representation of the line
+     */
+    static String lineToString(double x0, double y0, double x1, double y1, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke) {
         return String.format(
                 "%s<line x1=\"%s\" y1=\"%s\" x2=\"%s\" y2=\"%s\" %s/>%n",
                 indent.toString(),
@@ -198,7 +250,19 @@ public final class SVGUtils {
         );
     }
 
-    static String circleToString(double x, double y, double r, final SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    /**
+     * Convert a circle to an SVG representation
+     *
+     * @param x      the top-left x
+     * @param y      the top-left x
+     * @param r      the radius
+     * @param defs   the SVG definitions to add to, if required
+     * @param indent the current indent
+     * @param stroke the stroke of the rounded rectangle
+     * @param fill   the fill of the rounded rectangle
+     * @return an SVG element representation of a circle
+     */
+    static String circleToString(double x, double y, double r, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
         return String.format(
                 "%s<circle cx=\"%s\" cy=\"%s\" r=\"%s\" %s/>%n",
                 indent.toString(),
@@ -209,7 +273,7 @@ public final class SVGUtils {
         );
     }
 
-    static String pathToString(String pathD, final SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    static String pathToString(String pathD, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
         return String.format(
                 "%s<path d=\"%s\" %s/>%n",
                 indent.toString(),
@@ -217,7 +281,7 @@ public final class SVGUtils {
                 convertToString(defs, fill, stroke));
     }
 
-    static String polygonToString(double[] xPoints, double[] yPoints, int numPoints, SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
+    static String polygonToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
         final StringBuilder points = new StringBuilder(indent.toString()).append("<polygon points=\"");
         for (int i = 0; i < numPoints; ++i) {
             points.append(String.format("%s,%s ", convertToString(xPoints[i]), convertToString(yPoints[i])));
@@ -225,7 +289,7 @@ public final class SVGUtils {
         return points.append("\" ").append(convertToString(defs, fill, stroke)).append("/>\n").toString();
     }
 
-    static String polylineToString(double[] xPoints, double[] yPoints, int numPoints, SVGDefinitions defs, StringBuilder indent, Stroke stroke) {
+    static String polylineToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke) {
         final StringBuilder points = new StringBuilder(indent.toString()).append("<polyline points=\"");
         for (int i = 0; i < numPoints; ++i) {
             points.append(String.format("%s,%s ", convertToString(xPoints[i]), convertToString(yPoints[i])));
@@ -233,7 +297,7 @@ public final class SVGUtils {
         return points.append("\" ").append(convertToString(defs, null, stroke)).append("/>\n").toString();
     }
 
-    public static String textToString(final String text, double x, double y, net.mahdilamb.charts.graphics.Font font, SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
+    public static String textToString(final String text, double x, double y, net.mahdilamb.charts.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
         return String.format(
                 "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s>%s</text>%n",
                 indent.toString(),
@@ -248,7 +312,8 @@ public final class SVGUtils {
         );
 
     }
-    public static String rotatedTextToString(final String text, double x, double y,double rotationDegrees, double pivotX,double pivotY, net.mahdilamb.charts.graphics.Font font, SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
+
+    public static String rotatedTextToString(final String text, double x, double y, double rotationDegrees, double pivotX, double pivotY, net.mahdilamb.charts.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
         return String.format(
                 "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s transform=\"rotate(%s,%s,%s)\">%s</text>%n",
                 indent.toString(),
@@ -266,6 +331,7 @@ public final class SVGUtils {
         );
 
     }
+
     public static String imageToString(final byte[] bytes, double x, double y, double width, double height, StringBuilder indent) {
         return String.format("%s<image x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" xlink:href=\"data:image/png;base64,%s\" />%n",
                 indent,

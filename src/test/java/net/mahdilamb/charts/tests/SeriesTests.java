@@ -25,7 +25,7 @@ public class SeriesTests {
         final double[] x = {0, 1, 2, 3, 4};
         final double[] y = {0, 1, 4, 9, 16};
         final Scatter s = new Scatter(x, y);
-        final DataframeScatter t = new DataframeScatter(iris, "sepal_width", "sepal_length")
+    /*    final DataframeScatter t = new DataframeScatter(iris, "sepal_width", "sepal_length")
                 .setColors("species")
                 .setMarkerSizes("petal_length");
         final Line u = new Line(linearlySpaced(0, 2 * Math.PI, 100), Math::cos)
@@ -36,8 +36,8 @@ public class SeriesTests {
                 .setColors("smoker", tips.getStringSeries("smoker"));
         final Line w = new Line(gapminder.getDoubleSeries("year").toArray(new double[tips.size(Axis.INDEX)]), gapminder.getDoubleSeries("lifeExp").toArray(new double[tips.size(Axis.INDEX)]))
                 .setColors("continent", gapminder.getStringSeries("continent"))
-                .setGroups("country", gapminder.getStringSeries("country"));
-        System.out.println(w);
+                .setGroups("country", gapminder.getStringSeries("country"));*/
+        System.out.println();
 
     }
 }

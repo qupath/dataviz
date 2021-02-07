@@ -2,13 +2,22 @@ package net.mahdilamb.charts.plots;
 
 import net.mahdilamb.charts.PlotSeries;
 
-public final class PolarScatter extends PlotSeries.XY<PolarScatter> {
+public final class PolarScatter extends PlotSeries<PolarScatter> implements CircularPlot{
     Scatter.Mode markerMode = Scatter.Mode.MARKER_ONLY;
     double startAngle = 0;
     boolean clockWise = true, linesClosed = true;
 
+    String rLabel;
+    String thetaLabel;
+    protected double[] r;
+    protected double[] theta;
+
     public PolarScatter(double[] r, double[] theta) {
-        super(r, theta);
+        this.r = r;
+        this.theta = theta;
+        if (r.length != theta.length) {
+            throw new IllegalArgumentException();
+        }
     }
 
     public PolarScatter setMode(Scatter.Mode mode) {
@@ -17,11 +26,13 @@ public final class PolarScatter extends PlotSeries.XY<PolarScatter> {
     }
 
     protected PolarScatter setRadialLabel(String name) {
-        return super.setXLabel(name);
+        this.rLabel = name;
+        return requestLayout();
     }
 
     protected PolarScatter setAngularLabel(String name) {
-        return super.setYLabel(name);
+        this.thetaLabel = name;
+        return requestLayout();
     }
 
     public PolarScatter setStartAngle(double startAngle) {

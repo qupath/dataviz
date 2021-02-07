@@ -9,9 +9,12 @@ import java.util.Map;
  */
 public enum MarkerShape {
     /**
-     * A pixel marker '.'
+     * A point marker
      */
     POINT('.'),
+    /**
+     * A pixel marker ','
+     */
     PIXEL(','),
     /**
      * Circle marker 'o'

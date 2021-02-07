@@ -1,19 +1,16 @@
 package net.mahdilamb.charts.graphics;
 
-
 import net.mahdilamb.colormap.Color;
 
 /**
  * A basic stroke made up of a width and a color
  */
 //TODO add dashes, etc.
-//todo make immutable
-
 public class Stroke {
     /**
      * A default stroke - black and 1 pixel width. Use the {@link #copy} method to derive strokes
      */
-    public static final Stroke BLACK_STROKE = new UnmodifiableStroke(Color.BLACK, 1.);
+    public static final Stroke BLACK_STROKE = new Stroke(Color.BLACK, 1.);
     private final double width;
     private final Color color;
 
@@ -67,10 +64,4 @@ public class Stroke {
                 '}';
     }
 
-    private static final class UnmodifiableStroke extends Stroke {
-
-        UnmodifiableStroke(Color color, double width) {
-            super(color, width);
-        }
-    }
 }

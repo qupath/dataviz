@@ -62,7 +62,7 @@ public final class Area extends AbstractScatter<Area> {
         return super.setColors(name, groups);
     }
 
-    public Area setEdgeVisible(final boolean edgeVisible) {
+    public Area showEdges(final boolean edgeVisible) {
         showEdges = edgeVisible;
         return requestLayout();
     }

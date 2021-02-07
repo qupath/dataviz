@@ -6,7 +6,7 @@ import net.mahdilamb.charts.dataframe.DataFrame;
 
 import static net.mahdilamb.charts.utils.ArrayUtils.fill;
 
-public final class Table extends PlotSeries<Table> {
+public final class Table extends PlotSeries<Table>implements RectangularPlot {
     static final double DEFAULT_CELL_WIDTH = 75;
     static final double DEFAULT_CELL_HEIGHT = 32;
     final DataFrame frame;
@@ -28,4 +28,33 @@ public final class Table extends PlotSeries<Table> {
     }
 
 
+    @Override
+    public String getXLabel() {
+        return null;
+    }
+
+    @Override
+    public String getYLabel() {
+        return null;
+    }
+
+    @Override
+    public double getMinX() {
+        return 0;
+    }
+
+    @Override
+    public double getMaxX() {
+        return frame.size(Axis.INDEX);
+    }
+
+    @Override
+    public double getMinY() {
+        return 0;
+    }
+
+    @Override
+    public double getMaxY() {
+        return frame.numSeries();
+    }
 }

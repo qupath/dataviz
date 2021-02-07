@@ -1,6 +1,5 @@
 package net.mahdilamb.charts.swing;
 
-import net.mahdilamb.charts.Axis;
 import net.mahdilamb.charts.Chart;
 import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.Title;
@@ -19,70 +18,15 @@ import java.util.function.Consumer;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
-public final class SwingChart<P, S extends PlotSeries<S>> extends Chart<S> {
-    private static <S extends PlotSeries<S>> SwingChart<PlotLayout.RectangularPlot<S>, S> chart(final String title, double width, double height, final String xAxisLabel, double xAxisMin, double xAxisMax, final String yAxisLabel, double yAxisMin, double yAxisMax, final S series) {
-        final SwingChart<PlotLayout.RectangularPlot<S>, S> chart = new SwingChart<>(title, width, height, new PlotLayout.RectangularPlot<>(new Axis(xAxisLabel, xAxisMin, xAxisMax), new Axis(yAxisLabel, yAxisMin, yAxisMax), series));
-        //todo assignToChart(chart, plot.getXAxis(), plot.getYAxis());
-        return chart;
-    }
+public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
 
-
-    /**
-     * Convert a series to a chart
-     *
-     * @param title      the title of the chart
-     * @param width      the width of the chart
-     * @param height     the height of the chart
-     * @param xAxisLabel the label of the x axis
-     * @param yAxisLabel the label of the y axis
-     * @param series     the series
-     * @param <S>        the type of the series
-     * @return the series in its plot
-     */
-    private static <S extends PlotSeries<S>> SwingChart<PlotLayout.RectangularPlot<S>, S> chart(final String title, double width, double height, final String xAxisLabel, final String yAxisLabel, final S series) {
-        //    return chart(title, width, height, xAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, yAxisLabel, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, series);
-        return chart(title, width, height, xAxisLabel, 0, 10, yAxisLabel, 0, 10, series);
-
-    }
-
-    private static <S extends PlotSeries<S>> SwingChart<PlotLayout.RectangularPlot<S>, S> chart(final String title, final String xAxisLabel, final String yAxisLabel, final S series) {
-        return chart(title, DEFAULT_WIDTH, DEFAULT_HEIGHT, xAxisLabel, yAxisLabel, series);
-    }
     //todo show-editable. Save as images
 
-    /**
-     * Show a plot series
-     *
-     * @param <S>        the type of the series
-     * @param width      the width of the chart
-     * @param height     the height of the chart
-     * @param title      the title of the chart
-     * @param xAxisLabel the label of the x axis
-     * @param yAxisLabel the label of the y axis
-     * @param series     the series
-     * @return the chart that is shown
-     */
-    public static <S extends PlotSeries<S>> SwingChart<PlotLayout.RectangularPlot<S>, S> show(final double width, final double height, final String title, final String xAxisLabel, final String yAxisLabel, final S series) {
+    @SafeVarargs
+    public static <S extends PlotSeries<S>> SwingChart<S> show(final String title, S... series) {
         final JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
-        final SwingChart<PlotLayout.RectangularPlot<S>, S> chart = chart(title, width, height, xAxisLabel, yAxisLabel, series);
-        chart.addTo(frame.getContentPane(), BorderLayout.CENTER);
-        frame.pack();
-        frame.setVisible(true);
-        frame.setTitle(title);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        return chart;
-    }
-
-    public static <S extends PlotSeries<S>> SwingChart<PlotLayout.RectangularPlot<S>, S> show(final String title, final String xAxisLabel, final String yAxisLabel, final S series) {
-        return show(DEFAULT_WIDTH, DEFAULT_HEIGHT, title, xAxisLabel, yAxisLabel, series);
-    }
-
-    public static <S extends PlotSeries<S>> SwingChart<PlotLayout.RectangularPlot<S>, S> show(final double width, final double height, final String title, final String xAxisLabel, final String yAxisLabel, final S series, final Consumer<SwingChart<PlotLayout.RectangularPlot<S>, S>> beforeShow) {
-        final JFrame frame = new JFrame();
-        frame.setLayout(new BorderLayout());
-        final SwingChart<PlotLayout.RectangularPlot<S>, S> chart = chart(title, width, height, xAxisLabel, yAxisLabel, series);
-        beforeShow.accept(chart);
+        final SwingChart<S> chart = new SwingChart<>(title, DEFAULT_WIDTH, DEFAULT_HEIGHT, series);
         chart.addTo(frame.getContentPane(), BorderLayout.CENTER);
         frame.pack();
         frame.setVisible(true);
@@ -104,7 +48,8 @@ public final class SwingChart<P, S extends PlotSeries<S>> extends Chart<S> {
 
     private final ChartPane canvas = new ChartPane(this);
 
-    private SwingChart(String title, double width, double height, PlotLayout<S> plot) {
+    @SafeVarargs
+    private SwingChart(String title, double width, double height, S... plot) {
         super(title, width, height, plot);//todo
         final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
         canvas.setSize(size);
@@ -370,6 +315,11 @@ public final class SwingChart<P, S extends PlotSeries<S>> extends Chart<S> {
         }
 
         @Override
+        public void resetRect(double x, double y, double width, double height) {
+            queue.add(g -> g.clearRect(convert(x), convert(y), convert(width), convert(height)));
+        }
+
+        @Override
         public void reset() {
             queue.clear();
             queue.add(g -> {
@@ -503,7 +453,7 @@ public final class SwingChart<P, S extends PlotSeries<S>> extends Chart<S> {
 
         }
 
-        public double getTextHeight(Font font) {
+        double getTextHeight(Font font) {
             return SwingUtils.getLineHeight(getFontMetrics(SwingUtils.convert(font)));
 
         }

@@ -10,14 +10,13 @@ import java.util.Objects;
  * The constants are a compromise between the SVG specification
  * and the AWT constants
  */
-//todo make immutable
 public class Font {
 
     /**
      * A default 12-point san-serif font. Note that attempts to modify this font will thrown an error.
      * Please use the {@link #copy} to derive fonts
      */
-    public static final Font DEFAULT_FONT = new UnmodifiableFont(Family.SANS_SERIF, 12, Weight.NORMAL, Style.NORMAL);
+    public static final Font DEFAULT_FONT = new Font(Family.SANS_SERIF, 12, Weight.NORMAL, Style.NORMAL);
 
     /**
      * The font family
@@ -44,10 +43,10 @@ public class Font {
         BOLD
     }
 
-    private double size;
-    private Family family;
-    private Style style;
-    private Weight weight;
+    private final double size;
+    private final Family family;
+    private final Style style;
+    private final Weight weight;
 
     /**
      * Create a font with the given characteristics
@@ -114,13 +113,11 @@ public class Font {
     }
 
     /**
-     *
      * @return a copy of this font
      */
-    public Font copy(){
+    public Font copy() {
         return new Font(this);
     }
-
 
     /**
      * Modify the font size
@@ -128,9 +125,8 @@ public class Font {
      * @param size font size
      * @return a new font with current characteristics, but modified size
      */
-    public Font modify(final double size) {
-        this.size = size;
-        return this;
+    public Font derive(final double size) {
+        return new Font(family, size, weight, style);
 
     }
 
@@ -140,10 +136,8 @@ public class Font {
      * @param family font family
      * @return a new font with current characteristics, but modified family
      */
-    public Font modify(final Family family) {
-        this.family = family;
-        return this;
-
+    public Font derive(final Family family) {
+        return new Font(family, size, weight, style);
     }
 
     /**
@@ -152,9 +146,8 @@ public class Font {
      * @param style font style
      * @return a new font with current characteristics, but modified style
      */
-    public Font modify(final Style style) {
-        this.style = style;
-        return this;
+    public Font derive(final Style style) {
+        return new Font(family, size, weight, style);
 
     }
 
@@ -164,9 +157,9 @@ public class Font {
      * @param weight font weight
      * @return a new font with current characteristics, but modified weight
      */
-    public Font modify(final Weight weight) {
-        this.weight = weight;
-        return this;
+    public Font derive(final Weight weight) {
+        return new Font(family, size, weight, style);
+
     }
 
 
@@ -192,31 +185,5 @@ public class Font {
         return Objects.hash(size, family, style, weight);
     }
 
-    private static final class UnmodifiableFont extends Font {
-        UnmodifiableFont(Family family, double size, Weight weight, Style style) {
-            super(family, size, weight, style);
-        }
-
-        @Override
-        public Font modify(double size) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Font modify(Family family) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Font modify(Style style) {
-            throw new UnsupportedOperationException();
-        }
-
-        @Override
-        public Font modify(Weight weight) {
-            throw new UnsupportedOperationException();
-        }
-
-    }
 
 }

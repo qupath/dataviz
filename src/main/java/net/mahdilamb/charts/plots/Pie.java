@@ -10,7 +10,7 @@ import java.util.Map;
 import static net.mahdilamb.charts.utils.ArrayUtils.fill;
 
 @PlotType(name = "Pie", compatibleSeries = {PlotType.DataType.STRING, PlotType.DataType.NUMERIC})
-public final class Pie extends PlotSeries.Categorical<Pie> {
+public final class Pie extends PlotSeries.Categorical<Pie> implements CircularPlot{
     double hole = 0;
     double[] pull;
 
@@ -32,7 +32,7 @@ public final class Pie extends PlotSeries.Categorical<Pie> {
     public Pie setColors(final Map<String, Color> colors) {
         for (final Map.Entry<String, Color> entry : colors.entrySet()) {
             final GroupAttributes g = getGroupAttribute(entry.getKey());
-            g.setMarkerColor(entry.getValue());
+            g.markerColor = entry.getValue();
         }
         return requestLayout();
     }

@@ -1,8 +1,6 @@
 package net.mahdilamb.charts.swing;
 
-import net.mahdilamb.charts.Title;
 import net.mahdilamb.charts.graphics.Fill;
-import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.geom2d.geometries.Geometries;
 
 import javax.imageio.ImageIO;
@@ -11,7 +9,6 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -185,13 +182,6 @@ public final class SwingUtils {
 
     public static void drawMultilineTextRight(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
         drawMultilineText(g, text, x, y, lineSpacing, width, 1);
-    }
-
-    public static double[] ensureCapacity(double[] source, int capacity) {
-        if (capacity >= source.length) {
-            return Arrays.copyOf(source, capacity);
-        }
-        return source;
     }
 
     public static double getLineHeight(FontMetrics fontMetrics) {

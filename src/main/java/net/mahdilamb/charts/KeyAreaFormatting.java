@@ -16,9 +16,9 @@ interface KeyAreaFormatting<K extends KeyAreaFormatting<K>> {
 
     K setTitleColor(Color color);
 
-    K setTextColor(Color color);
+    K setValueColor(Color color);
 
-    K setTextFont(final Font font);
+    K setValueFont(final Font font);
 
     K setXOffset(double x);
 

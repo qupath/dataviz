@@ -1,82 +1,85 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.ChartCanvas;
-import net.mahdilamb.charts.graphics.Marker;
+import net.mahdilamb.charts.graphics.Fill;
+import net.mahdilamb.charts.graphics.MarkerShape;
+import net.mahdilamb.charts.graphics.Stroke;
 
 final class Markers {
-    private Markers(){}
+    private Markers() {
+    }
 
-    static void draw(ChartCanvas<?> canvas, double x, double y, Marker marker) {
-        double r = marker.getSize() * .5;
+    static void draw(ChartCanvas<?> canvas, double x, double y, double size, Fill fill, Stroke stroke, MarkerShape marker) {
+        double r = size * .5;
         double minX, minY;
-        switch (marker.getShape()) {
+        switch (marker) {
             case POINT:
-                canvas.setFill(marker.getFill());
-                double sqrtS = Math.sqrt(marker.getSize());
+                canvas.setFill(fill);
+                double sqrtS = Math.sqrt(size);
                 double sr = sqrtS * .5;
                 minX = x - sr;
                 minY = y - sr;
                 canvas.fillOval(minX, minY, sqrtS, sqrtS);
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.strokeOval(minX, minY, sqrtS, sqrtS);
                 return;
             case PIXEL:
 
-                canvas.setFill(marker.getFill());
+                canvas.setFill(fill);
                 minX = x - .5;
                 minY = y - .5;
                 canvas.fillRect(minX, minY, 1, 1);
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.strokeRect(minX, minY, 1, 1);
                 return;
             case CIRCLE:
-                canvas.setFill(marker.getFill());
+                canvas.setFill(fill);
                 minX = x - r;
                 minY = y - r;
-                canvas.fillOval(minX, minY, marker.getSize(), marker.getSize());
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                canvas.fillOval(minX, minY, size, size);
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
-                canvas.strokeOval(minX, minY, marker.getSize(), marker.getSize());
+                canvas.setStroke(stroke);
+                canvas.strokeOval(minX, minY, size, size);
                 return;
             case SQUARE:
                 minX = x - r;
                 minY = y - r;
-                canvas.setFill(marker.getFill());
-                canvas.fillRect(minX, minY, marker.getSize(), marker.getSize());
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                canvas.setFill(fill);
+                canvas.fillRect(minX, minY, size, size);
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
-                canvas.strokeRect(minX, minY, marker.getSize(), marker.getSize());
+                canvas.setStroke(stroke);
+                canvas.strokeRect(minX, minY, size, size);
                 return;
             case FILLED_PLUS:
                 minX = x - r;
                 minY = y - r;
-                double sizeBy3 = marker.getSize() / 3;
-                canvas.setFill(marker.getFill());
-                canvas.fillRect(minX + sizeBy3, minY, sizeBy3, marker.getSize());
-                canvas.fillRect(minX, minY + sizeBy3, marker.getSize(), sizeBy3);
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                double sizeBy3 = size / 3;
+                canvas.setFill(fill);
+                canvas.fillRect(minX + sizeBy3, minY, sizeBy3, size);
+                canvas.fillRect(minX, minY + sizeBy3, size, sizeBy3);
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
                 canvas.beginPath();
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.strokeLine(minX + sizeBy3, minY, minX + sizeBy3 + sizeBy3, minY);
                 canvas.strokeLine(minX + sizeBy3 + sizeBy3, minY + sizeBy3, minX + sizeBy3 + sizeBy3, minY);
-                canvas.strokeLine(minX + sizeBy3 + sizeBy3, minY + sizeBy3, minX + marker.getSize(), minY + sizeBy3);
-                canvas.strokeLine(minX + marker.getSize(), minY + sizeBy3, minX + marker.getSize(), minY + sizeBy3 + sizeBy3);
-                canvas.strokeLine(minX + marker.getSize(), minY + sizeBy3 + sizeBy3, minX + sizeBy3 + sizeBy3, minY + sizeBy3 + sizeBy3);
-                canvas.strokeLine(minX + sizeBy3 + sizeBy3, minY + sizeBy3 + sizeBy3, minX + sizeBy3 + sizeBy3, minY + marker.getSize());
-                canvas.strokeLine(minX + sizeBy3 + sizeBy3, minY + marker.getSize(), minX + sizeBy3, minY + marker.getSize());
-                canvas.strokeLine(minX + sizeBy3, minY + marker.getSize(), minX + sizeBy3, minY + sizeBy3 + sizeBy3);
+                canvas.strokeLine(minX + sizeBy3 + sizeBy3, minY + sizeBy3, minX + size, minY + sizeBy3);
+                canvas.strokeLine(minX + size, minY + sizeBy3, minX + size, minY + sizeBy3 + sizeBy3);
+                canvas.strokeLine(minX + size, minY + sizeBy3 + sizeBy3, minX + sizeBy3 + sizeBy3, minY + sizeBy3 + sizeBy3);
+                canvas.strokeLine(minX + sizeBy3 + sizeBy3, minY + sizeBy3 + sizeBy3, minX + sizeBy3 + sizeBy3, minY + size);
+                canvas.strokeLine(minX + sizeBy3 + sizeBy3, minY + size, minX + sizeBy3, minY + size);
+                canvas.strokeLine(minX + sizeBy3, minY + size, minX + sizeBy3, minY + sizeBy3 + sizeBy3);
                 canvas.strokeLine(minX + sizeBy3, minY + sizeBy3 + sizeBy3, minX, minY + sizeBy3 + sizeBy3);
                 canvas.strokeLine(minX, minY + sizeBy3 + sizeBy3, minX, minY + sizeBy3);
                 canvas.strokeLine(minX, minY + sizeBy3, minX + sizeBy3, minY + sizeBy3);
@@ -86,7 +89,7 @@ final class Markers {
             case STAR:
                 double deltaAngleRad = Math.PI / 5;
                 double innerRadius = r / 2.63;
-                canvas.setFill(marker.getFill());
+                canvas.setFill(fill);
                 canvas.beginPath();
                 for (int i = 0; i < 5 * 2; i++) {
                     double angleRad = Math.toRadians(-18) + i * deltaAngleRad;
@@ -109,10 +112,10 @@ final class Markers {
                 }
                 canvas.closePath();
                 canvas.fill();
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.stroke();
                 return;
             case PENTAGON:
@@ -124,11 +127,11 @@ final class Markers {
             case TRIANGLE_LEFT:
             case TRIANGLE_RIGHT:
             case TRIANGLE_DOWN:
-                fillRegularPolygon(canvas, x, y, r, marker);
+                fillRegularPolygon(canvas, x, y, r, marker, fill, stroke);
                 return;
             case THIN_DIAMOND:
-                double sizeBy4 = marker.getSize() / 4;
-                canvas.setFill(marker.getFill());
+                double sizeBy4 = size / 4;
+                canvas.setFill(fill);
                 canvas.beginPath();
                 canvas.moveTo(x, y - r);
                 canvas.lineTo(x + sizeBy4, y);
@@ -136,66 +139,66 @@ final class Markers {
                 canvas.lineTo(x - sizeBy4, y);
                 canvas.closePath();
                 canvas.fill();
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.stroke();
                 return;
             case TRI_LEFT:
             case TRI_DOWN:
             case TRI_RIGHT:
             case TRI_UP:
-                strokeTriangle(canvas, x, y, r, marker);
+                strokeTriangle(canvas, x, y, r, marker, fill, stroke);
                 return;
             case PLUS:
-                canvas.setFill(marker.getFill());
+                canvas.setFill(fill);
                 canvas.beginPath();
                 canvas.moveTo(x, y - r);
                 canvas.lineTo(x, y + r);
                 canvas.moveTo(x - r, y);
                 canvas.lineTo(x + r, y);
                 canvas.stroke();
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.stroke();
                 return;
             case X:
                 canvas.beginPath();
-                canvas.setFill(marker.getFill());
+                canvas.setFill(fill);
                 canvas.moveTo(x - r, y - r);
                 canvas.lineTo(x + r, y + r);
                 canvas.moveTo(x + r, y - r);
                 canvas.lineTo(x - r, y + r);
                 canvas.stroke();
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.stroke();
                 return;
             case HORIZONTAL_LINE:
-                canvas.setFill(marker.getFill());
+                canvas.setFill(fill);
                 canvas.strokeLine(x, y - r, x, y + r);
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.strokeLine(x, y - r, x, y + r);
                 return;
             case VERTICAL_LINE:
-                canvas.setFill(marker.getFill());
+                canvas.setFill(fill);
                 canvas.strokeLine(x - r, y, x + r, y);
-                if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+                if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
                     return;
                 }
-                canvas.setStroke(marker.getStroke());
+                canvas.setStroke(stroke);
                 canvas.strokeLine(x - r, y, x + r, y);
                 return;
             case FILLED_X:
-                filledX(canvas, x, y, marker);
+                filledX(canvas, x, y, size, marker, fill, stroke);
                 return;
             default:
                 throw new UnsupportedOperationException();
@@ -203,9 +206,9 @@ final class Markers {
         }
     }
 
-    private static void strokeTriangle(ChartCanvas<?> canvas, double x, double y, double r, Marker marker) {
+    private static void strokeTriangle(ChartCanvas<?> canvas, double x, double y, double r, MarkerShape marker, final Fill fill, final Stroke stroke) {
         double j;
-        switch (marker.getShape()) {
+        switch (marker) {
             case TRI_RIGHT:
                 j = 0;
                 break;
@@ -222,7 +225,7 @@ final class Markers {
                 throw new UnsupportedOperationException();
         }
         double rad = Math.PI / (1.5);
-        canvas.setFill(marker.getFill());
+        canvas.setFill(fill);
         canvas.beginPath();
         for (int i = 0; i < 6; i++) {
             double angleRad = j + i * rad;
@@ -242,23 +245,23 @@ final class Markers {
         }
         canvas.closePath();
         canvas.fill();
-        if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+        if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
             return;
         }
-        canvas.setStroke(marker.getStroke());
+        canvas.setStroke(stroke);
         canvas.stroke();
     }
 
-    private static void filledX(ChartCanvas<?> canvas, double x, double y, Marker marker) {
+    private static void filledX(ChartCanvas<?> canvas, double x, double y, double size, MarkerShape marker, final Fill fill, final Stroke stroke) {
         //divide into three
-        double sby3 = marker.getSize() / 4;
+        double sby3 = size / 4;
         //get the size of the hypotenuse
         double sbysC = Math.sqrt(sby3 * sby3 + sby3 * sby3);
         //get the size of half the hypotenuse
         double sbysCby2 = sbysC * .5;
 
         canvas.beginPath();
-        canvas.setFill(marker.getFill());
+        canvas.setFill(fill);
         canvas.moveTo(x, y - sbysCby2);
         canvas.lineTo(x + sbysCby2, y - sbysCby2 - sbysCby2);
         canvas.lineTo(x + sbysCby2 + sbysCby2, y - sbysCby2);
@@ -273,18 +276,18 @@ final class Markers {
         canvas.lineTo(x - sbysCby2, y - sbysCby2 - sbysCby2);
         canvas.closePath();
         canvas.fill();
-        if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+        if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
             return;
         }
-        canvas.setStroke(marker.getStroke());
+        canvas.setStroke(stroke);
         canvas.stroke();
     }
 
     // Adapted from https://stackoverflow.com/questions/16327588/how-to-make-star-shape-in-java
-    private static void fillRegularPolygon(ChartCanvas<?> canvas, double x, double y, double r, Marker marker) {
+    private static void fillRegularPolygon(ChartCanvas<?> canvas, double x, double y, double r, MarkerShape marker, final Fill fill, final Stroke stroke) {
         int sides;
         double j = 0;
-        switch (marker.getShape()) {
+        switch (marker) {
             case PENTAGON:
                 sides = 5;
                 j = Math.toRadians(-18);
@@ -325,7 +328,7 @@ final class Markers {
         }
         double rad = Math.PI / (sides * .5);
 
-        canvas.setFill(marker.getFill());
+        canvas.setFill(fill);
         canvas.beginPath();
         for (int i = 0; i < sides; i++) {
             double angleRad = j + i * rad;
@@ -343,10 +346,10 @@ final class Markers {
         }
         canvas.closePath();
         canvas.fill();
-        if (marker.getStroke().getWidth() <= 0 || marker.getStroke().getColor() == null) {
+        if (stroke.getWidth() <= 0 || stroke.getColor() == null) {
             return;
         }
-        canvas.setStroke(marker.getStroke());
+        canvas.setStroke(stroke);
         canvas.stroke();
 
     }

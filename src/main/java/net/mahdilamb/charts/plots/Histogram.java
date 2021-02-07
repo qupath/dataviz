@@ -5,7 +5,7 @@ import net.mahdilamb.charts.graphics.Orientation;
 import net.mahdilamb.charts.statistics.BinWidthEstimator;
 import net.mahdilamb.charts.statistics.StatUtils;
 
-public final class Histogram extends PlotSeries.Distribution<Histogram> {
+public final class Histogram extends PlotSeries.Distribution<Histogram>implements RectangularPlot {
 
     net.mahdilamb.charts.statistics.Histogram histogram;
     Orientation orientation = Orientation.VERTICAL;

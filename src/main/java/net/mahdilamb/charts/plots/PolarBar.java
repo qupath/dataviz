@@ -2,7 +2,7 @@ package net.mahdilamb.charts.plots;
 
 import net.mahdilamb.charts.PlotSeries;
 
-public final class PolarBar extends PlotSeries.Categorical<PolarBar> {
+public final class PolarBar extends PlotSeries.Categorical<PolarBar> implements CircularPlot{
     double startAngle = 0;
     boolean clockWise = true;
 

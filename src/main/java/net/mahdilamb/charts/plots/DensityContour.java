@@ -2,7 +2,7 @@ package net.mahdilamb.charts.plots;
 
 import net.mahdilamb.charts.PlotSeries;
 
-public class DensityContour extends PlotSeries.Distribution2D<DensityContour> {
+public class DensityContour extends PlotSeries.Distribution2D<DensityContour>implements RectangularPlot {
     boolean showLabels = false, useFill = false, showOutline = true;
 
     public DensityContour(double[] x, double[] y) {

@@ -1,5 +1,7 @@
 package net.mahdilamb.charts;
 
+import net.mahdilamb.colormap.Color;
+
 /**
  * Plot area
  *
@@ -55,4 +57,6 @@ public interface PlotArea<S extends PlotSeries<S>> {
      * @return the series at the specified index
      */
     S getSeries(int index);
+
+    void setBackground(final Color color);
 }

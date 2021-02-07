@@ -6,10 +6,21 @@ import net.mahdilamb.colormap.Color;
  * Interface for the canvas element in a chart
  */
 public interface ChartCanvas<IMAGE> {
-    //TODO reset a specific rectangle region
 
     /**
-     * Called before the canvas is laid out
+     * Clears a specific rectangular area of the canvas.
+     *
+     * @apiNote Exporter canvases may ignore this. I.e. GUI-based canvas will use this and ignore reset (unless it's
+     * the first draw), and exporter-canvases will ignore the reset
+     * @param x      top-left x
+     * @param y      top-left y
+     * @param width  width of the rectangle
+     * @param height height of the rectangle
+     */
+    void resetRect(double x, double y, double width, double height);
+
+    /**
+     * Called before the canvas is laid out. I.e. clears everything
      */
     void reset();
 

@@ -24,10 +24,10 @@ public interface ColorScaleFormatting extends KeyAreaFormatting<ColorScaleFormat
     ColorScaleFormatting setTitleColor(Color color);
 
     @Override
-    ColorScaleFormatting setTextColor(Color color);
+    ColorScaleFormatting setValueColor(Color color);
 
     @Override
-    ColorScaleFormatting setTextFont(final Font font);
+    ColorScaleFormatting setValueFont(final Font font);
 
     @Override
     ColorScaleFormatting setXOffset(double x);
@@ -53,26 +53,24 @@ public interface ColorScaleFormatting extends KeyAreaFormatting<ColorScaleFormat
     @Override
     ColorScaleFormatting setBackground(final Color color);
 
-    ColorScaleFormatting setRange(double min, double max);
+    ColorScaleFormatting showLabels(boolean values);
 
-    ColorScaleFormatting setLogarithmic(boolean logarithmic);
+    ColorScaleFormatting setLabelAlignment(HAlign alignment);
 
-    ColorScaleFormatting showValues(boolean values);
-
-    ColorScaleFormatting setValues(final double[] values, final String[] text);
-
-    ColorScaleFormatting setValueColor(final Color color);
-
-    ColorScaleFormatting setValueFont(final Font font);
-
-    ColorScaleFormatting setValueAlignment(HAlign alignment);
-
-    ColorScaleFormatting setValueAlignment(VAlign alignment);
+    ColorScaleFormatting setLabelAlignment(VAlign alignment);
 
     ColorScaleFormatting showTickMarks(boolean showTickMarks);
 
     ColorScaleFormatting setTickPosition(HAlign alignment);
 
     ColorScaleFormatting setTickPosition(VAlign alignment);
+
+    /**
+     * Sets the width if vertical, or height if horizontal
+     *
+     * @param size the size to set
+     * @return this ColorScaleFormatting
+     */
+    ColorScaleFormatting setSize(double size);
 
 }

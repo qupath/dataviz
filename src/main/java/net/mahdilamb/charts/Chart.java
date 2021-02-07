@@ -1,11 +1,14 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.*;
+import net.mahdilamb.charts.graphics.ChartCanvas;
+import net.mahdilamb.charts.graphics.Font;
+import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.io.ImageExporter;
-import net.mahdilamb.charts.io.SVGFile;
+import net.mahdilamb.charts.io.SVGExporter;
+import net.mahdilamb.charts.plots.CircularPlot;
+import net.mahdilamb.charts.plots.RectangularPlot;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
-import net.mahdilamb.colormap.reference.qualitative.Plotly;
 import net.mahdilamb.geom2d.geometries.Point;
 
 import java.io.File;
@@ -13,20 +16,22 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.BiConsumer;
 
-public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent implements PlotArea<S> {
+public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent {
 
     private static final Map<String, BiConsumer<File, Chart<?>>> supportedFormats = new HashMap<>();
+    private static final Font DEFAULT_TITLE_FONT = new Font(Font.Family.SANS_SERIF, 20);
 
     static {
         supportedFormats.put(".jpg", ImageExporter::toJPEG);
         supportedFormats.put(".jpeg", ImageExporter::toJPEG);
         supportedFormats.put(".tif", ImageExporter::toTIFF);
         supportedFormats.put(".tiff", ImageExporter::toTIFF);
-        supportedFormats.put(".svg", SVGFile::to);
-        supportedFormats.put(".svgz", SVGFile::toCompressed);
+        supportedFormats.put(".svg", SVGExporter::toSVG);
+        supportedFormats.put(".svgz", SVGExporter::toSVGZ);
         supportedFormats.put(".png", ImageExporter::toPNG);
         supportedFormats.put(".bmp", ImageExporter::toBMP);
     }
+
 
     protected abstract static class PlotLayout<S extends PlotSeries<S>> extends ChartComponent implements PlotArea<S> {
 
@@ -36,7 +41,7 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         }
 
         final S[] series;
-        Fill backgroundColor = new Fill(Color.lightgrey);
+        Color backgroundColor = Color.lightgrey;
         Stroke border = new Stroke(Color.darkgray, 1.5);
 
         public Axis getXAxis() {
@@ -63,6 +68,12 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         @Override
         public S getSeries(int index) {
             return series[index];
+        }
+
+        @Override
+        public void setBackground(Color color) {
+            this.backgroundColor = color;
+            requestLayout();
         }
 
 
@@ -98,7 +109,7 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         public static class RectangularPlot<S extends PlotSeries<S>> extends PlotLayout<S> {
 
 
-            private final Axis xAxis, yAxis;
+            private Axis xAxis, yAxis;
 
             @SafeVarargs
             public RectangularPlot(Axis xAxis, Axis yAxis, S... series) {
@@ -109,72 +120,12 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
             }
 
             protected void calculateBounds(Chart<?> chart, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
-                //get height of xAxis
-                final double availableHeight = maxY - minY;
-                final double availableWidth = maxX - minX;
-                double xAxisHeight = 0;
-                if (xAxis.title.isVisible()) {
-                    double titleHeight = chart.getTextLineHeight(xAxis.title.font);
-                    xAxisHeight += titleHeight;
-                }
-                if (xAxis.showMajorTicks) {
-                    xAxisHeight += xAxis.majorTickLength;
-                } else if (xAxis.showMinorTicks) {
-                    xAxisHeight += xAxis.minorTickLength;
-                }
-                if (xAxis.showLabels) {
-                    xAxisHeight += chart.getTextLineHeight(xAxis.labelFont) + xAxis.labelPadding;
-                }
-                //yAxis
-                double yAxisWidth = 0;
-                final double yTitleWidth;
-                final String longerLabel = StringUtils.longerString(yAxis.getLabel(yAxis.lowerLimit), yAxis.getLabel(yAxis.upperLimit));
-                if (xAxis.showLabels) {
-                    yAxisWidth += chart.getTextWidth(xAxis.labelFont, longerLabel);
-                }
-                if (yAxis.title.isVisible()) {
-                    yTitleWidth = chart.getTextLineHeight(xAxis.title.font);
-                } else {
-                    yTitleWidth = 0;
-                }
-                yAxisWidth += yTitleWidth;
-                if (yAxis.showMajorTicks) {
-                    yAxisWidth += yAxis.majorTickLength + yAxis.labelPadding;
-                } else if (yAxis.showMinorTicks) {
-                    yAxisWidth += yAxis.minorTickLength + yAxis.labelPadding;
-                }
-                xAxis.boundsX = minX + yAxisWidth;
-                xAxis.boundsY = minY + availableHeight - xAxisHeight;
-                xAxis.boundsWidth = availableWidth - yAxisWidth;
-                xAxis.boundsHeight = xAxisHeight;
 
-                yAxis.boundsX = minX;
-                yAxis.boundsY = minY;
-                yAxis.boundsWidth = yAxisWidth;
-                yAxis.boundsHeight = availableHeight - xAxisHeight;
-
-                this.boundsX = xAxis.boundsX;
-                this.boundsY = yAxis.boundsY;
-                this.boundsWidth = xAxis.boundsWidth;
-                this.boundsHeight = yAxis.boundsHeight;
             }
 
 
             @Override
             protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
-                canvas.setFill(backgroundColor);
-                calculateBounds(source, canvas, minX, minY, maxX, maxY);
-                canvas.fillRect(boundsX, boundsY, boundsWidth, boundsHeight);
-                xAxis.layout(canvas, source, minX, minY, maxX, maxY);
-                yAxis.layout(canvas, source, minX, minY, maxX, maxY);
-                canvas.setClip(ClipShape.RECTANGLE, boundsX, boundsY, boundsWidth, boundsHeight);
-                for (final S s : series) {
-                    //((PlotSeries<S>) s).layout(canvas, source, minX, minY, maxX, maxY);
-                }
-                canvas.clearClip();
-                //draw border
-                canvas.setStroke(border);
-                canvas.strokeRect(boundsX, boundsY, boundsWidth, boundsHeight);
             }
 
             public Axis getXAxis() {
@@ -198,58 +149,6 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
             }
         }
 
-        protected static final class MultiPlotArea<S extends PlotSeries<S>> extends ChartComponent implements PlotArea<S> {
-            String[] rows;
-            String[] cols;
-
-            //todo
-            @Override
-            protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
-
-            }
-
-            @Override
-            protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
-
-            }
-
-            @Override
-            public Axis getXAxis() {
-                //TODO
-                return null;
-            }
-
-            @Override
-            public Axis getYAxis() {
-                //TODO
-                return null;
-            }
-
-            @Override
-            public Axis getRadialAxis() {
-                //TODO
-                return null;
-            }
-
-            @Override
-            public Axis getAngularAxis() {
-                //TODO
-                return null;
-            }
-
-            @Override
-            public int numSeries() {
-                //TODO
-                return 0;
-            }
-
-            @Override
-            public S getSeries(int index) {
-                //TODO
-                return null;
-            }
-        }
-
     }
 
 
@@ -258,53 +157,118 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
     /**
      * The default chart theme
      */
-    public static final Theme DEFAULT_THEME = new ThemeImpl(new Plotly(), Color.WHITE, Color.LIGHT_GRAY, Color.BLACK, 2, 2);
-
-    Theme theme = Theme.DEFAULT;
-    Iterator<Float> colormapIt = theme.getDefaultColormap().iterator();
+    protected Color backgroundColor;
 
     Title title;
+    Font titleFont = DEFAULT_TITLE_FONT;
+
+    double width, height;
+
+    Charts.ColorScaleFormattingImpl colorScaleFormatting;
+    Charts.LegendFormattingImpl legendFormatting;
+
     ChartNode topArea, leftArea, rightArea, bottomArea;
     final PlotLayout<S> plotArea;
     ChartNode central; // to be used when adding colorscale/legend to the chart
     ChartNode overlay;//for interaction
-    double width, height;
 
-    S singleData;
-    List<S> data;
     ChartComponent singleAnnotation;
     List<ChartComponent> annotations;
 
-    protected Chart(String title, double width, double height, PlotLayout<S> plot) {
-        this.title = new Title(title, new Font(Font.Family.SANS_SERIF, theme.getTitleSize()));//todo
-        this.title.chart = this;
-        this.plotArea = plot;
-        this.plotArea.chart = this;
-        this.width = width;
-        this.height = height;
-       /* todo check
-       for (final S series : plot.series) {
-            addData(series);
-        }*/
+    @SafeVarargs
+    protected Chart(String title, double width, double height, S... series) {
+        this(title, width, height, getLayoutFromSeries(series), getLegendFromSeries(series), getColorScaleFromSeries(series));
     }
 
+    protected Chart(String title, double width, double height, PlotLayout<S> layout, Charts.LegendFormattingImpl legendFormatting, Charts.ColorScaleFormattingImpl colorScaleFormatting) {
+        this.title = new Title(title, titleFont);
+        assignToChart(chart, this.title);
+        this.width = width;
+        this.height = height;
+        this.plotArea = layout;
+        assignToChart(chart, this.plotArea);
+        this.legendFormatting = legendFormatting;
+        this.colorScaleFormatting = colorScaleFormatting;
+    }
 
-    private void addData(S data) {
-        //todo update key/color bar
-        data.chart = this;
-        if (this.data == null) {
-            if (singleData == null) {
-                singleData = data;
-                return;
-            }
-            this.data = new ArrayList<>();
-            this.data.add(singleData);
-            this.data.add(data);
-            singleData = null;
-            return;
+    protected Chart(String title, double width, double height, PlotLayout<S> layout) {
+        this(title, width, height, layout, new Charts.LegendFormattingImpl(), new Charts.ColorScaleFormattingImpl());
+    }
+
+    protected static <S extends PlotSeries<S>> Charts.ColorScaleFormattingImpl getColorScaleFromSeries(S[] series) {
+        //todo
+        return null;
+    }
+
+    protected static <S extends PlotSeries<S>> Charts.LegendFormattingImpl getLegendFromSeries(S[] series) {
+        //todo
+        return null;
+    }
+
+    /**
+     * Get the most compatible layout for the given series
+     *
+     * @param series the series
+     * @param <S>    the type of the series
+     * @return a layout for the series
+     */
+    protected static <S extends PlotSeries<S>> PlotLayout<S> getLayoutFromSeries(S[] series) {
+        if (series.length == 0) {
+            //empty plot
+            return new PlotLayout.RectangularPlot<>(new Axis(null, 0, 100), new Axis(null, 0, 100), series);
         }
-        this.data.add(data);
-
+        if (series.length == 1) {
+            if (series[0] instanceof RectangularPlot) {
+                final RectangularPlot t = (RectangularPlot) series[0];
+                return new PlotLayout.RectangularPlot<>(
+                        new Axis(t.getXLabel(), t.getMinX(), t.getMaxX()),
+                        new Axis(t.getYLabel(), t.getMinY(), t.getMaxY()),
+                        series
+                );
+            } else {
+                //TODO single circular plot
+            }
+        }
+        int numCircular = 0, numRectangular = 0;
+        for (final S s : series) {
+            if (s instanceof CircularPlot) {
+                ++numCircular;
+            } else {
+                ++numRectangular;
+            }
+        }
+        if (numCircular > 0 && numRectangular == 0) {
+            //all circular
+            //todo
+        } else if (numRectangular > 0 && numCircular == 0) {
+            //all rectangular
+            final Map<String, List<S>> xAxes = new HashMap<>(numRectangular);
+            final Map<String, List<S>> yAxes = new HashMap<>(numRectangular);
+            for (final S s : series) {
+                final List<S> xs = xAxes.computeIfAbsent(((RectangularPlot) s).getXLabel(), k -> new LinkedList<>());
+                xs.add(s);
+                final List<S> ys = yAxes.computeIfAbsent(((RectangularPlot) s).getYLabel(), k -> new LinkedList<>());
+                ys.add(s);
+            }
+            if (xAxes.size() <= 1 && yAxes.size() <= 1) {
+                double xMin = Double.NaN, xMax = Double.NaN, yMin = Double.NaN, yMax = Double.NaN;
+                for (int i = 0; i < series.length; i++) {
+                    final RectangularPlot t = (RectangularPlot) series[i];
+                    xMin = i == 0 ? t.getMinX() : Math.min(xMin, t.getMinX());
+                    xMax = i == 0 ? t.getMaxX() : Math.max(xMax, t.getMaxX());
+                    yMin = i == 0 ? t.getMinY() : Math.min(yMin, t.getMinY());
+                    yMax = i == 0 ? t.getMaxY() : Math.max(yMax, t.getMaxY());
+                }
+                final Axis xAxis = new Axis(xAxes.size() == 0 ? null : ((RectangularPlot) series[0]).getXLabel(), xMin, xMax);
+                final Axis yAxis = new Axis(yAxes.size() == 0 ? null : ((RectangularPlot) series[0]).getYLabel(), yMin, yMax);
+                return new PlotLayout.RectangularPlot<>(xAxis, yAxis, series);
+            } else {
+                //TODO multiplot of rectangular plots
+            }
+        } else {
+            //TODO mixed rectangular and circular
+        }
+        return null;
     }
 
     public void addAnnotation(ChartComponent annotation) {
@@ -330,10 +294,6 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         return title;
     }
 
-    public final PlotArea<S> getPlot() {
-        return plotArea;
-    }
-
     /**
      * Set the title of the chart
      *
@@ -344,6 +304,34 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         requestLayout();
     }
 
+    /**
+     * @return the plot area
+     */
+    public final PlotArea<S> getPlot() {
+        return plotArea;
+    }
+
+    /**
+     * @return the colorbars
+     */
+    public final ColorScaleFormatting getColorScale() {
+        return colorScaleFormatting;
+    }
+
+    /**
+     * @return the legend
+     */
+    public final LegendFormatting getLegend() {
+        return legendFormatting;
+    }
+
+    /**
+     * Set an axis title
+     *
+     * @param oldTitle the current title name
+     * @param newTitle the new title name
+     * @return whether the title was able to be updated
+     */
     public final boolean setAxisTitle(final String oldTitle, final String newTitle) {
         final Axis axis = plotArea.getAxis(oldTitle);
         if (axis == null) {
@@ -367,54 +355,6 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         return height;
     }
 
-
-    @Override
-    public Axis getXAxis() {
-        return plotArea.getXAxis();
-    }
-
-    @Override
-    public Axis getYAxis() {
-        return plotArea.getYAxis();
-    }
-
-    @Override
-    public Axis getRadialAxis() {
-        return plotArea.getRadialAxis();
-    }
-
-    @Override
-    public Axis getAngularAxis() {
-        return plotArea.getAngularAxis();
-    }
-
-    @Override
-    public int numSeries() {
-        return plotArea.numSeries();
-    }
-
-    @Override
-    public S getSeries(int index) {
-        return plotArea.getSeries(index);
-    }
-
-    /**
-     * Save a file based on its extension (svg, jpg, bmp, png are supported)
-     *
-     * @param file the file to save as
-     * @throws UnsupportedOperationException if the file format is not supported
-     * @throws IOException                   if the file cannot be written to
-     */
-    public final void saveAs(File file) throws IOException {
-        final String filePath = file.toString();
-        final String fileExt = StringUtils.getLastCharactersToLowerCase(new char[filePath.length() - filePath.lastIndexOf('.')], file.toString());
-        final BiConsumer<File, Chart<?>> fileWriter = supportedFormats.get(fileExt);
-        if (fileWriter == null) {
-            throw new UnsupportedOperationException("Cannot write to " + filePath + ". File type not supported");
-        }
-        fileWriter.accept(file, this);
-    }
-
     /**
      * Set the background color of this chart by the name
      *
@@ -430,7 +370,7 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
      * @param color the color to set
      */
     public final void setBackgroundColor(Color color) {
-        getTheme().background = color;
+        backgroundColor = color;
         backgroundChanged();
         requestLayout();
     }
@@ -439,22 +379,13 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
      * @return the background color of this chart
      */
     public final Color getBackgroundColor() {
-        return theme.getBackgroundColor();
+        return backgroundColor;
     }
 
     /**
      * Method called when the background has changed
      */
     protected abstract void backgroundChanged();
-
-    private ThemeImpl getTheme() {
-        //If theme is default or not Impl, get a copy
-        if (theme == Theme.DEFAULT || !(theme instanceof ThemeImpl)) {
-            theme = new ThemeImpl(theme);
-        }
-        return ((ThemeImpl) theme);
-    }
-
 
     /**
      * Layout the chart
@@ -463,30 +394,19 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
      */
     final void layout(ChartCanvas<?> canvas) {
         layout(canvas, this, 0, 0, width, height);
-
     }
 
-    /**
-     * Get the height of a line
-     *
-     * @param title the text
-     * @return the height of a line of the given text
-     */
-    protected abstract double getTextLineHeight(Title title);
 
     @Override
     protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
         canvas.reset();
-
-        //title.calculateBounds(canvas, source, minX, minY, maxX, maxY);
+        title.calculateBounds(canvas, source, minX, minY, maxX, maxY);
+        drawBounds(canvas, title);
         plotArea.layout(canvas, source, minX, minY, maxX, maxY);
 
         canvas.done();
     }
 
-    boolean isEmpty(final ChartNode node) {
-        return node == null || node.size() == 0;
-    }
 
     /**
      * Layout the chart locally
@@ -500,6 +420,40 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
     protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
 
     }
+
+    protected boolean isEmpty(final ChartNode node) {
+        return node == null || node.size() == 0;
+    }
+
+    /**
+     * Assign a component to a chart
+     *
+     * @param chart the chart
+     * @param a     the component
+     */
+    protected static <S extends PlotSeries<S>> void assignToChart(Chart<S> chart, ChartComponent a) {
+        a.chart = chart;
+    }
+
+    /**
+     * Assigns a chart component to a chart
+     *
+     * @param chart the chart to assign to
+     * @param a     component a
+     * @param b     component b
+     */
+    protected static <S extends PlotSeries<S>> void assignToChart(Chart<S> chart, ChartComponent a, ChartComponent b) {
+        assignToChart(chart, a);
+        assignToChart(chart, b);
+    }
+
+    /**
+     * Get the height of a line
+     *
+     * @param title the text
+     * @return the height of a line of the given text
+     */
+    protected abstract double getTextLineHeight(Title title);
 
     /**
      * @return the canvas of the chart
@@ -563,19 +517,6 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
     protected abstract int argbFromImage(Object image, int x, int y);
 
     /**
-     * Get the next color in the default colormap
-     *
-     * @param chart the chart
-     * @return the next color in the chart
-     */
-    protected static Color getNextColor(Chart<?> chart) {
-        if (chart.colormapIt == null || !chart.colormapIt.hasNext()) {
-            chart.colormapIt = chart.theme.getDefaultColormap().iterator();
-        }
-        return chart.theme.getDefaultColormap().get(chart.colormapIt.next());
-    }
-
-    /**
      * Register a file format
      *
      * @param extensionWithDot the extension with the dot
@@ -585,30 +526,21 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent impl
         supportedFormats.put(extensionWithDot, writer);
     }
 
-    protected static final double USE_PREFERRED_HEIGHT = -1;
-    protected static final double USE_PREFERRED_WIDTH = -1;
-
     /**
-     * Assign a component to a chart
+     * Save a file based on its extension (svg, jpg, bmp, png are supported)
      *
-     * @param chart the chart
-     * @param a     the component
+     * @param file the file to save as
+     * @throws UnsupportedOperationException if the file format is not supported
+     * @throws IOException                   if the file cannot be written to
      */
-    protected static <S extends PlotSeries<S>> void assignToChart(Chart<S> chart, ChartComponent a) {
-        a.chart = chart;
+    public final void saveAs(File file) throws IOException {
+        final String filePath = file.toString();
+        final String fileExt = StringUtils.getLastCharactersToLowerCase(new char[filePath.length() - filePath.lastIndexOf('.')], file.toString());
+        final BiConsumer<File, Chart<?>> fileWriter = supportedFormats.get(fileExt);
+        if (fileWriter == null) {
+            throw new UnsupportedOperationException("Cannot write to " + filePath + ". File type not supported");
+        }
+        fileWriter.accept(file, this);
     }
-
-    /**
-     * Assigns a chart component to a chart
-     *
-     * @param chart the chart to assign to
-     * @param a     component a
-     * @param b     component b
-     */
-    protected static <S extends PlotSeries<S>> void assignToChart(Chart<S> chart, ChartComponent a, ChartComponent b) {
-        assignToChart(chart, a);
-        assignToChart(chart, b);
-    }
-
 
 }

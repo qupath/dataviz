@@ -4,7 +4,6 @@ package net.mahdilamb.charts.plots.dataframe;
 import net.mahdilamb.charts.dataframe.Axis;
 import net.mahdilamb.charts.dataframe.DataFrame;
 import net.mahdilamb.charts.dataframe.DataType;
-import net.mahdilamb.charts.dataframe.DoubleSeries;
 import net.mahdilamb.charts.graphics.MarkerShape;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.plots.MarginalMode;
@@ -43,8 +42,8 @@ public class DataframeScatter extends Scatter {
     }
 
     @Override
-    public DataframeScatter setEdgeVisible(boolean edgeVisible) {
-        return (DataframeScatter) super.setEdgeVisible(edgeVisible);
+    public DataframeScatter showEdges(boolean edgeVisible) {
+        return (DataframeScatter) super.showEdges(edgeVisible);
     }
 
     @Override
@@ -123,13 +122,13 @@ public class DataframeScatter extends Scatter {
     }
 
     @Override
-    public DataframeScatter setAbsoluteErrorX(Iterable<Double> errorX) {
-        return (DataframeScatter) super.setAbsoluteErrorX(errorX);
+    public DataframeScatter setErrorX(Iterable<Double> errorX) {
+        return (DataframeScatter) super.setErrorX(errorX);
     }
 
     @Override
-    public DataframeScatter setAbsoluteErrorY(Iterable<Double> errorY) {
-        return (DataframeScatter) super.setAbsoluteErrorY(errorY);
+    public DataframeScatter setErrorY(Iterable<Double> errorY) {
+        return (DataframeScatter) super.setErrorY(errorY);
     }
 
     @Override
