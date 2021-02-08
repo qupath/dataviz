@@ -1,5 +1,6 @@
 package net.mahdilamb.charts;
 
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.SelectedStyle;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.UnselectedStyle;
@@ -13,16 +14,17 @@ import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.reference.qualitative.Plotly;
 import net.mahdilamb.colormap.reference.sequential.Viridis;
 
+import java.util.function.BiConsumer;
+import java.util.function.ObjDoubleConsumer;
+
 /**
  * A series of data elements that can be added to a plot area
  *
  * @param <S> the type of the series
  */
-public abstract class PlotSeries<S extends PlotSeries<S>> {
+public abstract class PlotSeries<S extends PlotSeries<S>> extends ChartComponent {
 
     public static final Colormap DEFAULT_QUALITATIVE_COLORMAP = new Plotly();
-
-    Chart<S> chart;
 
     protected String groupName;
     protected GroupBy<String> groups;
@@ -74,10 +76,21 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
      */
     protected Colormap groupColormap = DEFAULT_QUALITATIVE_COLORMAP;
 
+    @Override
+    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+        //TODO
+    }
+
+    @Override
+    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+        //TODO
+    }
+
     /**
      * @return this series after firing a redraw request if the chart is specified
      */
     @SuppressWarnings("unchecked")
+    @Override
     protected S requestLayout() {
         if (chart != null) {
             chart.requestLayout();
@@ -94,6 +107,24 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         return requestLayout();
     }
 
+    @SuppressWarnings("unchecked")
+    protected void ifAssigned(ObjDoubleConsumer<Chart<?>> chartSetter, ObjDoubleConsumer<S> seriesSetter, double val) {
+        if (this.chart == null) {
+            seriesSetter.accept((S) this, val);
+        } else {
+            chartSetter.accept(this.chart, val);
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    protected <T> void ifAssigned(BiConsumer<Chart<?>, T> chartSetter, BiConsumer<S, T> seriesSetter, T val) {
+        if (this.chart == null) {
+            seriesSetter.accept((S) this, val);
+        } else {
+            chartSetter.accept(this.chart, val);
+        }
+    }
+
     /**
      * Set the name of this series
      *
@@ -104,7 +135,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         this.name = name;
         return requestLayout();
     }
-    //TODO sync between chart and series e.g., change label in series also changes the axes
+
     /**
      * A one-dimensional plot series with distribution data
      *
@@ -448,5 +479,6 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         }
         return requestLayout();
     }
+
 
 }

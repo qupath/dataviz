@@ -35,14 +35,24 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent {
 
     protected abstract static class PlotLayout<S extends PlotSeries<S>> extends ChartComponent implements PlotArea<S> {
 
+
         @SafeVarargs
         PlotLayout(S... series) {
             this.series = series;
+
         }
 
         final S[] series;
         Color backgroundColor = Color.lightgrey;
         Stroke border = new Stroke(Color.darkgray, 1.5);
+
+        @Override
+        protected void assignToChart(Chart<?> chart) {
+            super.assignToChart(chart);
+            for (final S s : series) {
+                s.assignToChart(chart);
+            }
+        }
 
         public Axis getXAxis() {
             return null;
@@ -164,8 +174,8 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent {
 
     double width, height;
 
-    Charts.ColorScaleFormattingImpl colorScaleFormatting;
-    Charts.LegendFormattingImpl legendFormatting;
+    KeyAreaFormattingImpl.ColorScaleFormattingImpl<S> colorScaleFormatting;
+    KeyAreaFormattingImpl.LegendFormattingImpl<S> legendFormatting;
 
     ChartNode topArea, leftArea, rightArea, bottomArea;
     final PlotLayout<S> plotArea;
@@ -175,44 +185,35 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent {
     ChartComponent singleAnnotation;
     List<ChartComponent> annotations;
 
-    @SafeVarargs
-    protected Chart(String title, double width, double height, S... series) {
-        this(title, width, height, getLayoutFromSeries(series), getLegendFromSeries(series), getColorScaleFromSeries(series));
-    }
-
-    protected Chart(String title, double width, double height, PlotLayout<S> layout, Charts.LegendFormattingImpl legendFormatting, Charts.ColorScaleFormattingImpl colorScaleFormatting) {
+    /**
+     * Create a chart figure
+     *
+     * @param title  title of the chart
+     * @param width  width of the chart
+     * @param height height of the chart
+     * @param layout the layout, including series, of the chart
+     */
+    protected Chart(String title, double width, double height, PlotLayout<S> layout) {
         this.title = new Title(title, titleFont);
-        assignToChart(chart, this.title);
+        this.title.assignToChart(this);
         this.width = width;
         this.height = height;
         this.plotArea = layout;
-        assignToChart(chart, this.plotArea);
-        this.legendFormatting = legendFormatting;
-        this.colorScaleFormatting = colorScaleFormatting;
+        this.plotArea.assignToChart(this);
+        this.legendFormatting = new KeyAreaFormattingImpl.LegendFormattingImpl<>(layout.series);
+        this.colorScaleFormatting = new KeyAreaFormattingImpl.ColorScaleFormattingImpl<>(layout.series);
     }
 
-    protected Chart(String title, double width, double height, PlotLayout<S> layout) {
-        this(title, width, height, layout, new Charts.LegendFormattingImpl(), new Charts.ColorScaleFormattingImpl());
-    }
-
-    protected static <S extends PlotSeries<S>> Charts.ColorScaleFormattingImpl getColorScaleFromSeries(S[] series) {
-        //todo
-        return null;
-    }
-
-    protected static <S extends PlotSeries<S>> Charts.LegendFormattingImpl getLegendFromSeries(S[] series) {
-        //todo
-        return null;
-    }
 
     /**
-     * Get the most compatible layout for the given series
+     * Get the most compatible layout for the given series. If similar plots share the same axis name, they are plotted together
      *
      * @param series the series
      * @param <S>    the type of the series
      * @return a layout for the series
      */
-    protected static <S extends PlotSeries<S>> PlotLayout<S> getLayoutFromSeries(S[] series) {
+    //todo non-condensed version - one packed, one all rows
+    protected static <S extends PlotSeries<S>> PlotLayout<S> getGroupedLayoutForSeries(S[] series) {
         if (series.length == 0) {
             //empty plot
             return new PlotLayout.RectangularPlot<>(new Axis(null, 0, 100), new Axis(null, 0, 100), series);
@@ -423,28 +424,6 @@ public abstract class Chart<S extends PlotSeries<S>> extends ChartComponent {
 
     protected boolean isEmpty(final ChartNode node) {
         return node == null || node.size() == 0;
-    }
-
-    /**
-     * Assign a component to a chart
-     *
-     * @param chart the chart
-     * @param a     the component
-     */
-    protected static <S extends PlotSeries<S>> void assignToChart(Chart<S> chart, ChartComponent a) {
-        a.chart = chart;
-    }
-
-    /**
-     * Assigns a chart component to a chart
-     *
-     * @param chart the chart to assign to
-     * @param a     component a
-     * @param b     component b
-     */
-    protected static <S extends PlotSeries<S>> void assignToChart(Chart<S> chart, ChartComponent a, ChartComponent b) {
-        assignToChart(chart, a);
-        assignToChart(chart, b);
     }
 
     /**

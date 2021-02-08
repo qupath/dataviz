@@ -19,9 +19,9 @@ import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 //TODO come back to this
 public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S> {
 
-    @SafeVarargs
-    protected HeadlessChart(String title, double width, double height, HeadlessChartCanvas<S> canvas, S... plot) {
-        super(title, width, height, plot);
+
+    protected HeadlessChart(String title, double width, double height, PlotLayout<S> layout, HeadlessChartCanvas<S> canvas) {
+        super(title, width, height, layout);
         this.canvas = canvas;
     }
 

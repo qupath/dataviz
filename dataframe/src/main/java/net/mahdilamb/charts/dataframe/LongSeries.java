@@ -46,7 +46,7 @@ public interface LongSeries extends NumericSeries<Long> {
     }
 
     default long[] toArray(long[] output) {
-        if (output.length != size()) {
+        if (output.length < size()) {
             output = new long[size()];
         }
         for (int i = 0; i < size(); ++i) {

@@ -1,5 +1,6 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Chart;
 import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.graphics.MarkerShape;
 import net.mahdilamb.charts.graphics.Stroke;
@@ -173,12 +174,20 @@ abstract class AbstractScatter<S extends AbstractScatter<S>> extends PlotSeries<
     }
 
     public S setXLabel(String name) {
-        xLabel = name;
+        ifAssigned(
+                (chart, val) -> chart.getPlot().getXAxis().setTitle(val),
+                (series, val) -> series.xLabel = val,
+                name
+        );
         return requestLayout();
     }
 
     public S setYLabel(String name) {
-        yLabel = name;
+        ifAssigned(
+                (chart, val) -> chart.getPlot().getYAxis().setTitle(val),
+                (series, val) -> series.yLabel = val,
+                name
+        );
         return requestLayout();
     }
 
@@ -258,5 +267,12 @@ abstract class AbstractScatter<S extends AbstractScatter<S>> extends PlotSeries<
     @Override
     public double getMaxY() {
         return maxY;
+    }
+
+    @Override
+    protected void assignToChart(Chart<?> chart) {
+        super.assignToChart(chart);
+        this.xLabel = null;
+        this.yLabel = null;
     }
 }

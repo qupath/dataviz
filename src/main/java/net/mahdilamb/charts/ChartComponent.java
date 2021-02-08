@@ -75,6 +75,10 @@ public abstract class ChartComponent {
         this.boundsHeight = maxY - minY;
     }
 
+    protected void assignToChart(final Chart<?> chart) {
+        this.chart = chart;
+    }
+
     /**
      * Helper tool for making sure the bounds have been set correctly
      *
@@ -84,7 +88,7 @@ public abstract class ChartComponent {
         drawBounds(canvas, this);
     }
 
-    static <S> void drawBounds(final ChartCanvas<?> canvas, final ChartComponent component) {
+    static void drawBounds(final ChartCanvas<?> canvas, final ChartComponent component) {
         canvas.setStroke(Stroke.BLACK_STROKE);
         canvas.strokeRect(component.boundsX, component.boundsY, component.boundsWidth, component.boundsHeight);
     }

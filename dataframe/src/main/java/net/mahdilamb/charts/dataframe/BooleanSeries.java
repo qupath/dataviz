@@ -41,7 +41,7 @@ public interface BooleanSeries extends DataSeries<Boolean>, SeriesWithFunctional
     }
 
     default boolean[] toArray(boolean[] output) {
-        if (output.length != size()) {
+        if (output.length < size()) {
             output = new boolean[size()];
         }
         for (int i = 0; i < size(); ++i) {

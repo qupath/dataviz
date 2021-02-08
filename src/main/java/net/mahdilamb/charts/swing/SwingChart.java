@@ -20,19 +20,27 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
 public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
 
+
     //todo show-editable. Save as images
 
     @SafeVarargs
     public static <S extends PlotSeries<S>> SwingChart<S> show(final String title, S... series) {
         final JFrame frame = new JFrame();
         frame.setLayout(new BorderLayout());
-        final SwingChart<S> chart = new SwingChart<>(title, DEFAULT_WIDTH, DEFAULT_HEIGHT, series);
+        final SwingChart<S> chart = new SwingChart<>(title, DEFAULT_WIDTH, DEFAULT_HEIGHT, getGroupedLayoutForSeries(series));
         chart.addTo(frame.getContentPane(), BorderLayout.CENTER);
         frame.pack();
         frame.setVisible(true);
         frame.setTitle(title);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         return chart;
+    }
+
+    protected SwingChart(String title, double width, double height, PlotLayout<S> layout) {
+        super(title, width, height, layout);
+        final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
+        canvas.setSize(size);
+        canvas.setPreferredSize(size);
     }
 
     /**
@@ -48,13 +56,6 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
 
     private final ChartPane canvas = new ChartPane(this);
 
-    @SafeVarargs
-    private SwingChart(String title, double width, double height, S... plot) {
-        super(title, width, height, plot);//todo
-        final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
-        canvas.setSize(size);
-        canvas.setPreferredSize(size);
-    }
 
     @Override
     protected ChartCanvas<BufferedImage> getCanvas() {
@@ -316,7 +317,14 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
 
         @Override
         public void resetRect(double x, double y, double width, double height) {
-            queue.add(g -> g.clearRect(convert(x), convert(y), convert(width), convert(height)));
+            queue.add(g -> {
+                if (chart.getBackgroundColor() != null) {
+                    g.setColor(convert(chart.getBackgroundColor()));
+                } else {
+                    g.setColor(Color.WHITE);
+                }
+                g.clearRect(convert(x), convert(y), convert(width), convert(height));
+            });
         }
 
         @Override
@@ -325,8 +333,10 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
             queue.add(g -> {
                 g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
                 if (chart.getBackgroundColor() != null) {
-                    g.setColor(convert(
-                            chart.getBackgroundColor()));
+                    g.setColor(convert(chart.getBackgroundColor()));
+                } else {
+                    g.setColor(Color.WHITE);
+
                 }
                 g.fillRect(0, 0, getWidth(), getHeight());
                 g.setColor(Color.BLACK);
