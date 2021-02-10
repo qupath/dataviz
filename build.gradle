@@ -13,7 +13,7 @@ repositories {
 }
 
 dependencies {
-    testImplementation("junit:junit:4.13")
+    testCompile("junit:junit:4.13")
     compile project(':geom2d-core')
     compile project(':statistics')
     compile project(':dataframe')
