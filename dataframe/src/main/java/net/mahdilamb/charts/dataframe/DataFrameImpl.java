@@ -2,7 +2,7 @@ package net.mahdilamb.charts.dataframe;
 
 
 import net.mahdilamb.charts.dataframe.utils.StringUtils;
-import net.mahdilamb.charts.statistics.utils.GroupBy;
+import net.mahdilamb.charts.dataframe.utils.GroupBy;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Scanner;
-import java.util.function.DoubleBinaryOperator;
 import java.util.function.IntPredicate;
 import java.util.function.Predicate;
 

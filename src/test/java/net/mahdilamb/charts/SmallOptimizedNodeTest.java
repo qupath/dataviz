@@ -9,26 +9,16 @@ import static org.junit.Assert.assertEquals;
 public class SmallOptimizedNodeTest {
     public static final ChartComponent empty = new ChartComponent() {
         @Override
-        protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+        protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
 
         }
 
         @Override
-        protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+        protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
 
         }
     };
-    ChartNode node = new ChartNode() {
-        @Override
-        protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
-
-        }
-
-        @Override
-        protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
-
-        }
-    };
+    ChartPane node = new ChartPane() ;
     @Test
     public void addWorksCorrectly() {
         assertEquals(0, node.size());

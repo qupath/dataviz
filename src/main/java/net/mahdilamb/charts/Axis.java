@@ -45,7 +45,8 @@ public class Axis extends ChartComponent {
             zeroGridStroke = new Stroke(Color.white, 3);
 
     Stroke majorLineStroke = new Stroke(Color.black, 2.5),
-            minorLineStroke = new Stroke(Color.black, 1);
+            minorLineStroke = new Stroke(Color.black, 1),
+            axisStroke = null;
 
     Font labelFont = Font.DEFAULT_FONT;
     double labelPadding = 2;
@@ -75,42 +76,42 @@ public class Axis extends ChartComponent {
 
     public Axis setAxisMode(final Mode mode) {
         this.mode = mode;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setTitle(String newTitle) {
         title.setTitle(newTitle);
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setTitleFont(final Font font) {
         title.setFont(font);
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setTitleColor(final Color color) {
         title.color = color;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis showTitle(boolean visible) {
         title.setVisible(visible);
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMajorGridStroke(final Stroke stroke) {
         majorGridStroke = stroke;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMajorTickStroke(final Stroke stroke) {
         majorLineStroke = stroke;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis showMajorTicks(boolean visible) {
         this.showMajorTicks = visible;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMajorTickSpacing(double majorTickSpacing) {
@@ -118,93 +119,98 @@ public class Axis extends ChartComponent {
         tickPositions = null;
         minorTickSpacing = Math.min(minorTickSpacing, majorTickSpacing);
         this.majorTickSpacing = majorTickSpacing;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMajorTickLabels(double[] tickPositions, String[] tickLabels) {
         this.tickPositions = tickPositions;
         this.tickLabels = tickLabels;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMajorTicksInside() {
         majorTicksInside = true;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMajorTicksOutside() {
         majorTicksInside = false;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis showMajorGridLines(boolean visible) {
         showMajorGridLines = visible;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMinorGridStroke(final Stroke stroke) {
         minorGridStroke = stroke;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMinorTickStroke(final Stroke stroke) {
         minorLineStroke = stroke;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis showMinorGridLines(boolean visible) {
         showMinorGridLines = visible;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis showZeroLine(boolean visible) {
         showZeroLine = visible;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setZeroLineStroke(final Stroke stroke) {
         this.zeroGridStroke = stroke;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMinorTicksInside() {
         minorTicksInside = true;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setMinorTicksOutside() {
         minorTicksInside = false;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis showMinorTicks(boolean visible) {
         this.showMinorTicks = visible;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setLabelAlignment(final HAlign alignment) {
         this.labelAlignment = alignment;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setLabelPosition(final Boundary boundary) {
         this.labelPosition = boundary;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setLabelFont(final Font font) {
         this.labelFont = font;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis setLabelRotation(final double rotationDegrees) {
         this.labelRotation = rotationDegrees;
-        return requestLayout();
+        return redraw();
     }
 
     public Axis showLabels(boolean visible) {
         showLabels = visible;
-        return requestLayout();
+        return redraw();
+    }
+
+    public Axis setAxisStroke(final Stroke stroke) {
+        this.axisStroke = stroke;
+        return redraw();
     }
 
     public Axis setRange(double lowerBound, double upperBound) {
@@ -212,12 +218,12 @@ public class Axis extends ChartComponent {
             autoRanged = true;
             lowerLimit = Double.NEGATIVE_INFINITY;
             upperLimit = Double.POSITIVE_INFINITY;
-            return requestLayout();
+            return redraw();
         }
         autoRanged = false;
         this.lowerLimit = lowerBound;
         this.upperLimit = upperBound;
-        return requestLayout();
+        return redraw();
     }
 
     /**
@@ -230,17 +236,17 @@ public class Axis extends ChartComponent {
         return null;//TODO
     }
 
-    protected Axis requestLayout() {
-        return (Axis) super.requestLayout();
+    protected Axis redraw() {
+        return (Axis) super.redraw();
     }
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+    protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
         //TODO
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
         //TODO
     }
 

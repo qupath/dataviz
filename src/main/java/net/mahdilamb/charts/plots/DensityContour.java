@@ -16,11 +16,11 @@ public class DensityContour extends PlotSeries.Distribution2D<DensityContour>imp
 
     public DensityContour setFilled(boolean filled) {
         this.useFill = filled;
-        return requestLayout();
+        return redraw();
     }
 
     public DensityContour showOutlines(boolean showOutline) {
         this.showOutline = showOutline;
-        return requestLayout();
+        return redraw();
     }
 }

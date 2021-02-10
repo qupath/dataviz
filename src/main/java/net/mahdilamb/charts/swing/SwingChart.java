@@ -18,7 +18,7 @@ import java.util.function.Consumer;
 
 import static net.mahdilamb.charts.swing.SwingUtils.convert;
 
-public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
+public final class SwingChart<S extends PlotSeries<S>> extends Chart<S, BufferedImage> {
 
 
     //todo show-editable. Save as images
@@ -36,7 +36,7 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
         return chart;
     }
 
-    protected SwingChart(String title, double width, double height, PlotLayout<S> layout) {
+    protected SwingChart(String title, double width, double height, PlotImpl<S> layout) {
         super(title, width, height, layout);
         final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
         canvas.setSize(size);
@@ -51,7 +51,7 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
      */
     public void addTo(Container parent, String position) {
         parent.add(canvas, position);
-        requestLayout();
+        redraw();
     }
 
     private final ChartPane canvas = new ChartPane(this);
@@ -124,23 +124,23 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
     }
 
     @Override
-    protected double getImageWidth(Object image) throws ClassCastException {
-        return canvas.getImageWidth((BufferedImage) image);
+    protected double getImageWidth(BufferedImage image)  {
+        return canvas.getImageWidth(image);
     }
 
     @Override
-    protected double getImageHeight(Object image) throws ClassCastException {
-        return canvas.getImageHeight((BufferedImage) image);
+    protected double getImageHeight(BufferedImage image) {
+        return canvas.getImageHeight(image);
     }
 
     @Override
-    protected byte[] bytesFromImage(Object image) throws ClassCastException {
-        return canvas.bytesFromImage((BufferedImage) image);
+    protected byte[] bytesFromImage(BufferedImage image) {
+        return canvas.bytesFromImage(image);
     }
 
     @Override
-    protected int argbFromImage(Object image, int x, int y) {
-        return ((BufferedImage) image).getRGB(x, y);
+    protected int argbFromImage(BufferedImage image, int x, int y) {
+        return image.getRGB(x, y);
 
     }
 
@@ -168,7 +168,7 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
 
 
         private final Queue<Consumer<Graphics2D>> queue = new ArrayDeque<>();
-        private final Chart<?> chart;
+        private final Chart<?, ?> chart;
         private Fill currentFill = Fill.BLACK_FILL;
         private Stroke currentStroke = Stroke.BLACK_STROKE;
 
@@ -182,7 +182,7 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S> {
         private final AffineTransform affineTransform = new AffineTransform();
         boolean usingFill = true;
 
-        ChartPane(Chart<?> chart) {
+        ChartPane(Chart<?, ?> chart) {
             this.chart = chart;
         }
 

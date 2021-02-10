@@ -7,7 +7,7 @@ import net.mahdilamb.colormap.Color;
  *
  * @param <S> the type of the series contained in the plot
  */
-public interface PlotArea<S extends PlotSeries<S>> {
+public interface Plot<S extends PlotSeries<S>> {
 
     /**
      * @return the x axis or {@code null} if the plot doesn't have an x axis

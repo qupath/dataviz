@@ -10,17 +10,16 @@ repositories {
     maven {
         url "https://oss.sonatype.org/content/repositories/snapshots/"
     }
-
 }
 
 dependencies {
     testImplementation("junit:junit:4.13")
-    compile 'net.mahdilamb:colormap:0.9.45'
     compile project(':geom2d-core')
     compile project(':statistics')
     compile project(':dataframe')
     compile 'net.mahdilamb:utils-tuples:0.3.1'
     compile 'net.mahdilamb:utils-functions:0.1.22-SNAPSHOT'
+    compile 'net.mahdilamb:colormap:0.9.46-SNAPSHOT'
 
 }
 

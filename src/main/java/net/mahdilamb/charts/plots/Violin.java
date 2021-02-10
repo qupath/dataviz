@@ -15,8 +15,8 @@ public final class Violin extends Box {
     }
 
     @Override
-    protected Violin requestLayout() {
-        return (Violin) super.requestLayout();
+    protected Violin redraw() {
+        return (Violin) super.redraw();
     }
 
     @Override

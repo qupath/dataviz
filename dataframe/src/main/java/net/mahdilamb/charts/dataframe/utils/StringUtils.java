@@ -132,9 +132,12 @@ public final class StringUtils {
                 if (line.charAt(s) == line.charAt(f) && line.charAt(f) == quoteChar) {
                     ++s;
                     --f;
+                }else {
+                    f = line.length();
                 }
             }
         } else {
+
             f = e - 2;
             if (line.charAt(s) == line.charAt(f) && line.charAt(s) == quoteChar) {
                 ++s;

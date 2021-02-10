@@ -10,7 +10,7 @@ import net.mahdilamb.colormap.Color;
  */
 public class Title extends ChartComponent {
     double paddingX = 20, paddingY = 20;
-    boolean isVisible = true;
+    private boolean isVisible = true;
 
     HAlign textAlign = HAlign.LEFT;
     String text;
@@ -60,17 +60,17 @@ public class Title extends ChartComponent {
      */
     public void setTitle(String text) {
         this.text = text;
-        requestLayout();
+        redraw();
     }
 
     public void setFont(final Font font) {
         this.font = font;
-        requestLayout();
+        redraw();
     }
 
     public void setVisible(boolean visible) {
         this.isVisible = visible;
-        requestLayout();
+        redraw();
     }
 
     /**
@@ -94,7 +94,7 @@ public class Title extends ChartComponent {
         return font;
     }
 
-    private double getAlignFrac() {
+    protected static double getAlignFrac(HAlign textAlign) {
         switch (textAlign) {
             case CENTER:
                 return 0.5;
@@ -109,31 +109,35 @@ public class Title extends ChartComponent {
 
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+    protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             return;
         }
         canvas.setFont(font);
         if (!metricsSet) {
-            calculateBounds(canvas, source, minX, minY, maxX, maxY);
-            this.boundsX = minX;
-            this.boundsY = minY;
+            layout(source, canvas, minX, minY, maxX, maxY);
+            this.posX = minX;
+            this.posY = minY;
 
         }
         canvas.fillText(text, minX + paddingX * 0.5, minY + baselineOffset + paddingX * 0.5);
-        drawBounds(canvas);
 
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        if (!isVisible()) {
+            sizeX = 0;
+            sizeY = 0;
+            return;
+        }
         baselineOffset = source.getTextBaselineOffset(font);
         int i = 0;
-        boundsWidth = paddingX;
+        sizeX = paddingX;
         while (i < text.length()) {
-            boundsWidth += source.getCharWidth(font, text.charAt(i++));
+            sizeX += source.getCharWidth(font, text.charAt(i++));
         }
-        boundsHeight = source.getTextLineHeight(font) + paddingY;
+        sizeY = source.getTextLineHeight(font) + paddingY;
     }
 
 

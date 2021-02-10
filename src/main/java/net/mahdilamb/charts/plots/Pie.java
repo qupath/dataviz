@@ -1,11 +1,7 @@
 package net.mahdilamb.charts.plots;
 
 import net.mahdilamb.charts.PlotSeries;
-import net.mahdilamb.charts.statistics.utils.GroupBy;
-import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
-
-import java.util.Map;
 
 import static net.mahdilamb.charts.utils.ArrayUtils.fill;
 
@@ -16,30 +12,18 @@ public final class Pie extends PlotSeries.Categorical<Pie> implements CircularPl
 
     public Pie(String[] names, double[] values) {
         super(names, values);
-        groups = new GroupBy<>(names);
-        groupAttributes = new GroupAttributes[groups.numGroups()];
-        int i = 0;
-        for (final GroupBy.Group<String> g : this.groups) {
-            groupAttributes[i++] = new GroupAttributes(g);
-        }
+       //todo grouping
     }
 
     public Pie setColorSequence(final Colormap colormap) {
-        groupColormap = colormap;
-        return requestLayout();
+        this.colormap = colormap;
+        return redraw();
     }
 
-    public Pie setColors(final Map<String, Color> colors) {
-        for (final Map.Entry<String, Color> entry : colors.entrySet()) {
-            final GroupAttributes g = getGroupAttribute(entry.getKey());
-            g.markerColor = entry.getValue();
-        }
-        return requestLayout();
-    }
 
     public Pie setHoleSize(double size) {
         this.hole = size;
-        return requestLayout();
+        return redraw();
     }
 
     public Pie setPulls(final Iterable<Double> pulls) {

@@ -22,17 +22,17 @@ public final class PolarScatter extends PlotSeries<PolarScatter> implements Circ
 
     public PolarScatter setMode(Scatter.Mode mode) {
         this.markerMode = mode;
-        return requestLayout();
+        return redraw();
     }
 
     protected PolarScatter setRadialLabel(String name) {
         this.rLabel = name;
-        return requestLayout();
+        return redraw();
     }
 
     protected PolarScatter setAngularLabel(String name) {
         this.thetaLabel = name;
-        return requestLayout();
+        return redraw();
     }
 
     public PolarScatter setStartAngle(double startAngle) {
@@ -52,7 +52,7 @@ public final class PolarScatter extends PlotSeries<PolarScatter> implements Circ
 
     public PolarScatter setLinesClosed(final boolean linesClosed) {
         this.linesClosed = linesClosed;
-        return requestLayout();
+        return redraw();
     }
 
 }

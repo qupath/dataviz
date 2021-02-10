@@ -17,6 +17,7 @@ public class Font {
      * Please use the {@link #copy} to derive fonts
      */
     public static final Font DEFAULT_FONT = new Font(Family.SANS_SERIF, 12, Weight.NORMAL, Style.NORMAL);
+    public static final Font DEFAULT_TITLE_FONT = new Font(Family.SANS_SERIF, 18, Weight.NORMAL, Style.NORMAL);
 
     /**
      * The font family

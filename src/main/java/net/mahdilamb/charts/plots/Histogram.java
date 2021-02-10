@@ -30,17 +30,12 @@ public final class Histogram extends PlotSeries.Distribution<Histogram>implement
 
     public Histogram setOrientation(final Orientation orientation) {
         this.orientation = orientation;
-        return requestLayout();
+        return redraw();
     }
 
     public Histogram setMarginalMode(final MarginalMode mode) {
         this.mode = mode;
         return requestDataUpdate();
-    }
-
-    @Override
-    public Histogram setColors(String name, Iterable<String> groups) {
-        return super.setColors(name, groups);
     }
 
     public Histogram setNormalized(boolean normalized) {

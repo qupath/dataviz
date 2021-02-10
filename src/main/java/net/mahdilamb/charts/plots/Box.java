@@ -26,8 +26,8 @@ public class Box extends Strip {
     }
 
     @Override
-    protected Box requestLayout() {
-        return (Box) super.requestLayout();
+    protected Box redraw() {
+        return (Box) super.redraw();
     }
 
     @Override

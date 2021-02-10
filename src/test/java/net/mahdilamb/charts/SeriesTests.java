@@ -1,18 +1,12 @@
-package net.mahdilamb.charts.tests;
+package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.dataframe.Axis;
 import net.mahdilamb.charts.dataframe.DataFrame;
-import net.mahdilamb.charts.dataframe.DoubleSeries;
-import net.mahdilamb.charts.plots.Bar;
-import net.mahdilamb.charts.plots.Line;
 import net.mahdilamb.charts.plots.Scatter;
-import net.mahdilamb.charts.plots.dataframe.DataframeScatter;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.Objects;
-
-import static net.mahdilamb.charts.statistics.ArrayUtils.linearlySpaced;
+import java.util.PrimitiveIterator;
 
 public class SeriesTests {
     static final DataFrame iris = DataFrame.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("iris.csv")).getFile()));
@@ -40,4 +34,5 @@ public class SeriesTests {
         System.out.println();
 
     }
+
 }

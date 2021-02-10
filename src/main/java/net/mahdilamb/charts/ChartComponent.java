@@ -4,43 +4,44 @@ import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Stroke;
 
 public abstract class ChartComponent {
-    Chart<?> chart;
-    double boundsX, boundsY, boundsWidth, boundsHeight;
+    Figure<?, ?> figure;
+    ChartNode<ChartComponent> parentNode;
+    double posX = 0, posY = 0, sizeX, sizeY;
+    boolean inline = true;
+    boolean layoutNeedsRefresh = true;
 
     ChartComponent() {
 
     }
 
     /**
-     * Calculate the minimum display area
-     *
-     * @param canvas the canvas that will eventually be drawn on
+     * Calculate the size of the object (i.e updates sizeX and sizeY)
      * @param source the source of the request
+     * @param canvas the canvas that will eventually be drawn on
      * @param minX   the requested minX
      * @param minY   the requested minY
      * @param maxX   the requested maxX
      * @param maxY   the requested maxY
      */
-    protected abstract void calculateBounds(ChartCanvas<?> canvas, Chart<? extends Object> source, double minX, double minY, double maxX, double maxY);
+    protected abstract void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY);
 
     /**
      * Draw the elements
-     *
-     * @param canvas the canvas to draw on
      * @param source the source of the draw request
+     * @param canvas the canvas to draw on
      * @param minX   the requested minX
      * @param minY   the requested minY
      * @param maxX   the requested maxX
      * @param maxY   the requested maxY
      */
-    protected abstract void layout(ChartCanvas<?> canvas, Chart<? extends Object> source, double minX, double minY, double maxX, double maxY);
+    protected abstract void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY);
 
     /**
      * Request a layout to the chart, if one has been assigned
      */
-    protected Object requestLayout() {
-        if (chart != null) {
-            chart.requestLayout();
+    protected Object redraw() {
+        if (parentNode != null) {
+            parentNode.redraw();
         }
         return this;
     }
@@ -54,10 +55,10 @@ public abstract class ChartComponent {
      * @param boundsHeight the height
      */
     protected void setBoundsFromRect(double boundsX, double boundsY, double boundsWidth, double boundsHeight) {
-        this.boundsX = boundsX;
-        this.boundsY = boundsY;
-        this.boundsWidth = boundsWidth;
-        this.boundsHeight = boundsHeight;
+        this.posX = boundsX;
+        this.posY = boundsY;
+        this.sizeX = boundsWidth;
+        this.sizeY = boundsHeight;
     }
 
     /**
@@ -69,14 +70,14 @@ public abstract class ChartComponent {
      * @param maxY the max Y
      */
     protected void setBoundsFromExtent(double minX, double minY, double maxX, double maxY) {
-        this.boundsX = minX;
-        this.boundsY = minY;
-        this.boundsWidth = maxX - minX;
-        this.boundsHeight = maxY - minY;
+        this.posX = minX;
+        this.posY = minY;
+        this.sizeX = maxX - minX;
+        this.sizeY = maxY - minY;
     }
 
-    protected void assignToChart(final Chart<?> chart) {
-        this.chart = chart;
+    protected void assign(final Figure<?, ?> chart) {
+        this.figure = chart;
     }
 
     /**
@@ -90,7 +91,7 @@ public abstract class ChartComponent {
 
     static void drawBounds(final ChartCanvas<?> canvas, final ChartComponent component) {
         canvas.setStroke(Stroke.BLACK_STROKE);
-        canvas.strokeRect(component.boundsX, component.boundsY, component.boundsWidth, component.boundsHeight);
+        canvas.strokeRect(component.posX, component.posY, component.sizeX, component.sizeY);
     }
 
 }

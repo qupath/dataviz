@@ -2,6 +2,7 @@ package net.mahdilamb.charts.io;
 
 import net.mahdilamb.charts.Chart;
 import net.mahdilamb.charts.ChartExporter;
+import net.mahdilamb.charts.Figure;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.graphics.*;
@@ -28,7 +29,7 @@ public class ImageExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart
      */
-    public static void toPNG(File file, Chart<?> chart) {
+    public static void toPNG(File file, Figure<?, ?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "png", file);
         } catch (IOException e) {
@@ -43,7 +44,7 @@ public class ImageExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart
      */
-    public static void toTIFF(File file, Chart<?> chart) {
+    public static void toTIFF(File file, Figure<?, ?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "tiff", file);
         } catch (IOException e) {
@@ -58,7 +59,7 @@ public class ImageExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart
      */
-    public static void toJPEG(File file, Chart<?> chart) {
+    public static void toJPEG(File file, Figure<?, ?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "jpeg", file);
         } catch (IOException e) {
@@ -72,7 +73,7 @@ public class ImageExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart
      */
-    public static void toBMP(File file, Chart<?> chart) {
+    public static void toBMP(File file, Figure<?, ?> chart) {
         try {
             ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "bmp", file);
         } catch (IOException e) {
@@ -83,7 +84,7 @@ public class ImageExporter extends ChartExporter {
     private static final class ImageExporterCanvas extends Component implements ChartCanvas<java.awt.image.BufferedImage> {
 
         private final Graphics2D g;
-        private final Chart<?> chart;
+        private final Figure<?, ?> chart;
         private final Path2D path = new Path2D.Double();
         private final Rectangle2D rect = new Rectangle2D.Double();
         private final RoundRectangle2D roundedRect = new RoundRectangle2D.Double();
@@ -95,7 +96,7 @@ public class ImageExporter extends ChartExporter {
         boolean usingFill = true;
         private final AffineTransform affineTransform = new AffineTransform();
 
-        public ImageExporterCanvas(boolean fillWhite, Chart<?> chart, Graphics2D graphics) {
+        public ImageExporterCanvas(boolean fillWhite, Figure<?, ?> chart, Graphics2D graphics) {
             this.g = graphics;
             this.chart = chart;
             this.fillWhite = fillWhite;
@@ -308,7 +309,7 @@ public class ImageExporter extends ChartExporter {
 
     }
 
-    private static BufferedImage toBufferedImage(int encoding, final Chart<?> chart) {
+    private static BufferedImage toBufferedImage(int encoding, final Figure<?, ?> chart) {
         final BufferedImage image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), encoding);
         layoutChart(new ImageExporterCanvas(encoding != BufferedImage.TYPE_INT_ARGB, chart, (Graphics2D) image.getGraphics()), chart);
         return image;

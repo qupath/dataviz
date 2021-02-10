@@ -17,10 +17,10 @@ import static net.mahdilamb.charts.swing.SwingUtils.convert;
 import static net.mahdilamb.charts.swing.SwingUtils.convertToByteArray;
 
 //TODO come back to this
-public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S> {
+public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S, BufferedImage> {
 
 
-    protected HeadlessChart(String title, double width, double height, PlotLayout<S> layout, HeadlessChartCanvas<S> canvas) {
+    protected HeadlessChart(String title, double width, double height, PlotImpl<S> layout, HeadlessChartCanvas<S> canvas) {
         super(title, width, height, layout);
         this.canvas = canvas;
     }
@@ -28,7 +28,7 @@ public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S> {
     private static final class HeadlessChartCanvas<S extends PlotSeries<S>> extends Component implements ChartCanvas<BufferedImage> {
 
         private Graphics2D g;
-        private Chart<S> chart;
+        private Chart<S, ?> chart;
         private final Path2D path = new Path2D.Double();
         private final Rectangle2D rect = new Rectangle2D.Double();
         private final RoundRectangle2D roundedRect = new RoundRectangle2D.Double();
@@ -45,7 +45,7 @@ public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S> {
 
         }
 
-        void setChart(Chart<S> chart, boolean supportTransparency) {
+        void setChart(Chart<S, ?> chart, boolean supportTransparency) {
             this.chart = chart;
             this.image = new BufferedImage((int) chart.getWidth(), (int) chart.getHeight(), supportTransparency ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB);
             this.g = (Graphics2D) this.image.getGraphics();
@@ -298,7 +298,7 @@ public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S> {
         }
     */
     @Override
-    protected ChartCanvas<?> getCanvas() {
+    protected ChartCanvas<BufferedImage> getCanvas() {
         return canvas;
     }
 
@@ -326,23 +326,23 @@ public abstract class HeadlessChart<S extends PlotSeries<S>> extends Chart<S> {
     }
 
     @Override
-    protected double getImageWidth(Object image) throws ClassCastException {
-        return canvas.getImageWidth((BufferedImage) image);
+    protected double getImageWidth(BufferedImage image) throws ClassCastException {
+        return canvas.getImageWidth(image);
     }
 
     @Override
-    protected double getImageHeight(Object image) throws ClassCastException {
-        return canvas.getImageHeight((BufferedImage) image);
+    protected double getImageHeight(BufferedImage image) throws ClassCastException {
+        return canvas.getImageHeight(image);
     }
 
     @Override
-    protected byte[] bytesFromImage(Object image) throws ClassCastException {
-        return canvas.bytesFromImage((BufferedImage) image);
+    protected byte[] bytesFromImage(BufferedImage image) throws ClassCastException {
+        return canvas.bytesFromImage(image);
     }
 
     @Override
-    protected int argbFromImage(Object image, int x, int y) {
-        return ((BufferedImage) image).getRGB(x, y);
+    protected int argbFromImage(BufferedImage image, int x, int y) {
+        return image.getRGB(x, y);
     }
 
     @Override

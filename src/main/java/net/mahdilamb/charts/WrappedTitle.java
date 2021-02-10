@@ -3,6 +3,8 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
 import net.mahdilamb.charts.graphics.HAlign;
+import net.mahdilamb.charts.dataframe.utils.DoubleArrayList;
+import net.mahdilamb.charts.dataframe.utils.IntArrayList;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -16,9 +18,9 @@ public class WrappedTitle extends Title {
 
     double lineSpacing = 1;
 
-    int[] lineStarts = new int[1];
-    double[] xOffsets = new double[1];
-    double[] yOffsets = new double[1];
+    IntArrayList lineStarts = new IntArrayList(1);
+    DoubleArrayList xOffsets = new DoubleArrayList(1);
+    DoubleArrayList yOffsets = new DoubleArrayList(1);
     final List<String> lines = new LinkedList<>();
     int numLines;
 
@@ -33,44 +35,34 @@ public class WrappedTitle extends Title {
         super(text, font);
     }
 
-    private double getAlignFrac() {
-        switch (textAlign) {
-            case CENTER:
-                return 0.5;
-            case RIGHT:
-                return 1;
-            case LEFT:
-                return 0;
-            default:
-                throw new UnsupportedOperationException();
-        }
-    }
-
 
     @Override
-    protected void layout(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+    protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             return;
         }
         canvas.setFont(font);
         if (!metricsSet) {
-            calculateBounds(canvas, source, minX, minY, maxX, maxY);
-            this.boundsX = minX;
-            this.boundsY = minY;
+            layout(source, canvas, minX, minY, maxX, maxY);
+            this.posX = minX;
+            this.posY = minY;
 
         }
         for (int i = 0; i < numLines - 1; ++i) {
-            canvas.fillText(lines.get(i), minX + xOffsets[i], minY + yOffsets[i]);
+            canvas.fillText(lines.get(i), minX + xOffsets.get(i), minY + yOffsets.get(i));
         }
         if (numLines >= 1) {
             int i = numLines - 1;
-            canvas.fillText(lines.get(i), minX + xOffsets[i], minY + yOffsets[i]);
+            canvas.fillText(lines.get(i), minX + xOffsets.get(i), minY + yOffsets.get(i));
         }
 
     }
 
     @Override
-    protected void calculateBounds(ChartCanvas<?> canvas, Chart<?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        xOffsets.clear();
+        yOffsets.clear();
+        lineStarts.clear();
         double maxWidth = maxX - minX;
         double lineHeight = source.getTextLineHeight(font);
         double baselineOffset = source.getTextBaselineOffset(font);
@@ -89,14 +81,12 @@ public class WrappedTitle extends Title {
             currentWidth += source.getCharWidth(font, c);
             if (currentWidth > maxWidth || c == '\n') {
                 actualWidth = Math.max(actualWidth, lineWidth);
-                double lineOffset = textAlign == HAlign.LEFT ? 0 : (getAlignFrac() * (maxWidth - lineWidth));
-                xOffsets = ensureCapacity(xOffsets, lineI + 1);
-                xOffsets[lineI] = lineOffset + xOffset;
-                yOffsets = ensureCapacity(yOffsets, xOffsets.length);
-                yOffsets[lineI] = yOffset + (lineSpacing * lineHeight * lineI);
+                double lineOffset = textAlign == HAlign.LEFT ? 0 : (getAlignFrac(textAlign) * (maxWidth - lineWidth));
+                xOffsets.add(lineOffset + xOffset);
+                yOffsets.add(yOffset + (lineSpacing * lineHeight * lineI));
                 lines.add(text.substring(k, j));
-                lineStarts = ensureCapacity(lineStarts, xOffsets.length);
-                lineStarts[lineI++] = k;
+                lineStarts.add(k);
+                lineI++;
                 currentWidth = 0;
                 k = j;
                 i = j;
@@ -104,20 +94,18 @@ public class WrappedTitle extends Title {
         }
         if (j < text.length()) {
             actualWidth = Math.max(actualWidth, currentWidth);
-            double lineOffset = textAlign == HAlign.LEFT ? 0 : (getAlignFrac() * (maxWidth - currentWidth));
-            xOffsets = ensureCapacity(xOffsets, lineI + 1);
-            xOffsets[lineI] = lineOffset + xOffset;
-            yOffsets = ensureCapacity(yOffsets, yOffsets.length);
-            yOffsets[lineI] = yOffset + (lineSpacing * lineHeight * lineI);
+            double lineOffset = textAlign == HAlign.LEFT ? 0 : (getAlignFrac(textAlign) * (maxWidth - currentWidth));
+            xOffsets.add(lineOffset + xOffset);
+            yOffsets.add(yOffset + (lineSpacing * lineHeight * lineI));
             lines.add(text.substring(k));
-            lineStarts = ensureCapacity(lineStarts, yOffsets.length);
-            lineStarts[lineI++] = k;
+            lineStarts.add(k);
+            lineI++;
         }
         double actualHeight = lineSpacing * lineHeight * lineI;
         numLines = lineI;
 
-        this.boundsWidth = actualWidth + paddingX;
-        this.boundsHeight = actualHeight + paddingY;
+        this.sizeX = actualWidth + paddingX;
+        this.sizeY = actualHeight + paddingY;
     }
 
     static int[] ensureCapacity(int[] array, int maxIndex) {

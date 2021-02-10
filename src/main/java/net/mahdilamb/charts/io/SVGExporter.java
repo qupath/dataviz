@@ -2,6 +2,7 @@ package net.mahdilamb.charts.io;
 
 import net.mahdilamb.charts.Chart;
 import net.mahdilamb.charts.ChartExporter;
+import net.mahdilamb.charts.Figure;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.geom2d.geometries.Geometries;
@@ -22,12 +23,12 @@ import static net.mahdilamb.charts.utils.StringUtils.EMPTY_STRING;
  */
 public class SVGExporter extends ChartExporter {
 
-    private static final class SVGWriter implements ChartCanvas<Object> {
+    private static final class SVGWriter<T> implements ChartCanvas<T> {
         String header;
         final StringBuilder out = new StringBuilder();
         final StringBuilder indent = new StringBuilder("\t");
         SVGDefinitions defs;
-        final Chart<?> chart;
+        final Figure<?, T> chart;
         private final File output;
 
         boolean isClipped = false;
@@ -38,7 +39,7 @@ public class SVGExporter extends ChartExporter {
         private Font font = new Font(Font.Family.SANS_SERIF, 12);
         boolean compressed;
 
-        SVGWriter(File output, Chart<?> chart, boolean compressed) {
+        SVGWriter(File output, Figure<?, T> chart, boolean compressed) {
             this.compressed = compressed;
             this.chart = chart;
             this.output = output;
@@ -46,7 +47,7 @@ public class SVGExporter extends ChartExporter {
 
         }
 
-        SVGWriter(File output, Chart<?> chart) {
+        SVGWriter(File output, Figure<?, T> chart) {
             this(output, chart, false);
         }
 
@@ -149,7 +150,7 @@ public class SVGExporter extends ChartExporter {
         }
 
         @Override
-        public void drawImage(Object o, double x, double y) {
+        public void drawImage(T o, double x, double y) {
             out.append(imageToString(imageToBytes(o, chart), x, y, getImageWidth(o, chart), getImageHeight(o, chart), indent));
         }
 
@@ -263,8 +264,8 @@ public class SVGExporter extends ChartExporter {
      * @param output the file output
      * @param chart  the chart to convert
      */
-    public static void toSVG(final File output, final Chart<?> chart) {
-        new SVGWriter(output, chart);
+    public static <T>void toSVG(final File output, final Figure<?, T> chart) {
+        new SVGWriter<>(output, chart);
     }
 
     /**
@@ -273,8 +274,8 @@ public class SVGExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart to convert
      */
-    public static void toSVGZ(File file, Chart<?> chart) {
-        new SVGWriter(file, chart, true);
+    public static<T> void toSVGZ(File file, Figure<?, T> chart) {
+        new SVGWriter<>(file, chart, true);
     }
 
     /**

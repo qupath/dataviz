@@ -110,7 +110,7 @@ public abstract class DataFrameImporter {
                         }
                         headerNameLength[j++] = k - 1;
                         k = 0;
-                        numColumns++;
+                        ++numColumns;
                         quote = 0;
                     } else {
                         if (isQuote(c)) {
@@ -123,7 +123,7 @@ public abstract class DataFrameImporter {
                         headerNameLength = Arrays.copyOf(headerNameLength, headerNameLength.length + 1);
                     }
                     headerNameLength[numColumns] = k - 1;
-                    numColumns++;
+                    ++numColumns;
                 }
                 putativeHeader = new String[numColumns];
                 types = new DataType[numColumns];
@@ -158,7 +158,6 @@ public abstract class DataFrameImporter {
                 int[] typeCounts = new int[seriesTypes.length * numColumns];
                 if (storePreview) {
                     previewLines = new String[TEST_LINES];
-
                 }
                 while (scanCount < TEST_LINES && scanner.hasNextLine()) {
 
@@ -170,6 +169,7 @@ public abstract class DataFrameImporter {
                     while (h < line.length()) {
                         int currentO = o;
                         h = iterateLine(line, h, separator, quoteCharacter, str -> {
+
                             int b = 0;
                             for (final DataType t : seriesTypes) {
                                 if (t.matches(str)) {
@@ -180,8 +180,8 @@ public abstract class DataFrameImporter {
                         });
                         ++o;
                     }
-                    scanCount++;
-                    numLines++;
+                    ++scanCount;
+                    ++numLines;
                 }
                 for (int i = 0; i < numColumns; ++i) {
                     DataType favored = null;
@@ -204,7 +204,7 @@ public abstract class DataFrameImporter {
                 }
                 guessHasColumnNames();
                 while (scanner.findWithinHorizon(LINE_PATTERN, 0) != null) {
-                    numLines++;
+                    ++numLines;
                 }
 
             } catch (IOException e) {

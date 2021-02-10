@@ -1,7 +1,7 @@
 package net.mahdilamb.charts.dataframe;
 
 import net.mahdilamb.charts.dataframe.utils.StringUtils;
-import net.mahdilamb.charts.statistics.utils.GroupBy;
+import net.mahdilamb.charts.dataframe.utils.GroupBy;
 
 import java.util.Arrays;
 import java.util.Iterator;

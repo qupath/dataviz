@@ -207,5 +207,10 @@ public enum DataType {
         this.matcher = matcher;
     }
 
-
+    /**
+     * @return if this type is numeric
+     */
+    public boolean isNumeric() {
+        return isNumeric(this);
+    }
 }

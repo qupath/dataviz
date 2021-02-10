@@ -1,5 +1,7 @@
 package net.mahdilamb.charts.graphics;
 
+import net.mahdilamb.charts.dataframe.utils.PrimitiveIterators;
+
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -7,6 +9,7 @@ import java.util.Map;
 /**
  * A marker for use in plots
  */
+//todo default order: https://github.com/mwaskom/seaborn/blob/6183f1e3b0fc2b56ef441acfe1f9f63a13ae4beb/seaborn/_core.py#L1657
 public enum MarkerShape {
     /**
      * A point marker
@@ -110,6 +113,7 @@ public enum MarkerShape {
     HORIZONTAL_LINE('_');
 
     private static final Map<Character, MarkerShape> store = new HashMap<>();
+    private static final char[] ordered = {'o', 'x', 'D', 'P', 's', '*', '^', '+', 'v', 'p', 'h', '8'};
 
     static {
         for (final MarkerShape m : MarkerShape.class.getEnumConstants()) {
@@ -164,6 +168,39 @@ public enum MarkerShape {
             }
         }
         return out;
+    }
+
+    /**
+     * Get a marker from the ordered list
+     *
+     * @param order the order
+     * @return the marker at the position
+     */
+    public static MarkerShape get(int order) {
+        return get(ordered[order]);
+    }
+
+    /**
+     * Get an iterable over the first n ordered markers
+     *
+     * @param numValues the number of values
+     * @return an iterable over the default order of markers
+     * @throws ArrayIndexOutOfBoundsException if the number is greater than 12
+     */
+    public static Iterable<Character> orderedValues(int numValues) {
+        return () -> new PrimitiveIterators.OfCharacter() {
+            private int i = 0;
+
+            @Override
+            public boolean hasNext() {
+                return i < numValues;
+            }
+
+            @Override
+            public char nextChar() {
+                return ordered[i++];
+            }
+        };
     }
 
 }

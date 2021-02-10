@@ -24,7 +24,7 @@ public class Heatmap extends PlotSeries.Matrix<Heatmap> implements RectangularPl
 
     public Heatmap showText(boolean showText) {
         this.showText = showText;
-        return requestLayout();
+        return redraw();
     }
 
     public Heatmap setCellWidth(double width) {

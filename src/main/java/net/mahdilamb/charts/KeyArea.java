@@ -3,7 +3,7 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.colormap.Color;
 
-interface KeyAreaFormatting<K extends KeyAreaFormatting<K>> {
+interface KeyArea<K extends KeyArea<K>> {
     K setFloating(boolean floating);
 
     K setOrientation(Orientation orientation);
