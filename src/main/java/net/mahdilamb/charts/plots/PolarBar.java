@@ -1,6 +1,9 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 
 public final class PolarBar extends PlotSeries.Categorical<PolarBar> implements CircularPlot{
     double startAngle = 0;
@@ -23,5 +26,10 @@ public final class PolarBar extends PlotSeries.Categorical<PolarBar> implements 
     public PolarBar setCounterClockwise() {
         this.clockWise = true;
         return requestDataUpdate();
+    }
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends PolarBar> plot) {
+
     }
 }

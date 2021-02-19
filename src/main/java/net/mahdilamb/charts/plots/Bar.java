@@ -1,14 +1,21 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Orientation;
 import net.mahdilamb.charts.graphics.Stroke;
-import net.mahdilamb.charts.dataframe.utils.GroupBy;
 
 import static net.mahdilamb.charts.utils.ArrayUtils.fill;
 
 public final class Bar extends PlotSeries.Categorical<Bar> implements RectangularPlot {
 
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Bar> plot) {
+
+    }
 
     public enum Mode {
         STACKED,

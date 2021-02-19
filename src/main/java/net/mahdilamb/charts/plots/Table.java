@@ -1,8 +1,11 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.dataframe.Axis;
 import net.mahdilamb.charts.dataframe.DataFrame;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 
 import static net.mahdilamb.charts.utils.ArrayUtils.fill;
 
@@ -12,6 +15,8 @@ public final class Table extends PlotSeries<Table>implements RectangularPlot {
     final DataFrame frame;
     double[] cellHeights, cellWidths;
     boolean[] visibleRows, visibleColumns;
+    int[] rowSort;
+    int[] colSort;
 
     public Table(final DataFrame frame) {
         this.frame = frame;
@@ -26,7 +31,6 @@ public final class Table extends PlotSeries<Table>implements RectangularPlot {
         this.cellHeights = fill(new double[frame.numSeries()], heights, DEFAULT_CELL_HEIGHT);
         return requestDataUpdate();
     }
-
 
     @Override
     public String getXLabel() {
@@ -56,5 +60,15 @@ public final class Table extends PlotSeries<Table>implements RectangularPlot {
     @Override
     public double getMaxY() {
         return frame.numSeries();
+    }
+
+    @Override
+    public int size() {
+        return data.size() * data.numSeries();
+    }
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Table> plot) {
+
     }
 }

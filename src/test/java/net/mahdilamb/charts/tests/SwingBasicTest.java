@@ -1,17 +1,26 @@
 package net.mahdilamb.charts.tests;
 
+import net.mahdilamb.charts.dataframe.DataFrame;
+import net.mahdilamb.charts.plots.Line;
 import net.mahdilamb.charts.plots.Scatter;
 
+import java.io.File;
+
+import static net.mahdilamb.charts.ScatterTests.loadData;
 import static net.mahdilamb.charts.swing.SwingChart.show;
 
 public class SwingBasicTest {
     public static void main(String[] args) {
-        final Scatter s = new Scatter(new double[]{0, 1, 2, 3, 4, 5}, new double[]{0, 1, 2, 3, 4, 5});
-        final Scatter t = new Scatter(new double[]{0, 1, 2, 3, 4, 5}, new double[]{0, 1, 4, 9, 16, 25})
-                .setColors(new double[]{0, 0.1, 0.2, 0.3, 0.4, 0.5});
-        show("Sepal length vs width", s, t);
 
-        System.out.println();
+        final Scatter c = new Scatter(loadData("tips.csv"), "total_bill", "tip")
+                //  .setColors("day")
+                //.setShapes("time")
+                ;
+        show(
+                new Line(loadData("gapminder.csv").query("continent == 'Oceania'"), "year", "lifeExp")
+                        .setColors("country")
+
+        );
 
     }
 }

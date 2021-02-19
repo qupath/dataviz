@@ -113,7 +113,7 @@ public enum MarkerShape {
     HORIZONTAL_LINE('_');
 
     private static final Map<Character, MarkerShape> store = new HashMap<>();
-    private static final char[] ordered = {'o', 'x', 'D', 'P', 's', '*', '^', '+', 'v', 'p', 'h', '8'};
+    private static final char[] ordered = {'o', 'X', 'D', 'P', 's', '*', '^', '+', 'v', 'p', 'h', '8'};
 
     static {
         for (final MarkerShape m : MarkerShape.class.getEnumConstants()) {

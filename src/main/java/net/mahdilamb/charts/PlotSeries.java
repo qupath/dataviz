@@ -1,31 +1,35 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.dataframe.*;
+import net.mahdilamb.charts.dataframe.utils.DoubleArrayList;
 import net.mahdilamb.charts.dataframe.utils.GroupBy;
+import net.mahdilamb.charts.functions.BiObjAndBiDoubleConsumer;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.SelectedStyle;
 import net.mahdilamb.charts.graphics.UnselectedStyle;
 import net.mahdilamb.charts.plots.MarginalMode;
 import net.mahdilamb.charts.plots.RectangularPlot;
+import net.mahdilamb.charts.plots.Scatter;
+import net.mahdilamb.charts.statistics.BinWidthEstimator;
+import net.mahdilamb.charts.statistics.Histogram;
+import net.mahdilamb.charts.statistics.StatUtils;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 
-import java.lang.reflect.Array;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.function.IntFunction;
-import java.util.function.ObjDoubleConsumer;
+import java.util.function.*;
 
-import static net.mahdilamb.charts.statistics.ArrayUtils.intRange;
+import static net.mahdilamb.charts.Figure.DEFAULT_QUALITATIVE_COLORMAP;
 import static net.mahdilamb.charts.statistics.StatUtils.max;
 import static net.mahdilamb.charts.statistics.StatUtils.min;
 import static net.mahdilamb.charts.utils.StringUtils.EMPTY_STRING;
 
 /**
- * A series of data elements that can be added to a plot area
+ * A series of data elements that can be added to a plot area.
  *
  * @param <S> the type of the series
  */
@@ -33,15 +37,17 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
 
     Figure<?, ?> figure;
 
-    private Map<AttributeType, Attribute<?>> attributes;
+    private Map<AttributeType, TraceGroup<?>> attributes;
     protected DataFrame data;
 
     /*
     Layout suggestions
      */
-    FactorizedDataAttribute<String> facetCol;
-    FactorizedDataAttribute<String> facetRow;
+    //todo
+    String facetCol;
+    String facetRow;
     int facetColWrap = -1;
+
 
     /**
      * The attribute type
@@ -78,237 +84,279 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         }
     }
 
-    /**
-     * Abstract attribute for a data point
-     */
-    protected static abstract class Attribute<T> {
-        /**
-         * The name of the attribute - this is also used for linking attributes together
-         */
+
+    protected static class TraceGroup<T> {
         public String name;
-        /**
-         * The type of the attribute
-         */
-        AttributeType type;
-        /**
-         * The next attribute in the link
-         */
-        public Attribute<?> next;
+        public AttributeType type;
+        public Trace[] traces;
+        public final T source;
+        public TraceGroup<?> next;
 
-        Attribute(final String name) {
+        private TraceGroup(String name, T source) {
             this.name = name;
-        }
+            this.source = source;
 
-        /**
-         * @return the attribute type
-         */
-        public AttributeType getType() {
-            return type;
         }
-
-        public abstract T get(int index);
 
         @Override
-        public boolean equals(Object obj) {
-            if (obj == this) {
-                return true;
+        public String toString() {
+            return String.format("TraceGroup {%s, type: %s, traces: %d}", name, type, traces == null ? 0 : traces.length);
+        }
+
+        public static TraceGroup<QualitativeColorAttribute> createForQualitativeColor(final String name, final QualitativeColorAttribute source) {
+            final TraceGroup<QualitativeColorAttribute> traceGroup = new TraceGroup<>(name, source);
+            traceGroup.traces = new Trace[source.factors.length];
+            for (final GroupBy.Group<String> group : source.groups) {
+                final Trace trace = new Trace(group);
+                traceGroup.traces[trace.i] = trace;
             }
-            if (!(obj instanceof Attribute)) {
-                return false;
-            }
-            final Attribute<?> other = (Attribute<?>) obj;
-            return other.name.equals(name);
-        }
-    }
-
-    /**
-     * A data attribute
-     *
-     * @param <T> the type of the data
-     */
-    protected static class DataAttribute<T> extends Attribute<T> {
-
-        T[] attributes;
-
-        /**
-         * Create a data attribute with the given data
-         *
-         * @param name       the name of the attribute
-         * @param attributes the actual attributes
-         */
-        public DataAttribute(final String name, T[] attributes) {
-            super(name);
-            this.attributes = attributes;
+            return traceGroup;
         }
 
-        /**
-         * Get the attribute at the given index
-         *
-         * @param index the index
-         * @return the attribute at the specified index
-         */
-        @Override
-        public T get(int index) {
-            return attributes[index];
-        }
-    }
+        public static TraceGroup<DimensionMap> createForDimension(String name, DimensionMap attributeMap, double scaleMin, double scaleMax, String[] names, double[] values) {
+            final TraceGroup<DimensionMap> traceGroup = new TraceGroup<>(name, attributeMap);
+            attributeMap.scaleMin = scaleMin;
+            attributeMap.scaleMax = scaleMax;
 
-    /**
-     * A primitive double attribute
-     */
-    protected static class DoubleDataAttribute extends Attribute<Double> {
-        double[] attributes;
-
-        /**
-         * Create a data attribute with the given data
-         *
-         * @param name       the name of the attribute
-         * @param attributes the actual attributes
-         */
-        public DoubleDataAttribute(final String name, double[] attributes) {
-            super(name);
-            this.attributes = attributes;
-        }
-
-        /**
-         * Get the attribute at the given index
-         *
-         * @param index the index
-         * @return the attribute at the specified index
-         */
-        public double getDouble(int index) {
-            return attributes[index];
-        }
-
-        @Override
-        public Double get(int index) {
-            return getDouble(index);
-        }
-    }
-
-    protected static class PairedDoubleDataAttribute extends DoubleDataAttribute {
-        public double[] right;
-
-        public PairedDoubleDataAttribute(final String name, double[] attributes, double[] right) {
-            super(name, attributes);
-            this.right = right;
-        }
-    }
-
-    protected static class ScaledDoubleDataAttribute extends DoubleDataAttribute {
-
-        public double scaleNaN = 0, scaleMin = 0, scaleMax = 1;
-
-        //the actual min and max values to use from the value range
-        public double valueMin, valueMax;
-
-        public ScaledDoubleDataAttribute(String name, double[] attributes) {
-            super(name, attributes);
-            valueMin = min(attributes);
-            valueMax = max(attributes);
-        }
-
-        @Override
-        public double getDouble(int index) {
-            if (Double.isNaN(attributes[index])) {
-                return scaleNaN;
-            }
-            return (((attributes[index] - valueMin) / (valueMax - valueMin)) * (scaleMax - scaleMin)) + scaleMin;
-        }
-    }
-
-
-    protected static class IntDataAttribute extends Attribute<Integer> {
-        public int[] attributes;
-
-        public IntDataAttribute(final String name, int[] attributes) {
-            super(name);
-            this.attributes = attributes;
-        }
-
-        public int getInt(int index) {
-            return attributes[index];
-        }
-
-        @Override
-        public Integer get(int index) {
-            return getInt(index);
-        }
-    }
-
-    protected static class FactorizedDataAttribute<T> extends Attribute<T> {
-        public int[] factors;
-        public T[] data;
-        public int[] attributes;
-        public String[] names;
-
-        public FactorizedDataAttribute(final String name, int[] attributes, int[] factors) {
-            super(name);
-            this.attributes = attributes;
-            this.factors = factors;
-        }
-
-        public FactorizedDataAttribute(final String name, final GroupBy<String> groups) {
-            this(name, new int[groups.size()], intRange(groups.numGroups()));
-            names = new String[groups.numGroups()];
-            int i = 0;
-            for (final GroupBy.Group<String> group : groups) {
-                for (final int j : group) {
-                    attributes[j] = group.getID();
+            if (names != null) {
+                traceGroup.traces = new Trace[names.length];
+                for (int i = 0; i < traceGroup.traces.length; ++i) {
+                    final Trace trace = new Trace();
+                    trace.i = i;
+                    trace.name = names[i];
+                    //todo use val to make glyph
+                    traceGroup.traces[i] = trace;
                 }
-                factors[i] = group.getID();
-                names[i] = group.get();
-                ++i;
-
+            } else {
+                final Histogram hist = StatUtils.histogram(Math.min(4, StatUtils.histogramBinEdges(BinWidthEstimator.NUMPY_AUTO, attributeMap.values).length - 1), attributeMap.values);
+                int count = 0;
+                for (int i = 0; i < hist.numBins(); ++i) {
+                    if (hist.getCount(i) != 0) {
+                        ++count;
+                    }
+                }
+                traceGroup.traces = new Trace[count];
+                for (int i = hist.numBins() - 1, j = 0; i >= 0; --i) {
+                    if (hist.getCount(i) == 0) {
+                        continue;
+                    }
+                    final Trace trace = new Trace();
+                    trace.name = String.format("%.3f", hist.getBinEdges()[i]);//TODO deal with formatting
+                    trace.glyphSize = attributeMap.scale(hist.getBinEdges()[i]);
+                    trace.i = j++;
+                    traceGroup.traces[trace.i] = trace;
+                }
             }
+
+            return traceGroup;
         }
 
-        @SuppressWarnings("unchecked")
-        public FactorizedDataAttribute<T> mapFactor(IntFunction<T> mapper, Class<T> toClass) {
-            if (data == null) {
-                data = (T[]) Array.newInstance(toClass, attributes.length);
+        public static <T> TraceGroup<FromGroupIdMap<T>> createForGroupID(String name, GroupBy<String> groups, IntFunction<T> setter) {
+            final TraceGroup<FromGroupIdMap<T>> traceGroup = new TraceGroup<>(name, new FromGroupIdMap<>(groups, setter));
+            traceGroup.traces = new Trace[groups.numGroups()];
+            for (final GroupBy.Group<String> group : groups) {
+                final Trace trace = new Trace(group);
+                traceGroup.traces[trace.i] = trace;
             }
-            for (int i = 0; i < attributes.length; i++) {
-                data[i] = mapper.apply(factors[attributes[i]]);
-            }
-            return this;
+            return traceGroup;
         }
 
-        @SuppressWarnings("unchecked")
-        public FactorizedDataAttribute<T> map(Function<String, T> mapper, Class<T> toClass) {
-            if (data == null) {
-                data = (T[]) Array.newInstance(toClass, attributes.length);
+        public static <T> TraceGroup<FromGroupNameMap<T>> createForGroupVal(String name, GroupBy<String> groups, Function<String, T> setter) {
+            final TraceGroup<FromGroupNameMap<T>> traceGroup = new TraceGroup<>(name, new FromGroupNameMap<>(groups, setter));
+            traceGroup.traces = new Trace[groups.numGroups()];
+            int j = 0;
+            for (final GroupBy.Group<String> group : groups) {
+                final Trace trace = new Trace(group);
+                traceGroup.traces[j++] = trace;
             }
-            for (int i = 0; i < attributes.length; i++) {
-                data[i] = mapper.apply(names[factors[attributes[i]]]);
-            }
-            return this;
+            return traceGroup;
+
+        }
+
+        public static TraceGroup<SequentialColorAttribute> createForSequentialColormap(String name, SequentialColorAttribute sequentialColorAttribute) {
+            final TraceGroup<SequentialColorAttribute> traceGroup = new TraceGroup<>(name, sequentialColorAttribute);
+            //TODO
+            return traceGroup;
+        }
+
+
+        public static TraceGroup<DimensionMap> createForDimension(String name, DimensionMap attributeMap, double scaleMin, double scaleMax) {
+            return createForDimension(name, attributeMap, scaleMin, scaleMax, null, null);
+        }
+
+        public static TraceGroup<DoubleArrayList> createForDoubleArrayList(final DoubleArrayList arrayList) {
+            return new TraceGroup<>(null, arrayList);
+        }
+
+        public static <T> TraceGroup<List<T>> createForArrayList(final List<T> arrayList) {
+            return new TraceGroup<>(null, arrayList);
+        }
+    }
+
+    protected static class Trace {
+
+        /* legend attributes */
+        BiObjAndBiDoubleConsumer<ChartCanvas<?>, Trace> glyph;
+        public double glyphSize = Scatter.DEFAULT_MARKER_SIZE;
+        public Object glyphData;
+        String name;
+        int i;
+
+        public Trace() {
+
+        }
+
+        public Trace(GroupBy.Group<String> group) {
+            name = group.get();
+            i = group.getID();
+
         }
 
         @Override
+        public String toString() {
+            return String.format("Trace {%s, id: %d}", name, i);
+        }
+
+        public int get() {
+            return i;
+        }
+
+    }
+
+    protected static class FactorMap {
+        int[] values;
+        public final GroupBy<String> groups;
+        final int[] factors;
+        final String[] labels;
+
+        FactorMap(final GroupBy<String> groups) {
+            this.groups = groups;
+            values = new int[groups.size()];
+            factors = new int[groups.numGroups()];
+            labels = new String[groups.numGroups()];
+            int j = 0;
+            for (final GroupBy.Group<String> g : groups) {
+                factors[j] = g.getID();
+                labels[j] = g.get();
+                for (int i : g) {
+                    values[i] = g.getID();
+                }
+                ++j;
+            }
+        }
+    }
+
+    protected static class FromGroupIdMap<T> extends FactorMap {
+
+        private final T[] data;
+        private final int[] groups;
+
+        @SuppressWarnings("unchecked")
+        FromGroupIdMap(GroupBy<String> groups, IntFunction<T> converter) {
+            super(groups);
+            data = (T[]) new Object[groups.numGroups()];
+            for (final GroupBy.Group<String> g : groups) {
+                data[g.getID()] = converter.apply(g.getID());
+            }
+            this.groups = groups.toArray();
+        }
+
         public T get(int index) {
-            return data[index];
+            return data[groups[index]];
         }
     }
 
-    protected static final class QualitativeColorAttribute extends FactorizedDataAttribute<Color> {
-        public Colormap colormap = null;//null inherit from plot
+    protected static class FromGroupNameMap<T> extends FactorMap {
 
-        public QualitativeColorAttribute(String name, int[] attributes, int[] factors) {
-            super(name, attributes, factors);
+        private final T[] data;
+        private final int[] groups;
+
+        @SuppressWarnings("unchecked")
+        FromGroupNameMap(GroupBy<String> groups, Function<String, T> converter) {
+            super(groups);
+            data = (T[]) new Object[groups.numGroups()];
+            for (final GroupBy.Group<String> g : groups) {
+                data[g.getID()] = converter.apply(g.get());
+            }
+            this.groups = groups.toArray();
         }
 
-        public QualitativeColorAttribute(final String name, final GroupBy<String> groups) {
-            super(name, groups);
+        public T get(int index) {
+            return data[groups[index]];
         }
     }
 
-    protected static final class SequentialColorAttribute extends ScaledDoubleDataAttribute {
-        public Colormap colormap = null;//null inherit from plot
+    protected static class DimensionMap {
+        final double[] values;
+        //the actual min and max values to use from the value range
+        public final double valMin, valRange;
+        //the minimum values to map to in the colormap
+        public double scaleMin = 0, scaleMax = 1;
         public boolean useLogarithmic = false;
 
-        public SequentialColorAttribute(String name, double[] attributes) {
-            super(name, attributes);
+        public DimensionMap(double[] values) {
+            this.values = values;
+            this.valMin = StatUtils.min(values);
+            double valMax = StatUtils.max(values);
+            valRange = valMax - valMin;
+        }
+
+        public double get(int index) {
+            return scale(values[index]);
+        }
+
+        public double scale(double value) {
+            double v = (((value - valMin) / valRange) * (scaleMax - scaleMin)) + scaleMin;
+            if (useLogarithmic) {
+                //todo scale logarithmically
+            }
+            return v;
+        }
+    }
+
+    protected static final class ErrorAttribute {
+        DoubleArrayList upper;
+        DoubleArrayList lower;
+
+        public ErrorAttribute(DoubleArrayList data) {
+            this.upper = data;
+            this.lower = data;
+        }
+
+        public ErrorAttribute(DoubleArrayList lower, DoubleArrayList upper) {
+            this.lower = lower;
+            this.upper = upper;
+        }
+    }
+
+    protected static final class QualitativeColorAttribute extends FactorMap {
+        public Colormap colormap = null;//null inherit from plot
+
+        public QualitativeColorAttribute(final GroupBy<String> groups) {
+            super(groups);
+        }
+
+        public Color get(final Colormap colormap, int index) {
+            float c = ((float) values[index]) / colormap.size();
+            return colormap.get(c - ((int) c));
+        }
+
+        public Color getI(final Colormap colormap, int index) {
+            float c = ((float) index) / colormap.size();
+            return colormap.get(c - ((int) c));
+        }
+    }
+
+    protected static final class SequentialColorAttribute extends DimensionMap {
+        public Colormap colormap = null;//null inherit from plot
+
+        public SequentialColorAttribute(Colormap colormap, double[] attributes) {
+            this(attributes);
+            this.colormap = colormap;
+        }
+
+        public SequentialColorAttribute(double[] attributes) {
+            super(attributes);
         }
     }
 
@@ -333,18 +381,22 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         this.figure = chart;
     }
 
-    @SuppressWarnings("unchecked")
     protected S ifSeriesCategorical(final String seriesName, BiConsumer<S, StringSeries> categorical, BiConsumer<S, DoubleSeries> qualitative) {
+        return ifSeriesCategorical(seriesName, categorical, qualitative, this::redraw);
+    }
+
+    @SuppressWarnings("unchecked")
+    protected S ifSeriesCategorical(final String seriesName, BiConsumer<S, StringSeries> categorical, BiConsumer<S, DoubleSeries> qualitative, Supplier<S> andThen) {
         if (data == null) {
             throw new UnsupportedOperationException("This method should only be used if working with a dataframe");
         }
-        final DataSeries<?> series = data.get(seriesName);
+        final Series<?> series = data.get(seriesName);
         if (series.getType() == DataType.DOUBLE) {
             qualitative.accept((S) this, series.asDouble());
         } else {
             categorical.accept((S) this, series.asString());
         }
-        return redraw();
+        return andThen.get();
     }
 
     /**
@@ -371,26 +423,55 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
      *
      * @param type      the name of the attribute
      * @param attribute the attribute
-     * @param <A>       the type of the attribute
      * @return the attribute
      */
-    protected <A extends Attribute<T>, T> A addAttribute(final AttributeType type, final A attribute) {
+    protected <T> TraceGroup<T> addAttribute(final AttributeType type, final TraceGroup<T> attribute) {
+        switch (type) {
+            case SIZE:
+                return addAttribute(type, attribute, (canvas, trace, x, y) -> {
+                    canvas.setFill(Color.gray);
+                    canvas.fillOval(x - trace.glyphSize * .5, y - trace.glyphSize * .5, trace.glyphSize, trace.glyphSize);
+                });
+            case SHAPE:
+                return addAttribute(type, attribute, null);
+            case COLOR:
+                if (attribute.source.getClass() == QualitativeColorAttribute.class) {
+                    return addAttribute(type, attribute, (canvas, trace, x, y) -> {
+                        canvas.setFill(((QualitativeColorAttribute) attribute.source).getI(((QualitativeColorAttribute) attribute.source).colormap == null ? DEFAULT_QUALITATIVE_COLORMAP : ((QualitativeColorAttribute) attribute.source).colormap, trace.i));
+                        canvas.fillOval(x - trace.glyphSize * .5, y - trace.glyphSize * .5, trace.glyphSize, trace.glyphSize);
+                    });
+                }
+                return addAttribute(type, attribute, null);
+
+            default:
+                throw new UnsupportedOperationException();
+        }
+
+
+    }
+
+    protected <T> TraceGroup<T> addAttribute(final AttributeType type, final TraceGroup<T> attribute, BiObjAndBiDoubleConsumer<ChartCanvas<?>, Trace> glyph) {
         attribute.type = type;
+        for (final Trace t : attribute.traces) {
+            if (t.glyph != null) {
+                break;
+            }
+            t.glyph = glyph;
+        }
         if (attributes == null) {
             attributes = new LinkedHashMap<>();
         }
-        removeAttribute(attribute);
-        for (final Attribute<?> a : attributes()) {
-            if (a == attribute) {
-                continue;
-            }
-            if (attribute.equals(a)) {
-                Attribute<?> b = a;
-                while (b.next != null) {
-                    b = b.next;
+        removeAttribute(type);
+        for (final Map.Entry<AttributeType, TraceGroup<?>> group : attributes.entrySet()) {
+            if (group.getValue().name.equals(attribute.name)) {
+                TraceGroup<?> candidate = group.getValue();
+                while (candidate.next != null) {
+                    candidate = candidate.next;
                 }
-                b.next = attribute;
+                candidate.next = attribute;
                 return attribute;
+            } else if (group.getValue().next != null) {
+                //todo traverse and link
             }
         }
 
@@ -407,20 +488,41 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         if (attributes == null) {
             return;
         }
-        attributes.remove(attrName);
+        for (final Map.Entry<AttributeType, TraceGroup<?>> group : attributes.entrySet()) {
+            if (group.getKey() == attrName) {
+                if (group.getValue().next != null) {
+                    //todo reel in
+                } else {
+                    //just remove key
+                }
+            } else if (group.getValue().next != null) {
+                TraceGroup<?> candidate = group.getValue();
+                while (candidate != null) {
+                    if (candidate.type == attrName) {
+                        //todo remove
+                        break;
+                    }
+                    candidate = candidate.next;
+                }
+            }
+        }
     }
 
-    protected Attribute<?> getAttribute(AttributeType name) {
+    protected TraceGroup<?> getAttribute(AttributeType name) {
         if (attributes == null) {
             return null;
         }
         return attributes.get(name);
     }
 
+    int numAttributes() {
+        return attributes == null ? 0 : attributes.size();
+    }
+
     /**
      * @return an iterable over the ordered attributes
      */
-    protected Iterable<Attribute<?>> attributes() {
+    protected Iterable<TraceGroup<?>> attributes() {
         if (attributes == null) {
             return () -> new Iterator<>() {
                 @Override
@@ -429,7 +531,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
                 }
 
                 @Override
-                public Attribute<?> next() {
+                public TraceGroup<?> next() {
                     throw new UnsupportedOperationException();
                 }
             };
@@ -437,7 +539,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         return () -> attributes.values().iterator();
     }
 
-    protected Iterable<Map.Entry<AttributeType, Attribute<?>>> attributeEntries() {
+    protected Iterable<Map.Entry<AttributeType, TraceGroup<?>>> attributeEntries() {
         if (attributes == null) {
             return () -> new Iterator<>() {
                 @Override
@@ -446,7 +548,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
                 }
 
                 @Override
-                public Map.Entry<AttributeType, Attribute<?>> next() {
+                public Map.Entry<AttributeType, TraceGroup<?>> next() {
                     return null;
                 }
             };
@@ -454,35 +556,14 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         return () -> attributes.entrySet().iterator();
     }
 
-    private void removeAttribute(Attribute<?> attribute) {
-        for (final Attribute<?> a : attributes()) {
-            Attribute<?> candidate = a;
-            boolean contains = false;
-
-            do {
-                if (candidate.type == attribute.type) {
-                    contains = true;
-                    break;
-                }
-                candidate = candidate.next;
-            } while (candidate != null);
-
-            if (contains) {
-                if (candidate == a) {
-                    //is also a key
-                    attributes.remove(candidate.type);
-                    if (candidate.next != null) {
-                        //move to the beginning of the links
-                        attributes.put(candidate.next.type, candidate.next);
-                    }
-                    candidate.next = null;
-
-                } else {
-                    //TODO deal with replacing and removing
-                }
-            }
+    private void removeAttribute(TraceGroup<?> attribute) {
+        if (attributes == null) {
+            return;
         }
+        attributes.remove(attribute.type);
     }
+
+    protected abstract void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends S> plot);
 
     /**
      * @return this series after firing a redraw request if the chart is specified
@@ -528,7 +609,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
             throw new UnsupportedOperationException("Cannot set number of columns after chart created");
         }
         final StringSeries series = data.getStringSeries(seriesName);
-        this.facetCol = new FactorizedDataAttribute<>(seriesName, new GroupBy<>(series, series.size()));
+        this.facetCol = seriesName;//TODO
         return (S) this;
     }
 
@@ -541,7 +622,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
             throw new UnsupportedOperationException("Cannot set number of rows after chart created");
         }
         final StringSeries series = data.getStringSeries(seriesName);
-        this.facetRow = new FactorizedDataAttribute<>(seriesName, new GroupBy<>(series, series.size()));
+        this.facetRow = seriesName; // todo
         this.facetColWrap = -1;
         return (S) this;
     }
@@ -606,6 +687,12 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         }
 
         @Override
+        public int size() {
+            //todo
+            return values.length;
+        }
+
+        @Override
         public double getMaxY() {
             return valueMax;
         }
@@ -638,6 +725,12 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
             yMin = min(y);
             yMax = max(y);
 
+        }
+
+        @Override
+        public int size() {
+            //TODO
+            return x.length * y.length;
         }
 
         /**
@@ -695,6 +788,8 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
 
     public static abstract class Categorical<S extends Categorical<S>> extends PlotSeries<S> {
         protected final String[] names;
+
+
         protected final double[] values;
         protected final double valueMin, valueMax;
 
@@ -722,6 +817,11 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
 
         protected double getMaxY() {
             return valueMax;
+        }
+
+        @Override
+        public int size() {
+            return names.length;
         }
 
     }
@@ -774,6 +874,11 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
         public String getYLabel() {
             return yLabel;
         }
+
+        @Override
+        public int size() {
+            return rowMajorHeight * rowMajorWidth;
+        }
     }
 
     /**
@@ -820,4 +925,21 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
     protected static <T> String formatWord(T word, Function<T, String> nonNull) {
         return word == null ? EMPTY_STRING : nonNull.apply(word);
     }
+
+    public abstract int size();
+
+    protected static <S extends PlotSeries<S>> double convertXToPosition(Plot<? extends S> plot, double x) {
+        x -= plot.getXAxis().currentLowerBound;
+        x *= plot.getXAxis().scale;
+        x += plot.getXAxis().posX;
+        return x;
+    }
+
+    protected static <S extends PlotSeries<S>> double convertYToPosition(Plot<? extends S> plot, double y) {
+        y -= plot.getYAxis().currentLowerBound;
+        y *= plot.getYAxis().scale;
+        y = plot.getYAxis().sizeY - y + plot.getYAxis().posY;
+        return y;
+    }
+
 }

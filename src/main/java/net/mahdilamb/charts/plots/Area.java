@@ -1,8 +1,8 @@
 package net.mahdilamb.charts.plots;
 
-import net.mahdilamb.charts.graphics.Stroke;
-import net.mahdilamb.colormap.Color;
-import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 
 public final class Area extends AbstractScatter<Area> {
     boolean showEdges = true;
@@ -21,5 +21,16 @@ public final class Area extends AbstractScatter<Area> {
         this.stacked = stacked;
         // todo recalculate
         return redraw();
+    }
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Area> plot) {
+
+    }
+
+    @Override
+    public int size() {
+        //TODO
+        return 0;
     }
 }

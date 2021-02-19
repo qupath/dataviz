@@ -10,8 +10,6 @@ interface KeyArea<K extends KeyArea<K>> {
 
     K setGroupSpacing(double spacing);
 
-    K setTitle(String title);
-
     K setTitleFont(Font font);
 
     K setTitleColor(Color color);

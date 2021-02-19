@@ -1,5 +1,7 @@
 package net.mahdilamb.charts.utils;
 
+import net.mahdilamb.charts.statistics.StatUtils;
+
 import java.util.Iterator;
 import java.util.function.*;
 
@@ -100,5 +102,19 @@ public final class ArrayUtils {
         return out;
     }
 
+    public static double[] rescale(final double[] data, double min, double max) {
+        final double valMin = StatUtils.min(data);
+        final double valMax = StatUtils.max(data);//todo consider NaN
+        final double valRange = valMax - valMin;
+        double scaleRange = max - min;
+        for (int i = 0; i < data.length; ++i) {
+            if (!Double.isFinite(data[i])) {
+                continue;
+            }
+            data[i] = (((data[i] - valMin) / valRange) * scaleRange) + min;
+        }
+        return data;
+
+    }
 
 }

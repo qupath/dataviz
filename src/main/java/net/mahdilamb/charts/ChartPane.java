@@ -8,12 +8,8 @@ import java.util.List;
 
 /**
  * A chart node contains multiple chart components.
- *
- * @implNote Uses small list optimisation (only uses a list when there are
- * more than one child). The list remains once created
  */
-public class ChartPane extends ChartNode<ChartComponent> implements Iterable<ChartComponent> {
-    private ChartComponent child;
+public class ChartPane extends ChartNode implements Iterable<ChartComponent> {
     private List<ChartComponent> children;
 
     /**
@@ -21,53 +17,19 @@ public class ChartPane extends ChartNode<ChartComponent> implements Iterable<Cha
      *
      * @param child the child node to add
      */
+    @Override
     protected void add(final ChartComponent child) {
         if (child != null) {
-            child.parentNode = this;
+            child.parent = this;
             child.figure = figure;
-            layoutNeedsRefresh = true;
+            markLayoutAsOld();
         } else {
             return;
         }
         if (children == null) {
-            if (this.child == null) {
-                this.child = child;
-                return;
-            }
-            this.children = new ArrayList<>();
-            this.children.add(this.child);
-            this.children.add(child);
-            this.child = null;
-            return;
+            children = new ArrayList<>();
         }
         this.children.add(child);
-    }
-
-    /**
-     * @return the size of the chart node
-     */
-    protected int size() {
-        if (children == null) {
-            return this.child == null ? 0 : 1;
-        }
-        return this.children.size();
-    }
-
-    /**
-     * @param index the index
-     * @return the item at the index
-     */
-    protected ChartComponent get(int index) {
-        if (index < 0) {
-            throw new IndexOutOfBoundsException("index cannot be less than 0");
-        }
-        if (children == null) {
-            if (child == null) {
-                throw new IndexOutOfBoundsException("The node is currently empty");
-            }
-            return child;
-        }
-        return children.get(index);
     }
 
     /**
@@ -76,35 +38,35 @@ public class ChartPane extends ChartNode<ChartComponent> implements Iterable<Cha
      * @param component the component to remove
      * @return whether the component was removed
      */
+    @Override
     protected boolean remove(ChartComponent component) {
         if (component != null) {
-            component.parentNode = null;
+            component.parent = null;
             component.figure = null;
-            layoutNeedsRefresh = true;
+            markLayoutAsOld();
         } else {
             return false;
         }
         if (children == null) {
-            if (child != null && child == component) {
-                child = null;
-                return true;
-            }
             return false;
         }
         return children.remove(component);
     }
 
+    /**
+     * @param component the component
+     * @return whether the pane contains a component
+     */
     protected boolean contains(ChartComponent component) {
         if (children == null) {
-            return child != null && child == component;
+            return false;
         }
         return children.contains(component);
     }
 
-
     @Override
-    protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
-        if (!layoutNeedsRefresh) {
+    protected void layoutComponent(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
+        if (children == null) {
             return;
         }
         double remainingWidth = maxX - minX;
@@ -113,9 +75,8 @@ public class ChartPane extends ChartNode<ChartComponent> implements Iterable<Cha
         double rowHeight = 0;
         double rowWidth = 0;
         for (final ChartComponent child : this) {
-            if (child.layoutNeedsRefresh) {
-                child.layout(source, canvas, minX, minY, maxX, maxY);
-            }
+            child.layoutComponent(source, minX, minY, maxX, maxY);
+
             if (child.inline) {
                 rowWidth += child.sizeX;
 
@@ -141,12 +102,16 @@ public class ChartPane extends ChartNode<ChartComponent> implements Iterable<Cha
 
         sizeY += rowHeight;
         sizeX = rowWidth;
-        layoutNeedsRefresh = false;
+
     }
 
     @Override
-    protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
-        //TODO
+    protected void drawComponent(Figure<?, ?> source, ChartCanvas<?> canvas) {
+        if (children != null) {
+            for (final ChartComponent c : children) {
+                c.drawComponent(source, canvas);
+            }
+        }
     }
 
     @Override
@@ -164,5 +129,49 @@ public class ChartPane extends ChartNode<ChartComponent> implements Iterable<Cha
                 return get(i++);
             }
         };
+    }
+
+    /**
+     * @param index the index
+     * @return the item at the index
+     */
+    protected ChartComponent get(int index) {
+        if (index < 0) {
+            throw new IndexOutOfBoundsException("index cannot be less than 0");
+        }
+        if (children == null) {
+            return null;
+        }
+        return children.get(index);
+    }
+
+    /**
+     * @return the size of the chart node
+     */
+    protected int size() {
+        if (children == null) {
+            return 0;
+        }
+        return this.children.size();
+    }
+
+    @Override
+    protected void markLayoutAsOld() {
+        if (children != null) {
+            for (final ChartComponent component : children) {
+                component.markLayoutAsOld();
+            }
+        }
+        super.markLayoutAsOld();
+    }
+
+    @Override
+    protected void markDrawAsOld() {
+        if (children != null) {
+            for (final ChartComponent component : children) {
+                component.markDrawAsOld();
+            }
+        }
+        super.markDrawAsOld();
     }
 }

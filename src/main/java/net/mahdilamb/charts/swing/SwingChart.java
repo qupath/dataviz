@@ -35,7 +35,17 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S, Buffered
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         return chart;
     }
-
+    @SafeVarargs
+    public static <S extends PlotSeries<S>> SwingChart<S> show( S... series) {
+        final JFrame frame = new JFrame();
+        frame.setLayout(new BorderLayout());
+        final SwingChart<S> chart = new SwingChart<>(null, DEFAULT_WIDTH, DEFAULT_HEIGHT, getGroupedLayoutForSeries(series));
+        chart.addTo(frame.getContentPane(), BorderLayout.CENTER);
+        frame.pack();
+        frame.setVisible(true);
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        return chart;
+    }
     protected SwingChart(String title, double width, double height, PlotImpl<S> layout) {
         super(title, width, height, layout);
         final Dimension size = new Dimension((int) Math.ceil(width), (int) Math.ceil(height));
@@ -124,7 +134,7 @@ public final class SwingChart<S extends PlotSeries<S>> extends Chart<S, Buffered
     }
 
     @Override
-    protected double getImageWidth(BufferedImage image)  {
+    protected double getImageWidth(BufferedImage image) {
         return canvas.getImageWidth(image);
     }
 

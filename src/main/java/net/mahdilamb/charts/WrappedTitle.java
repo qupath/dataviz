@@ -37,29 +37,23 @@ public class WrappedTitle extends Title {
 
 
     @Override
-    protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+    protected void drawComponent(Figure<?, ?> source, ChartCanvas<?> canvas) {
         if (!isVisible()) {
             return;
         }
         canvas.setFont(font);
-        if (!metricsSet) {
-            layout(source, canvas, minX, minY, maxX, maxY);
-            this.posX = minX;
-            this.posY = minY;
-
-        }
         for (int i = 0; i < numLines - 1; ++i) {
-            canvas.fillText(lines.get(i), minX + xOffsets.get(i), minY + yOffsets.get(i));
+            canvas.fillText(lines.get(i), posX + xOffsets.get(i), posY + yOffsets.get(i));
         }
         if (numLines >= 1) {
             int i = numLines - 1;
-            canvas.fillText(lines.get(i), minX + xOffsets.get(i), minY + yOffsets.get(i));
+            canvas.fillText(lines.get(i), posX + xOffsets.get(i), posY + yOffsets.get(i));
         }
 
     }
 
     @Override
-    protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
         xOffsets.clear();
         yOffsets.clear();
         lineStarts.clear();
@@ -106,6 +100,8 @@ public class WrappedTitle extends Title {
 
         this.sizeX = actualWidth + paddingX;
         this.sizeY = actualHeight + paddingY;
+        this.posX = minX;
+        this.posY = minY;
     }
 
     static int[] ensureCapacity(int[] array, int maxIndex) {

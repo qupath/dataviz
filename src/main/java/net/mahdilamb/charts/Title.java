@@ -12,12 +12,11 @@ public class Title extends ChartComponent {
     double paddingX = 20, paddingY = 20;
     private boolean isVisible = true;
 
-    HAlign textAlign = HAlign.LEFT;
+    HAlign textAlign = HAlign.CENTER;
     String text;
     Font font;
-    Color color;
+    Color color = Color.BLACK;
 
-    boolean metricsSet = false;
     double baselineOffset;
 
 
@@ -109,26 +108,23 @@ public class Title extends ChartComponent {
 
 
     @Override
-    protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+    protected void drawComponent(Figure<?, ?> source, ChartCanvas<?> canvas) {
         if (!isVisible()) {
             return;
         }
+        canvas.setFill(color);
         canvas.setFont(font);
-        if (!metricsSet) {
-            layout(source, canvas, minX, minY, maxX, maxY);
-            this.posX = minX;
-            this.posY = minY;
-
-        }
-        canvas.fillText(text, minX + paddingX * 0.5, minY + baselineOffset + paddingX * 0.5);
+        canvas.fillText(text, posX + paddingX * 0.5, posY + baselineOffset + paddingX * 0.5);
 
     }
 
     @Override
-    protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             sizeX = 0;
             sizeY = 0;
+            posX = minX;
+            posY = minY;
             return;
         }
         baselineOffset = source.getTextBaselineOffset(font);
@@ -138,7 +134,16 @@ public class Title extends ChartComponent {
             sizeX += source.getCharWidth(font, text.charAt(i++));
         }
         sizeY = source.getTextLineHeight(font) + paddingY;
+        this.posY = minY;
+        this.posX = minX;
+        if (textAlign != HAlign.LEFT) {
+            posX += (textAlign == HAlign.RIGHT ? 1 : 0.5) * (maxX - minX - sizeX);
+        }
+
     }
 
-
+    @Override
+    public String toString() {
+        return String.format("Title {%s, %s}", text, font);
+    }
 }

@@ -1,6 +1,9 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 
 public class Heatmap extends PlotSeries.Matrix<Heatmap> implements RectangularPlot{
 
@@ -35,5 +38,10 @@ public class Heatmap extends PlotSeries.Matrix<Heatmap> implements RectangularPl
     public Heatmap setCellHeight(double height) {
         this.cellHeight = height;
         return requestDataUpdate();
+    }
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Heatmap> plot) {
+
     }
 }

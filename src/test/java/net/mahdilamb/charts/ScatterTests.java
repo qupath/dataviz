@@ -10,13 +10,13 @@ import java.util.Map;
 import java.util.Objects;
 
 public class ScatterTests {
-    static DataFrame getDataFrame(final String resourcePath) {
+
+    static final DataFrame iris = loadData("iris.csv");
+    static final DataFrame tips = loadData("tips.csv");
+
+    public static DataFrame loadData(final String resourcePath) {
         return DataFrame.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource(resourcePath)).getFile()));
     }
-
-    static final DataFrame iris = getDataFrame("iris.csv");
-    static final DataFrame tips = getDataFrame("tips.csv");
-
 
     @Test
     public void PlotlyLineAndScatter0() {
@@ -87,6 +87,8 @@ public class ScatterTests {
                 .setColors("day")
                 .setShapes("time");
         System.out.println(c);
+
+
     }
 
     @Test
@@ -184,6 +186,7 @@ public class ScatterTests {
                 .setShape('+')
                 .setColor(".2")
                 .setSize(10);
+
         System.out.println(c);
     }
 
@@ -207,7 +210,6 @@ public class ScatterTests {
                 .setColors("day")
                 .setCols("time");
         System.out.println(c);
-        System.out.println(Figure.getGroupedLayoutForSeries(c));
     }
 
     @Test
@@ -251,6 +253,7 @@ public class ScatterTests {
                 .setSizes("size", 10, 100)
                 .setShapes("sex")
                 .setColorMap("b", "r");
+
         System.out.println(c);
     }
 }

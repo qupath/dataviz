@@ -1,6 +1,9 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 
 public final class PolarScatter extends PlotSeries<PolarScatter> implements CircularPlot{
     Scatter.Mode markerMode = Scatter.Mode.MARKER_ONLY;
@@ -55,4 +58,13 @@ public final class PolarScatter extends PlotSeries<PolarScatter> implements Circ
         return redraw();
     }
 
+    @Override
+    public int size() {
+        return r.length;
+    }
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends PolarScatter> plot) {
+
+    }
 }

@@ -2,7 +2,7 @@ package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Font;
-import net.mahdilamb.charts.graphics.Orientation;
+import net.mahdilamb.charts.graphics.Side;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.io.ImageExporter;
 import net.mahdilamb.charts.io.SVGExporter;
@@ -10,7 +10,10 @@ import net.mahdilamb.charts.plots.CircularPlot;
 import net.mahdilamb.charts.plots.RectangularPlot;
 import net.mahdilamb.charts.utils.StringUtils;
 import net.mahdilamb.colormap.Color;
-import net.mahdilamb.geom2d.geometries.Point;
+import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.QualitativeColormap;
+import net.mahdilamb.colormap.reference.qualitative.Plotly;
+import net.mahdilamb.colormap.reference.sequential.Viridis;
 
 import java.io.File;
 import java.util.*;
@@ -22,7 +25,10 @@ import java.util.function.BiConsumer;
  * @param <S>   the type of the series in the figure
  * @param <IMG> the image type of the canvas
  */
-public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<ChartComponent> {
+public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode {
+
+    public static final QualitativeColormap DEFAULT_QUALITATIVE_COLORMAP = new Plotly();
+    public static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = new Viridis();
 
     private static final Map<String, BiConsumer<File, Figure<?, ?>>> supportedFormats = new HashMap<>();
 
@@ -37,18 +43,16 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
         supportedFormats.put(".bmp", ImageExporter::toBMP);
     }
 
-    protected abstract static class PlotImpl<S extends PlotSeries<S>> extends ChartComponent implements Plot<S> {
 
-        KeyAreaImpl.LegendImpl.LegendGroup legendGroup;
+    protected abstract static class PlotImpl<S extends PlotSeries<S>> extends ChartComponent implements Plot<S> {
 
         ChartComponent singleAnnotation;
         List<ChartComponent> annotations;
-        PairedChartNode central; // to be used when adding colorscale/legend to the chart
+        ChartKeyNode central; // to be used when adding colorscale/legend to the chart
 
         @SafeVarargs
         PlotImpl(S... series) {
             this.series = series;
-
         }
 
         final S[] series;
@@ -101,15 +105,6 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
         }
 
 
-        public abstract Point getPositionFromValue(final double x, final double y);
-
-        public abstract Point getValueFromPosition(double x, double y);
-
-        @Override
-        protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
-
-        }
-
         protected Axis getAxis(final String name) {
             if (hasXAxis() && getXAxis().title != null && getXAxis().title.getText().equals(name)) {
                 return getXAxis();
@@ -144,11 +139,9 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
         }
     }
 
-    private static final Font DEFAULT_TITLE_FONT = new Font(Font.Family.SANS_SERIF, 20);
-
     protected static double DEFAULT_WIDTH = 800;
     protected static double DEFAULT_HEIGHT = 640;
-
+    protected static final Font DEFAULT_TITLE_FONT = new Font(Font.Family.SANS_SERIF, 18);
     protected Color backgroundColor;
 
     Title title;
@@ -156,10 +149,10 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
 
     double width, height;
 
-    KeyAreaImpl.ColorScaleImpl<S> colorScales;
-    KeyAreaImpl.LegendImpl<S> legend;
+    ColorScaleImpl<S> colorScales;
+    LegendImpl<S> legend;
 
-    PairedChartNode topArea, leftArea, rightArea, bottomArea;
+    ChartKeyNode topArea, leftArea, rightArea, bottomArea;
     final PlotImpl<S> plotArea;
 
     /**
@@ -168,17 +161,17 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
      * @param title  title of the chart
      * @param width  width of the chart
      * @param height height of the chart
-     * @param layout the layout, including series, of the chart
+     * @param plot   the layout, including series, of the chart
      */
-    protected Figure(String title, double width, double height, PlotImpl<S> layout) {
+    protected Figure(String title, double width, double height, PlotImpl<S> plot) {
         this.title = new Title(title, titleFont);
         this.title.assign(this);
         this.width = width;
         this.height = height;
-        this.plotArea = layout;
+        this.plotArea = plot;
         this.plotArea.assign(this);
-        this.legend = new KeyAreaImpl.LegendImpl<>();
-        this.colorScales = new KeyAreaImpl.ColorScaleImpl<>();
+        this.legend = new LegendImpl<>(plot);
+        this.colorScales = new ColorScaleImpl<>(plot);
         legend.assign(this);
         colorScales.assign(this);
         setKeyArea(legend);
@@ -186,12 +179,12 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
     }
 
     void setKeyArea(KeyAreaImpl<?> keyArea) {
-        if (keyArea.parentNode != null) {
-            keyArea.parentNode.remove(keyArea);
+        if (keyArea.parent != null) {
+            (keyArea.parent).remove(keyArea);
         }
         if (keyArea.isFloating) {
             if (plotArea.central == null) {
-                plotArea.central = new PairedChartNode(null);
+                plotArea.central = new ChartKeyNode();
             }
             plotArea.central.add(keyArea);
             return;
@@ -199,25 +192,25 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
         switch (keyArea.side) {
             case LEFT:
                 if (leftArea == null) {
-                    leftArea = new PairedChartNode(Orientation.VERTICAL);
+                    leftArea = new ChartKeyNode(Side.LEFT);
                 }
                 leftArea.add(keyArea);
                 return;
             case RIGHT:
                 if (rightArea == null) {
-                    rightArea = new PairedChartNode(Orientation.VERTICAL);
+                    rightArea = new ChartKeyNode(Side.RIGHT);
                 }
                 rightArea.add(keyArea);
                 return;
             case BOTTOM:
                 if (bottomArea == null) {
-                    bottomArea = new PairedChartNode(Orientation.HORIZONTAL);
+                    bottomArea = new ChartKeyNode(Side.BOTTOM);
                 }
                 bottomArea.add(keyArea);
                 return;
             case TOP:
                 if (topArea == null) {
-                    topArea = new PairedChartNode(Orientation.HORIZONTAL);
+                    topArea = new ChartKeyNode(Side.TOP);
                 }
                 topArea.add(keyArea);
                 return;
@@ -235,7 +228,6 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
     protected void add(ChartComponent keyArea) {
         throw new UnsupportedOperationException();
     }
-
 
     /**
      * @return the width of the chart
@@ -262,10 +254,8 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
      * @param <S>    the type of the series
      * @return a layout for the series
      */
-    //todo non-condensed version - one packed, one all rows
     @SafeVarargs
     protected static <S extends PlotSeries<S>> PlotImpl<S> getGroupedLayoutForSeries(S... series) {
-
         if (series.length == 0) {
             //empty plot
             return new Chart.RectangularPlot<>(new Axis(null, 0, 100), new Axis(null, 0, 100), series);
@@ -274,11 +264,16 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
             if (series[0].data != null && (series[0].facetCol != null || series[0].facetRow != null)) {
                 return new Chart.FacetPlot<>(series[0]);
             }
+
             if (series[0] instanceof RectangularPlot) {
                 final RectangularPlot t = (RectangularPlot) series[0];
+                final double xRange = (t.getMaxX() - t.getMinX());
+                final double yRange = (t.getMaxY() - t.getMinY());
+                final Axis xAxis = new Axis(t.getXLabel(), t.getMinX(), t.getMaxX());
+                final Axis yAxis = new Axis(t.getYLabel(), t.getMinY(), t.getMaxY());
                 return new Chart.RectangularPlot<>(
-                        new Axis(t.getXLabel(), t.getMinX(), t.getMaxX()),
-                        new Axis(t.getYLabel(), t.getMinY(), t.getMaxY()),
+                        xAxis,
+                        yAxis,
                         series
                 );
             } else {
@@ -294,10 +289,10 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
             }
         }
         if (numCircular > 0 && numRectangular == 0) {
-            //all circular
+            //all circular - try to combine
             //todo
         } else if (numRectangular > 0 && numCircular == 0) {
-            //all rectangular
+            //all rectangular - try to combine
             final Map<String, List<S>> xAxes = new HashMap<>(numRectangular);
             final Map<String, List<S>> yAxes = new HashMap<>(numRectangular);
             for (final S s : series) {
@@ -318,74 +313,159 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
                 final Axis xAxis = new Axis(xAxes.size() == 0 ? null : ((RectangularPlot) series[0]).getXLabel(), xMin, xMax);
                 final Axis yAxis = new Axis(yAxes.size() == 0 ? null : ((RectangularPlot) series[0]).getYLabel(), yMin, yMax);
                 return new Chart.RectangularPlot<>(xAxis, yAxis, series);
-            } else {
-                //TODO multiplot of rectangular plots
             }
-        } else {
-            //TODO mixed rectangular and circular
         }
+        //todo grid plots
         return null;
     }
 
     @Override
-    protected void layout(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
-        if (!layoutNeedsRefresh) {
-            return;
-        }
+    protected void layoutComponent(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
         if (title.isVisible()) {
-            title.layout(source, canvas, minX, minY, maxX, maxY);
+            title.layoutComponent(source, minX, minY, maxX, maxY);
             minY += title.sizeY;
+        } else {
+            minY += 2;//todo padding
         }
-        layoutComponent(leftArea, canvas, source, minX, minY, maxX, maxY);
+        layoutComponent(leftArea, source, minX, minY, maxX, maxY);
         if (leftArea != null) {
             minX += leftArea.sizeX;
         }
-        layoutComponent(rightArea, canvas, source, minX, minY, maxX, maxY);
+        layoutComponent(rightArea, source, minX, minY, maxX, maxY);
         if (rightArea != null) {
             maxX -= rightArea.sizeX;
         }
-        layoutComponent(topArea, canvas, source, minX, minY, maxX, maxY);
+        layoutComponent(topArea, source, minX, minY, maxX, maxY);
         if (topArea != null) {
             minY += topArea.sizeY;
         }
-        layoutComponent(bottomArea, canvas, source, minX, minY, maxX, maxY);
+        layoutComponent(bottomArea, source, minX, minY, maxX, maxY);
         if (bottomArea != null) {
             maxY -= bottomArea.sizeY;
         }
-        //todo update positions
-        layoutNeedsRefresh = false;
+        if (title.isVisible()) {
+            title.layoutComponent(source, minX, 0, maxX, maxY);
+        }
+        final double height = maxY - minY;
+        final double width = maxX - minX;
+        if (rightArea != null) {
+            rightArea.posX = maxX;
+            rightArea.posY = minY;
+            rightArea.sizeY = height;
+            rightArea.alignChildren(source, height, width);
+        }
+        if (leftArea != null) {
+            leftArea.posX = 0;
+            leftArea.posY = minY;
+            leftArea.sizeY = height;
+            leftArea.alignChildren(source, height, width);
+        }
+        if (topArea != null) {
+            topArea.posY = title.sizeY;
+            topArea.posX = minX;
+            topArea.sizeX = width;
+            topArea.alignChildren(source, height, width);
+        }
+        if (bottomArea != null) {
+            bottomArea.posY = maxY;
+            bottomArea.posX = minX;
+            bottomArea.sizeX = width;
+            bottomArea.alignChildren(source, height, width);
+        }
+        plotArea.layoutComponent(source, minX, minY, maxX, maxY);
     }
 
-    private void layoutComponent(final ChartComponent component, ChartCanvas<?> canvas, Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
-        if (component == null) {
-            return;
-        }
-        component.layout(source, canvas, minX, minY, maxX, maxY);
-    }
 
     @Override
-    protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+    protected void drawComponent(Figure<?, ?> source, ChartCanvas<?> canvas) {
         canvas.reset();
-
-        //  drawBounds(canvas, leftArea);
-        canvas.strokeRect(0, 0, 50, 60);
-
+        title.drawComponent(source, canvas);
+        plotArea.drawComponent(source, canvas);
+        canvas.setStroke(new Stroke(Color.GREEN, 1));
+        if (rightArea != null) {
+            rightArea.draw(source, canvas);
+        }
+        if (leftArea != null) {
+            leftArea.draw(source, canvas);
+        }
+        if (topArea != null) {
+            topArea.draw(source, canvas);
+        }
+        if (bottomArea != null) {
+            bottomArea.draw(source, canvas);
+        }
         canvas.done();
     }
 
-    /**
-     * Layout the chart locally
-     */
-    protected final Figure<S, ?> redraw() {
-        return redraw(getCanvas());
+    private void layoutComponent(final ChartComponent component, Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
+        if (component == null) {
+            return;
+        }
+        component.layoutComponent(source, minX, minY, maxX, maxY);
     }
 
-    protected final Figure<S, ?> redraw(final ChartCanvas<?> canvas) {
-        layout(this, canvas, 0, 0, width, height);
-        draw(this, canvas, 0, 0, width, height);
+    /**
+     * Draw the chart locally
+     */
+    protected final Figure<S, ?> redraw() {
+        layoutComponent(this, 0, 0, width, height);
+        drawComponent(this, getCanvas());
         return this;
     }
 
+    /**
+     * Draw the figure on the given canvas
+     *
+     * @param canvas the canvas to draw on
+     * @return this figure
+     */
+    protected final Figure<S, ?> redraw(final ChartCanvas<?> canvas) {
+        markDrawAsOld();
+        layoutComponent(this, 0, 0, width, height);
+        drawComponent(this, canvas);
+        return this;
+    }
+
+    @Override
+    protected void markLayoutAsOld() {
+        if (leftArea != null) {
+            leftArea.markLayoutAsOld();
+        }
+        if (rightArea != null) {
+            rightArea.markLayoutAsOld();
+        }
+        if (topArea != null) {
+            topArea.markLayoutAsOld();
+        }
+        if (bottomArea != null) {
+            bottomArea.markLayoutAsOld();
+        }
+        if (plotArea != null) {
+            plotArea.markLayoutAsOld();
+        }
+        super.markLayoutAsOld();
+    }
+
+    @Override
+    protected void markDrawAsOld() {
+        if (leftArea != null) {
+            leftArea.markDrawAsOld();
+        }
+        if (rightArea != null) {
+            rightArea.markDrawAsOld();
+        }
+        if (topArea != null) {
+            topArea.markDrawAsOld();
+        }
+        if (bottomArea != null) {
+            bottomArea.markDrawAsOld();
+        }
+        if (plotArea != null) {
+            plotArea.markDrawAsOld();
+        }
+        super.markDrawAsOld();
+    }
+    /* Background methods */
 
     /**
      * Set the background color of this chart by the name
@@ -393,7 +473,7 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
      * @param colorName the name of the color
      */
     public final void setBackgroundColor(String colorName) {
-        setBackgroundColor(Color.get(colorName));
+        setBackgroundColor(StringUtils.convertToColor(colorName));
     }
 
     /**
@@ -418,6 +498,8 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
     public final Color getBackgroundColor() {
         return backgroundColor;
     }
+
+    /* Canvas methods */
 
     /**
      * @return the canvas of the chart
@@ -484,6 +566,8 @@ public abstract class Figure<S extends PlotSeries<S>, IMG> extends ChartNode<Cha
      * @return the packed into from an image at a specific position
      */
     protected abstract int argbFromImage(IMG image, int x, int y);
+
+    /*  Export methods  */
 
     /**
      * Register a file format

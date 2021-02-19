@@ -1,12 +1,11 @@
 package net.mahdilamb.charts;
 
 import net.mahdilamb.charts.graphics.ChartCanvas;
-import net.mahdilamb.geom2d.geometries.Point;
+import net.mahdilamb.charts.graphics.ClipShape;
 
 import java.util.Objects;
 
 public abstract class Chart<S extends PlotSeries<S>, IMG> extends Figure<S, IMG> {
-
 
     /**
      * Create a chart figure
@@ -77,10 +76,11 @@ public abstract class Chart<S extends PlotSeries<S>, IMG> extends Figure<S, IMG>
     /**
      * An XY plot layout
      */
-    public static class RectangularPlot<S extends PlotSeries<S>> extends PlotImpl<S> {
+    static class RectangularPlot<S extends PlotSeries<S>> extends PlotImpl<S> {
 
 
         private final Axis xAxis, yAxis;
+        private PlotSeries<?> xMarginal, yMarginal;
 
         @SafeVarargs
         public RectangularPlot(Axis xAxis, Axis yAxis, S... series) {
@@ -90,9 +90,45 @@ public abstract class Chart<S extends PlotSeries<S>, IMG> extends Figure<S, IMG>
 
         }
 
-        @Override
-        protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        @SafeVarargs
+        public RectangularPlot(Axis xAxis, Axis yAxis, PlotSeries<?> xMarginal, PlotSeries<?> yMarginal, S... series) {
+            this(xAxis, yAxis, series);
+            this.xMarginal = xMarginal;
+            this.yMarginal = yMarginal;
         }
+
+        @Override
+        protected void layoutComponent(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
+            setBoundsFromExtent(minX, minY, maxX, maxY);
+            //todo check for y marginal
+            yAxis.partialLayoutYAxis(source, minX, minY, maxX, maxY);
+            xAxis.posX = yAxis.posX + yAxis.sizeX;
+
+            //todo check for x marginal
+            xAxis.partialLayoutXAxis(source, minX, minY, maxX, maxY);
+            yAxis.sizeY = xAxis.posY - yAxis.posY;
+            xAxis.updateXAxisScale();
+            yAxis.updateYAxisScale();
+        }
+
+        @Override
+        protected void drawComponent(Figure<?, ?> source, ChartCanvas<?> canvas) {
+            if (backgroundColor != null) {
+                canvas.setFill(backgroundColor);
+                canvas.fillRect(xAxis.posX, yAxis.posY, xAxis.sizeX, yAxis.sizeY);
+            }
+            xAxis.drawXGrid(source, canvas, yAxis);
+            yAxis.drawYGrid(source, canvas, xAxis);
+
+            xAxis.drawXAxis(source, canvas, yAxis);
+            yAxis.drawYAxis(source, canvas, xAxis);
+            canvas.setClip(ClipShape.RECTANGLE, xAxis.posX, yAxis.posY, xAxis.sizeX, yAxis.sizeY);
+            for (final S s : series) {
+                s.drawSeries(source, canvas, this);
+            }
+            canvas.clearClip();
+        }
+
 
         public Axis getXAxis() {
             return xAxis;
@@ -102,40 +138,23 @@ public abstract class Chart<S extends PlotSeries<S>, IMG> extends Figure<S, IMG>
             return yAxis;
         }
 
-        @Override
-        public Point getPositionFromValue(double x, double y) {
-            //TODO
-            return null;
-        }
-
-        @Override
-        public Point getValueFromPosition(double x, double y) {
-            //TODO
-            return null;
-        }
     }
 
-    public static class FacetPlot<S extends PlotSeries<S>> extends PlotImpl<S> {
+    static class FacetPlot<S extends PlotSeries<S>> extends PlotImpl<S> {
         FacetPlot(final S series) {
             super(series);
         }
 
         @Override
-        protected void draw(Figure<?, ?> source, ChartCanvas<?> canvas, double minX, double minY, double maxX, double maxY) {
+        protected void layoutComponent(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
 
         }
 
         @Override
-        public Point getPositionFromValue(double x, double y) {
-            //TODO
-            return null;
+        protected void drawComponent(Figure<?, ?> source, ChartCanvas<?> canvas) {
+
         }
 
-        @Override
-        public Point getValueFromPosition(double x, double y) {
-            //TODO
-            return null;
-        }
     }
 
 }

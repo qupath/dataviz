@@ -1,6 +1,9 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 
 public class HexBinned extends PlotSeries.Distribution2D<HexBinned> implements RectangularPlot{
     int nBinsX = -1, nBinsY = 1;
@@ -17,5 +20,10 @@ public class HexBinned extends PlotSeries.Distribution2D<HexBinned> implements R
     public HexBinned setBinsY(int nBins) {
         this.nBinsY = nBins;
         return requestDataUpdate();
+    }
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends HexBinned> plot) {
+
     }
 }

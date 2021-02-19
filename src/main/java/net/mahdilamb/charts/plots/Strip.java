@@ -1,8 +1,10 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Orientation;
-import net.mahdilamb.charts.dataframe.utils.GroupBy;
 
 public class Strip extends PlotSeries.Distribution<Strip>  {
 
@@ -34,4 +36,8 @@ public class Strip extends PlotSeries.Distribution<Strip>  {
     }
 
 
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Strip> plot) {
+
+    }
 }

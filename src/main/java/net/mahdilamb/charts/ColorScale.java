@@ -15,9 +15,6 @@ public interface ColorScale extends KeyArea<ColorScale> {
     ColorScale setGroupSpacing(double spacing);
 
     @Override
-    ColorScale setTitle(String title);
-
-    @Override
     ColorScale setTitleFont(Font font);
 
     @Override

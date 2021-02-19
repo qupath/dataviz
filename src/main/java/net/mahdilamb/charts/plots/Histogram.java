@@ -1,6 +1,9 @@
 package net.mahdilamb.charts.plots;
 
+import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
+import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.Orientation;
 import net.mahdilamb.charts.statistics.BinWidthEstimator;
 import net.mahdilamb.charts.statistics.StatUtils;
@@ -51,5 +54,10 @@ public final class Histogram extends PlotSeries.Distribution<Histogram>implement
     public Histogram setCumulative(final boolean cumulative) {
         this.useCumulative = cumulative;
         return requestDataUpdate();
+    }
+
+    @Override
+    protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Histogram> plot) {
+
     }
 }

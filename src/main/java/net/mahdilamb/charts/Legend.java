@@ -14,9 +14,6 @@ public interface Legend extends KeyArea<Legend> {
     Legend setGroupSpacing(double spacing);
 
     @Override
-    Legend setTitle(String title);
-
-    @Override
     Legend setTitleFont(Font font);
 
     @Override
