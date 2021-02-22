@@ -21,6 +21,7 @@ import net.mahdilamb.colormap.Colormaps;
 import java.util.*;
 import java.util.function.*;
 
+import static net.mahdilamb.charts.Figure.DEFAULT_QUALITATIVE_COLORMAP;
 import static net.mahdilamb.charts.utils.ArrayUtils.rescale;
 import static net.mahdilamb.charts.utils.ArrayUtils.toArray;
 import static net.mahdilamb.charts.utils.StringUtils.EMPTY_STRING;
@@ -65,6 +66,8 @@ public final class Scatter extends AbstractScatter<Scatter> implements Rectangul
 
     Marker marker = new Marker();
     private List<ScatterPoint<Scatter>> points;
+    List<LineElement> lines;
+
 
     /**
      * Create a scatter series from an array of doubles and a function which maps those values to y
@@ -567,29 +570,37 @@ public final class Scatter extends AbstractScatter<Scatter> implements Rectangul
 
     @Override
     protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Scatter> plot) {
-        if (showEdges) {
-            System.out.println(edge);
+        if (markerMode != Mode.MARKER_ONLY) {
+            if (lineStyle == null) {
+                lineStyle = new Stroke(DEFAULT_QUALITATIVE_COLORMAP.get(0), 2);
+            }
+            canvas.setStroke(lineStyle);
+            for (final LineElement l : getLines()) {
+
+                canvas.strokeLine(convertXToPosition(plot, l.startX), convertYToPosition(plot, l.startY), convertXToPosition(plot, l.endX), convertYToPosition(plot, l.endY));
+            }
         }
-
-        final TraceGroup<?> shapes = getAttribute(AttributeType.SHAPE);
-        @SuppressWarnings("unchecked") final FromGroupIdMap<MarkerShape> markers = (shapes != null && shapes.source.getClass() == FromGroupIdMap.class) ? ((FromGroupIdMap<MarkerShape>) shapes.source) : null;
-
-        for (final ScatterPoint<Scatter> s : getPoints()) {
+        if(markerMode != Mode.LINE_ONLY){
+            final TraceGroup<?> shapes = getAttribute(AttributeType.SHAPE);
             if (showEdges) {
                 canvas.setStroke(edge);
             }
-            marker.shape = markers == null ? shape : markers.get(s.i);
-            canvas.setFill(s.getColor());
-            marker.x = convertXToPosition(plot, s.getMidX());
-            marker.y = convertYToPosition(plot, s.getMidY());
-            marker.size = s.getSize();
+            @SuppressWarnings("unchecked") final FromGroupIdMap<MarkerShape> markers = (shapes != null && shapes.source.getClass() == FromGroupIdMap.class) ? ((FromGroupIdMap<MarkerShape>) shapes.source) : null;
+            for (final ScatterPoint<Scatter> s : getPoints()) {
+                marker.shape = markers == null ? shape : markers.get(s.i);
+                canvas.setFill(s.getColor());
+                marker.x = convertXToPosition(plot, s.getMidX());
+                marker.y = convertYToPosition(plot, s.getMidY());
+                marker.size = s.getSize();
 
-            marker.fill(canvas);
-            if (showEdges) {
-                marker.stroke(canvas);
+                marker.fill(canvas);
+                if (showEdges) {
+                    marker.stroke(canvas);
+                }
+
             }
-
         }
+
     }
 
     @Override

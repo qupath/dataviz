@@ -258,7 +258,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
             for (final GroupBy.Group<String> g : groups) {
                 data[g.getID()] = converter.apply(g.getID());
             }
-            this.groups = groups.toArray();
+            this.groups = groups.toMeltedArray();
         }
 
         public T get(int index) {
@@ -278,7 +278,7 @@ public abstract class PlotSeries<S extends PlotSeries<S>> {
             for (final GroupBy.Group<String> g : groups) {
                 data[g.getID()] = converter.apply(g.get());
             }
-            this.groups = groups.toArray();
+            this.groups = groups.toMeltedArray();
         }
 
         public T get(int index) {

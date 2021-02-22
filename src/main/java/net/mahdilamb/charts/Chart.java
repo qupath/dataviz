@@ -109,6 +109,7 @@ public abstract class Chart<S extends PlotSeries<S>, IMG> extends Figure<S, IMG>
             yAxis.sizeY = xAxis.posY - yAxis.posY;
             xAxis.updateXAxisScale();
             yAxis.updateYAxisScale();
+
         }
 
         @Override
@@ -123,6 +124,7 @@ public abstract class Chart<S extends PlotSeries<S>, IMG> extends Figure<S, IMG>
             xAxis.drawXAxis(source, canvas, yAxis);
             yAxis.drawYAxis(source, canvas, xAxis);
             canvas.setClip(ClipShape.RECTANGLE, xAxis.posX, yAxis.posY, xAxis.sizeX, yAxis.sizeY);
+
             for (final S s : series) {
                 s.drawSeries(source, canvas, this);
             }

@@ -10,7 +10,7 @@ import java.text.DecimalFormat;
 public final class Axis extends ChartComponent {
     public enum Mode {
         LINEAR,
-        LOGICAL,
+        LOGARITHMIC,
         CATEGORICAL
     }
 
@@ -113,23 +113,25 @@ public final class Axis extends ChartComponent {
         fraction = range / Math.pow(10, exponent);
 
         if (round) {
-            if (fraction < 1.5)
+            if (fraction < 1.5) {
                 niceFraction = 1;
-            else if (fraction < 3)
+            } else if (fraction < 3) {
                 niceFraction = 2;
-            else if (fraction < 7)
+            } else if (fraction < 7) {
                 niceFraction = 5;
-            else
+            } else {
                 niceFraction = 10;
+            }
         } else {
-            if (fraction <= 1)
+            if (fraction <= 1) {
                 niceFraction = 1;
-            else if (fraction <= 2)
+            } else if (fraction <= 2) {
                 niceFraction = 2;
-            else if (fraction <= 5)
+            } else if (fraction <= 5) {
                 niceFraction = 5;
-            else
+            } else {
                 niceFraction = 10;
+            }
         }
         return niceFraction * Math.pow(10, exponent);
     }
@@ -276,8 +278,7 @@ public final class Axis extends ChartComponent {
     public Axis setRange(double lowerBound, double upperBound) {
         if (!Double.isFinite(lowerBound) || !Double.isFinite(upperBound)) {
             autoRanged = true;
-            currentLowerBound = Double.NEGATIVE_INFINITY;
-            currentUpperBound = Double.POSITIVE_INFINITY;
+            updateRangeToBest();
             return redraw();
         }
         autoRanged = false;
@@ -298,6 +299,7 @@ public final class Axis extends ChartComponent {
     }
 
     protected Axis redraw() {
+
         return (Axis) super.redraw();
     }
 
@@ -312,6 +314,7 @@ public final class Axis extends ChartComponent {
     }
 
     void partialLayoutYAxis(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
+
         this.posX = minX;
         this.posY = minY;
         sizeX = 0;
@@ -329,7 +332,6 @@ public final class Axis extends ChartComponent {
             sizeX += source.getTextWidth(labelFont, StringUtils.longerString(a, b)) + labelPadding;
         }
     }
-
 
 
     void partialLayoutXAxis(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
@@ -438,10 +440,12 @@ public final class Axis extends ChartComponent {
         double remainder = Numbers.mod(v, spacing);
         return v - remainder + spacing;
     }
+
     private static double getIterEnd(double v, double spacing) {
         double remainder = Numbers.mod(v, spacing);
-        return v - remainder ;
+        return v - remainder;
     }
+
     void drawYAxis(Figure<?, ?> source, ChartCanvas<?> canvas, Axis xAxis) {
         switch (mode) {
             case LINEAR:

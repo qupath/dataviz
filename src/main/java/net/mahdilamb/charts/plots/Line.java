@@ -21,46 +21,6 @@ import static net.mahdilamb.charts.utils.ArrayUtils.toArray;
 
 public class Line extends AbstractScatter<Line> implements RectangularPlot {
 
-    protected static class LineElement extends RectangularNode<Runnable> {
-        public Stroke stroke;
-        double startX, startY, endX, endY;
-        Line series;
-        int i;
-        Color color = null;
-
-
-        public LineElement(double startX, double startY, double endX, double endY) {
-            super(Math.min(startX, endX), Math.min(startY, endY), Math.max(startX, endX), Math.max(startY, endY));
-            this.startX = startX;
-            this.startY = startY;
-            this.endX = endX;
-            this.endY = endY;
-        }
-
-        public Color getColor() {
-            if (color == null) {
-                color = series.color == null ? DEFAULT_QUALITATIVE_COLORMAP.get(0) : series.color;
-                final TraceGroup<?> colors = series.getAttribute(AttributeType.COLOR);
-                if (colors != null) {
-                    if (colors.source.getClass() == QualitativeColorAttribute.class) {
-                        final Colormap colormap = ((QualitativeColorAttribute) colors.source).colormap == null ? DEFAULT_QUALITATIVE_COLORMAP : ((QualitativeColorAttribute) colors.source).colormap;
-                        color = ((QualitativeColorAttribute) colors.source).get(colormap, i);
-                    } else {
-                        throw new UnsupportedOperationException();
-                    }
-                }
-                final TraceGroup<?> opacities = series.getAttribute(AttributeType.OPACITY);
-                //TODO apply opacity
-                if (series.opacity != 1) {
-                    color = new Color(color.red(), color.green(), color.blue(), series.opacity);
-                }
-            }
-            return color;
-        }
-
-
-    }
-
     boolean fillGaps = false;
 
     Stroke errorUpperStroke;
@@ -73,7 +33,6 @@ public class Line extends AbstractScatter<Line> implements RectangularPlot {
 
     Stroke bandStroke;
     Color bandFill;
-    List<LineElement> lines;
 
     public Line(double[] x, double[] y) {
         super(x, y);
@@ -158,47 +117,7 @@ public class Line extends AbstractScatter<Line> implements RectangularPlot {
         return requestDataUpdate();
     }
 
-    private List<LineElement> getLines() {
-        if (lines == null) {
-            final TraceGroup<?> colors = getAttribute(AttributeType.COLOR);
-            if (colors != null) {
-                if (colors.source.getClass() == QualitativeColorAttribute.class) {
-                    lines = new ArrayList<>(x.size());
 
-                    for (final GroupBy.Group<String> group : ((QualitativeColorAttribute) colors.source).groups) {
-                        int last = -1;
-                        final Colormap colormap = ((QualitativeColorAttribute) colors.source).colormap == null ? DEFAULT_QUALITATIVE_COLORMAP : ((QualitativeColorAttribute) colors.source).colormap;
-                        color = ((QualitativeColorAttribute) colors.source).getI(colormap, group.getID());
-                        Stroke currentStroke = new Stroke(color, lineStyle.getWidth());
-                        for (int i : group) {
-                            if (last != -1) {
-                                final LineElement line = new LineElement(x.get(last), y.get(last), x.get(i), y.get(i));
-                                line.i = last;
-                                line.series = this;
-
-                                line.stroke = currentStroke;
-                                lines.add(line);
-                            }
-                            last = i;
-                        }
-                    }
-                } else {
-                    throw new UnsupportedOperationException();
-                }
-            } else {
-                int j = x.size() - 1;
-                lines = new ArrayList<>(j);
-                for (int i = 1, k = 0; i < j; k = i++) {
-                    final LineElement line = new LineElement(x.get(k), y.get(k), x.get(i), y.get(i));
-                    line.i = k;
-                    line.series = this;
-                    lines.add(line);
-                }
-            }
-
-        }
-        return lines;
-    }
 
     @Override
     protected void drawSeries(Figure<?, ?> source, ChartCanvas<?> canvas, Plot<? extends Line> plot) {

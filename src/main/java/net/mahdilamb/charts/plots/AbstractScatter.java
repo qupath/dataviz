@@ -1,10 +1,9 @@
 package net.mahdilamb.charts.plots;
 
 import net.mahdilamb.charts.Figure;
-import net.mahdilamb.charts.Plot;
 import net.mahdilamb.charts.PlotSeries;
 import net.mahdilamb.charts.dataframe.utils.DoubleArrayList;
-import net.mahdilamb.charts.graphics.ChartCanvas;
+import net.mahdilamb.charts.dataframe.utils.GroupBy;
 import net.mahdilamb.charts.graphics.MarkerShape;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.charts.statistics.StatUtils;
@@ -13,20 +12,55 @@ import net.mahdilamb.charts.utils.IntersectsPoint;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.geom2d.trees.PointNode;
+import net.mahdilamb.geom2d.trees.RectangularNode;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.DoubleUnaryOperator;
-import java.util.function.ObjDoubleConsumer;
 
 import static net.mahdilamb.charts.Figure.DEFAULT_QUALITATIVE_COLORMAP;
 import static net.mahdilamb.charts.plots.Scatter.DEFAULT_MARKER_SIZE;
 import static net.mahdilamb.charts.utils.ArrayUtils.rescale;
 
 abstract class AbstractScatter<S extends AbstractScatter<S>> extends PlotSeries<S> implements RectangularPlot {
+    protected static class LineElement extends RectangularNode<Runnable> {
+        public Stroke stroke;
+        double startX, startY, endX, endY;
+        AbstractScatter<?> series;
+        int i;
+        Color color = null;
+
+
+        public LineElement(double startX, double startY, double endX, double endY) {
+            super(Math.min(startX, endX), Math.min(startY, endY), Math.max(startX, endX), Math.max(startY, endY));
+            this.startX = startX;
+            this.startY = startY;
+            this.endX = endX;
+            this.endY = endY;
+        }
+
+        public Color getColor() {
+            if (color == null) {
+                color = series.color == null ? DEFAULT_QUALITATIVE_COLORMAP.get(0) : series.color;
+                final TraceGroup<?> colors = series.getAttribute(AttributeType.COLOR);
+                if (colors != null) {
+                    if (colors.source.getClass() == QualitativeColorAttribute.class) {
+                        final Colormap colormap = ((QualitativeColorAttribute) colors.source).colormap == null ? DEFAULT_QUALITATIVE_COLORMAP : ((QualitativeColorAttribute) colors.source).colormap;
+                        color = ((QualitativeColorAttribute) colors.source).get(colormap, i);
+                    } else {
+                        throw new UnsupportedOperationException();
+                    }
+                }
+                final TraceGroup<?> opacities = series.getAttribute(AttributeType.OPACITY);
+                //TODO apply opacity
+                if (series.opacity != 1) {
+                    color = new Color(color.red(), color.green(), color.blue(), series.opacity);
+                }
+            }
+            return color;
+        }
+
+    }
 
     protected static final class ScatterPoint<S extends AbstractScatter<S>> extends PointNode<Runnable> implements IntersectsPoint {
 
@@ -56,23 +90,24 @@ abstract class AbstractScatter<S extends AbstractScatter<S>> extends PlotSeries<
                 if (colors != null) {
                     if (colors.source.getClass() == QualitativeColorAttribute.class) {
                         final Colormap colormap = ((QualitativeColorAttribute) colors.source).colormap == null ? DEFAULT_QUALITATIVE_COLORMAP : ((QualitativeColorAttribute) colors.source).colormap;
-                        color = ((QualitativeColorAttribute) colors.source).get(colormap,i);
+                        color = ((QualitativeColorAttribute) colors.source).get(colormap, i);
                     } else {
                         throw new UnsupportedOperationException();
                     }
                 }
                 final TraceGroup<?> opacities = series.getAttribute(AttributeType.OPACITY);
                 //TODO apply opacity
-                if(series.opacity !=1){
-                    color = new Color(color.red(),color.green(),color.blue(),series.opacity);
+                if (series.opacity != 1) {
+                    color = new Color(color.red(), color.green(), color.blue(), series.opacity);
                 }
             }
             return color;
         }
-        public double getSize(){
+
+        public double getSize() {
             final TraceGroup<?> sizes = series.getAttribute(AttributeType.SIZE);
-            if (sizes != null){
-                return ((DimensionMap)sizes.source).get(i);
+            if (sizes != null) {
+                return ((DimensionMap) sizes.source).get(i);
             }
             return series.size;
         }
@@ -101,6 +136,9 @@ abstract class AbstractScatter<S extends AbstractScatter<S>> extends PlotSeries<
      * Stores the min and max of each axis
      */
     double minX, maxX, minY, maxY;
+
+    List<LineElement> lines;
+
 
     protected AbstractScatter(String name, double[] x, double[] y) {
         if (x.length != y.length) {
@@ -296,12 +334,52 @@ abstract class AbstractScatter<S extends AbstractScatter<S>> extends PlotSeries<
         return String.format("Scatter {name: %s, n: %d, %sx%s: %.2f to %.2f, %sy%s: %.2f to %.2f}", name, size(), sep, formatName(xLabel), minX, maxX, sep, formatName(yLabel), minY, maxY);
     }
 
-
     @Override
     protected <T> TraceGroup<T> addAttribute(AttributeType type, TraceGroup<T> attribute) {
-        if (attribute.traces !=null && attribute.traces.length > 1){
+        if (attribute.traces != null && attribute.traces.length > 1) {
             opacity = 0.8;
         }
         return super.addAttribute(type, attribute);
+    }
+
+    protected List<LineElement> getLines() {
+        if (lines == null) {
+            final TraceGroup<?> colors = getAttribute(AttributeType.COLOR);
+            if (colors != null) {
+                if (colors.source.getClass() == QualitativeColorAttribute.class) {
+                    lines = new ArrayList<>(x.size());
+
+                    for (final GroupBy.Group<String> group : ((QualitativeColorAttribute) colors.source).groups) {
+                        int last = -1;
+                        final Colormap colormap = ((QualitativeColorAttribute) colors.source).colormap == null ? DEFAULT_QUALITATIVE_COLORMAP : ((QualitativeColorAttribute) colors.source).colormap;
+                        color = ((QualitativeColorAttribute) colors.source).getI(colormap, group.getID());
+                        Stroke currentStroke = new Stroke(color, lineStyle.getWidth());
+                        for (int i : group) {
+                            if (last != -1) {
+                                final LineElement line = new LineElement(x.get(last), y.get(last), x.get(i), y.get(i));
+                                line.i = last;
+                                line.series = this;
+                                line.stroke = currentStroke;
+                                lines.add(line);
+                            }
+                            last = i;
+                        }
+                    }
+                } else {
+                    throw new UnsupportedOperationException();
+                }
+            } else {
+                int j = x.size() - 1;
+                lines = new ArrayList<>(j);
+                for (int i = 1, k = 0; i < size(); k = i++) {
+                    final LineElement line = new LineElement(x.get(k), y.get(k), x.get(i), y.get(i));
+                    line.i = k;
+                    line.series = this;
+                    lines.add(line);
+                }
+            }
+
+        }
+        return lines;
     }
 }
