@@ -1,7 +1,6 @@
 package net.mahdilamb.charts.graphics.shapes;
 
 import net.mahdilamb.charts.graphics.ChartCanvas;
-import net.mahdilamb.charts.graphics.Fill;
 import net.mahdilamb.charts.graphics.MarkerShape;
 
 //TODO check all

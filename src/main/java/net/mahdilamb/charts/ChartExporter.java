@@ -9,14 +9,18 @@ import net.mahdilamb.charts.graphics.ChartCanvas;
  * These methods could also be implemented with reflection, if the details are needed elsewhere
  */
 public abstract class ChartExporter {
+    protected static <T> Figure getFigure(Renderer<T> renderer) {
+        return renderer.figure;
+    }
+
     /**
      * Lays out a chart on a destination canvas
      *
      * @param dest   the destination canvas
      * @param source the source chart
      */
-    protected static void layoutChart(ChartCanvas<?> dest, Figure<?, ?> source) {
-        source.redraw(dest);
+    protected static <T> void layoutChart(ChartCanvas<T> dest, Renderer<?> source) {
+        source.refresh(dest);
     }
 
     /**
@@ -25,7 +29,7 @@ public abstract class ChartExporter {
      * @return the bytes of an image encoded as PNG
      * @throws ClassCastException if the method is used on a chart which uses a different type of image
      */
-    protected static <T> byte[] imageToBytes(T image, Figure<?, T> source) {
+    protected static <T> byte[] imageToBytes(T image, Renderer<T> source) {
         return source.bytesFromImage(image);
     }
 
@@ -35,7 +39,7 @@ public abstract class ChartExporter {
      * @return the width of an image
      * @throws ClassCastException if the method is used on a chart which uses a different type of image
      */
-    protected static <T> double getImageHeight(T image, Figure<?, T> source) {
+    protected static <T> double getImageHeight(T image, Renderer<T> source) {
         return source.getImageHeight(image);
     }
 
@@ -45,7 +49,7 @@ public abstract class ChartExporter {
      * @return the width of an image
      * @throws ClassCastException if the method is used on a chart which uses a different type of image
      */
-    protected static <T> double getImageWidth(T image, Figure<?, T> source) {
+    protected static <T> double getImageWidth(T image, Renderer<T> source) {
         return source.getImageWidth(image);
     }
 

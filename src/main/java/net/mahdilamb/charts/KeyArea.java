@@ -3,35 +3,34 @@ package net.mahdilamb.charts;
 import net.mahdilamb.charts.graphics.*;
 import net.mahdilamb.colormap.Color;
 
-interface KeyArea<K extends KeyArea<K>> {
-    K setFloating(boolean floating);
+abstract class KeyArea extends Component{
+    Stroke border;
+    Color borderColor = Color.BLACK;
+    Color background;
 
-    K setOrientation(Orientation orientation);
+    Font titleFont = Font.DEFAULT_TITLE_FONT;
+    Color titleColor = Color.BLACK;
 
-    K setGroupSpacing(double spacing);
+    Font itemFont = Font.DEFAULT_FONT;
+    Color valueColor = Color.BLACK;
 
-    K setTitleFont(Font font);
+    boolean isFloating = false;
+    Side side = Side.RIGHT;
+    Orientation orientation = Orientation.VERTICAL;
+    HAlign hAlign = HAlign.CENTER;
+    VAlign vAlign = VAlign.MIDDLE;
+    final Figure figure;
 
-    K setTitleColor(Color color);
+    KeyArea(final Figure figure) {
+        this.figure = figure;
+    }
+    private double offsetX = 0, offsetY = 0;
 
-    K setValueColor(Color color);
+    final double getOffsetX() {
+        return (side == Side.LEFT ? -1 : 1) * offsetX;
+    }
 
-    K setValueFont(final Font font);
-
-    K setXOffset(double x);
-
-    K setYOffset(double y);
-
-    K setSide(Side side);
-
-    K setAlignment(HAlign alignment);
-
-    K setAlignment(VAlign alignment);
-
-    K setMaxItemWidth(double width);
-
-    K setBorder(final Stroke stroke);
-
-    K setBackground(final Color color);
-
+    final double getOffsetY() {
+        return (side == Side.TOP ? -1 : 1) * offsetY;
+    }
 }

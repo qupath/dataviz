@@ -1,8 +1,4 @@
 rootProject.name = 'charts'
-
-include ":geom2d"
-project(":geom2d").projectDir = new File("../../geom2d/")
-include ':statistics'
 include ':dataframe'
 
 

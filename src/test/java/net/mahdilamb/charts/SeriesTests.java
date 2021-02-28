@@ -1,14 +1,15 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.dataframe.DataFrame;
-import net.mahdilamb.charts.plots.Scatter;
+import net.mahdilamb.dataframe.DataFrame;
 import org.junit.Test;
 
 import java.io.File;
 import java.util.Objects;
-import java.util.PrimitiveIterator;
 
 public class SeriesTests {
+    public static DataFrame loadDataFromResource(final String resourcePath) {
+        return DataFrame.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource(resourcePath)).getFile()));
+    }
     static final DataFrame iris = DataFrame.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("iris.csv")).getFile()));
     static final DataFrame tips = DataFrame.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("tips.csv")).getFile()));
     static final DataFrame gapminder = DataFrame.from(new File(Objects.requireNonNull(Thread.currentThread().getContextClassLoader().getResource("gapminder.csv")).getFile()));

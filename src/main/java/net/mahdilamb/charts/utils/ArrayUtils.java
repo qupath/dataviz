@@ -1,6 +1,6 @@
 package net.mahdilamb.charts.utils;
 
-import net.mahdilamb.charts.statistics.StatUtils;
+import net.mahdilamb.statistics.StatUtils;
 
 import java.util.Iterator;
 import java.util.function.*;

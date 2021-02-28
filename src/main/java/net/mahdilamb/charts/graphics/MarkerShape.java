@@ -1,6 +1,6 @@
 package net.mahdilamb.charts.graphics;
 
-import net.mahdilamb.charts.dataframe.utils.PrimitiveIterators;
+import net.mahdilamb.dataframe.utils.PrimitiveIterators;
 
 import java.util.HashMap;
 import java.util.List;

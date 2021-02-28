@@ -1,7 +1,7 @@
 package net.mahdilamb.charts.swing;
 
-import net.mahdilamb.charts.graphics.Fill;
-import net.mahdilamb.geom2d.geometries.Geometries;
+import net.mahdilamb.charts.graphics.Paint;
+import net.mahdilamb.charts.utils.Numbers;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -9,17 +9,17 @@ import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.WeakHashMap;
 
 public final class SwingUtils {
     private SwingUtils() {
 
     }
 
-    static final Map<net.mahdilamb.charts.graphics.Font, java.awt.Font> fontsToAWT = new HashMap<>();
-    static final Map<net.mahdilamb.colormap.Color, java.awt.Color> colorsToAWT = new HashMap<>();
-
+    static final Map<net.mahdilamb.charts.graphics.Font, java.awt.Font> fontsToAWT = new WeakHashMap<>();
+    static final Map<net.mahdilamb.colormap.Color, java.awt.Color> colorsToAWT = new WeakHashMap<>();
+    static final Map<net.mahdilamb.charts.graphics.Stroke, java.awt.BasicStroke> strokesToAWT = new WeakHashMap<>();
 
     /**
      * Convert a double to int
@@ -32,7 +32,7 @@ public final class SwingUtils {
     }
 
     /**
-     * Convert an abstract color to an AWT color
+     * Convert a general color to an AWT color
      *
      * @param color the abstract color
      * @return the AWT color
@@ -41,20 +41,21 @@ public final class SwingUtils {
         final Color cached = colorsToAWT.get(color);
         if (cached != null) {
             return cached;
-
         }
         return new java.awt.Color(color.red(), color.green(), color.blue(), color.alpha());
     }
 
     /**
-     * Convert a color to its abstract representation
+     * Convert a color to a general representation
      *
      * @param color the AWT color
-     * @return an abstract color
+     * @return a general color
      */
     public static Color convert(final java.awt.Color color) {
         return new Color(color.getRed(), color.getGreen(), color.getBlue(), color.getAlpha());
     }
+
+
 
     /**
      * Convert a gradient to an AWT gradient
@@ -62,7 +63,7 @@ public final class SwingUtils {
      * @param gradient the source gradient
      * @return AWT gradient
      */
-    public static MultipleGradientPaint convert(final Fill.Gradient gradient) {
+    public static MultipleGradientPaint convert(final Paint.Gradient gradient) {
         final Point2D start = new Point2D.Double(gradient.getStartX(), gradient.getStartY());
         final float[] dist = new float[gradient.getColorMap().size()];
         final java.awt.Color[] colors = new java.awt.Color[dist.length];
@@ -72,11 +73,11 @@ public final class SwingUtils {
             colors[i] = convert(entry.getValue());
             ++i;
         }
-        if (gradient.getType() == Fill.GradientType.LINEAR) {
+        if (gradient.getType() == Paint.GradientType.LINEAR) {
             final Point2D end = new Point2D.Double(gradient.getEndX(), gradient.getEndY());
             return new LinearGradientPaint(start, end, dist, colors);
         } else {
-            return new RadialGradientPaint(start, (float) Geometries.distance(gradient.getStartX(), gradient.getStartY(), gradient.getEndX(), gradient.getEndY()), dist, colors);
+            return new RadialGradientPaint(start, (float) Numbers.distance(gradient.getStartX(), gradient.getStartY(), gradient.getEndX(), gradient.getEndY()), dist, colors);
         }
     }
 
@@ -188,5 +189,52 @@ public final class SwingUtils {
         return fontMetrics.getHeight();
     }
 
+
+    public static BasicStroke convert(final net.mahdilamb.charts.graphics.Stroke stroke) {
+        final BasicStroke cached = strokesToAWT.get(stroke);
+        if (cached != null) {
+            return cached;
+        }
+        float width = (float) stroke.getWidth();
+        float miterLimit = (float) stroke.getMiterLimit();
+        float dashOffset = (float) stroke.getDashOffset();
+        final int join;
+        switch (stroke.getLineJoin()) {
+            case BEVEL:
+                join = BasicStroke.JOIN_BEVEL;
+                break;
+            case ROUND:
+                join = BasicStroke.JOIN_ROUND;
+                break;
+            case MITER:
+            default:
+                join = BasicStroke.JOIN_MITER;
+        }
+        final int cap;
+        switch (stroke.getEndCap()) {
+            case SQUARE:
+                cap = BasicStroke.CAP_SQUARE;
+                break;
+            case ROUND:
+                cap = BasicStroke.CAP_ROUND;
+                break;
+            default:
+                cap = BasicStroke.CAP_BUTT;
+        }
+        final BasicStroke bs;
+        if (stroke.numDashes() > 0) {
+            float[] dashes = new float[stroke.numDashes()];
+
+            for (int i = 0; i < dashes.length; ++i) {
+                dashes[i] = (float) stroke.getDash(i);
+            }
+            bs = new BasicStroke(width, cap, join, miterLimit, dashes, dashOffset);
+        } else {
+            bs = new BasicStroke(width, cap, join, miterLimit);
+        }
+
+        strokesToAWT.put(stroke, bs);
+        return bs;
+    }
 
 }

@@ -1,8 +1,8 @@
 package net.mahdilamb.charts.io;
 
 
-import net.mahdilamb.charts.graphics.Fill;
 import net.mahdilamb.charts.graphics.Font;
+import net.mahdilamb.charts.graphics.Paint;
 import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.colormap.Color;
 
@@ -66,8 +66,8 @@ public final class SVGUtils {
      * @param fill fill to convert
      * @return SVG representation of the fill
      */
-    public static String convertToString(final SVGExporter.SVGDefinitions defs, final Fill fill) {
-        if (Fill.isNull(fill)) {
+    public static String convertToString(final SVGExporter.SVGDefinitions defs, final Paint fill) {
+        if (Paint.isNull(fill)) {
             return "fill:none; ";
         }
         if (fill.isGradient()) {
@@ -75,6 +75,35 @@ public final class SVGUtils {
         } else {
             return String.format("fill:%s; ", convertToString(fill.getColor()));
         }
+    }
+
+    private static String convertToString(Stroke.LineJoin join) {
+        if (join == Stroke.LineJoin.MITER) {
+            return EMPTY_STRING;
+        }
+        return String.format("stroke-linejoin=\"%s\" ", join == Stroke.LineJoin.BEVEL ? "bevel" : "round");
+    }
+
+    private static String convertToString(Stroke.EndCap endCap) {
+        if (endCap == Stroke.EndCap.BUTT) {
+            return EMPTY_STRING;
+        }
+        return String.format("stroke-linecap=\"%s\" ", endCap == Stroke.EndCap.ROUND ? "round" : "square");
+    }
+
+    private static String convertToString(final String open, double[] arr, final String close) {
+        if (arr == null || arr.length == 0) {
+            return EMPTY_STRING;
+        }
+        if (arr.length == 1) {
+            return convertToString(arr[0]);
+        }
+        final StringBuilder sb = new StringBuilder(open);
+        for (double v : arr) {
+            sb.append(convertToString(v)).append(' ');
+        }
+        return sb.append(close).toString();
+
     }
 
     /**
@@ -87,7 +116,15 @@ public final class SVGUtils {
         if (stroke == null) {
             return EMPTY_STRING;
         }
-        return String.format("stroke-width:%s; stroke:%s; ", convertToString(stroke.getWidth()), convertToString(stroke.getColor()));
+        return String.format("stroke-width=\"%s\" %s%s%s%s%s",
+                convertToString(stroke.getWidth()),
+                convertToString(stroke.getEndCap()),
+                convertToString(stroke.getLineJoin()),
+                Double.compare(stroke.getMiterLimit(), 4) == 0 ? EMPTY_STRING : String.format("stroke-miterlimit=\"%s\" ", convertToString(stroke.getMiterLimit())),
+                Double.compare(stroke.getDashOffset(), 0) == 0 ? EMPTY_STRING : String.format("stroke-dashoffset=\"%s\" ", convertToString(stroke.getDashOffset())),
+                stroke.numDashes() == 0 ? EMPTY_STRING : convertToString("stroke-dasharray=\"", stroke.getDashes(), "\" ")
+
+        );
     }
 
     /**
@@ -98,8 +135,8 @@ public final class SVGUtils {
      * @param stroke stroke
      * @return style string representing the style
      */
-    static String convertToString(final SVGExporter.SVGDefinitions defs, final Fill fill, final Stroke stroke) {
-        return String.format("style=\"%s%s\" ", convertToString(defs, fill), convertToString(stroke));
+    static String convertToString(final SVGExporter.SVGDefinitions defs, final Paint fill, final Stroke stroke, final Color strokeColor) {
+        return String.format("style=\"%s%s\" %s", convertToString(defs, fill), strokeColor == null ? EMPTY_STRING : String.format("stroke:%s", convertToString(strokeColor)), convertToString(stroke));
     }
 
     /**
@@ -158,7 +195,7 @@ public final class SVGUtils {
      * @param fill   the fill of the rectangle
      * @return the SVG element of the rectangle
      */
-    static String rectangleToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    static String rectangleToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
         return String.format(
                 "%s<rect x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" %s/>%n",
                 indent.toString(),
@@ -166,7 +203,7 @@ public final class SVGUtils {
                 convertToString(y),
                 convertToString(width),
                 convertToString(height),
-                convertToString(defs, fill, stroke)
+                convertToString(defs, fill, stroke, strokeColor)
         );
     }
 
@@ -183,7 +220,7 @@ public final class SVGUtils {
      * @param fill   the fill of the ellipse
      * @return the SVG element of the ellipse
      */
-    static String ellipseToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    static String ellipseToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
         final double rx = width * .5;
         final double ry = height * .5;
         return String.format(
@@ -193,7 +230,7 @@ public final class SVGUtils {
                 convertToString(y + ry),
                 convertToString(rx),
                 convertToString(ry),
-                convertToString(defs, fill, stroke)
+                convertToString(defs, fill, stroke, strokeColor)
         );
     }
 
@@ -212,7 +249,8 @@ public final class SVGUtils {
      * @param fill      the fill of the rounded rectangle
      * @return the SVG element of the rounded rectangle
      */
-    static String roundedRectangleToString(double x, double y, double width, double height, double arcWidth, double arcHeight, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    static String roundedRectangleToString(double x, double y, double width, double height,
+                                           double arcWidth, double arcHeight, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
         return String.format(
                 "%s<rect x=\"%s\" y=\"%s\" rx=\"%s\" ry=\"%s\" width=\"%s\" height=\"%s\" %s/>%n",
                 indent.toString(),
@@ -222,7 +260,7 @@ public final class SVGUtils {
                 convertToString(arcHeight * .5),
                 convertToString(width),
                 convertToString(height),
-                convertToString(defs, fill, stroke)
+                convertToString(defs, fill, stroke, strokeColor)
         );
     }
 
@@ -238,7 +276,7 @@ public final class SVGUtils {
      * @param stroke the stroke of the rounded rectangle
      * @return an SVG element representation of the line
      */
-    static String lineToString(double x0, double y0, double x1, double y1, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke) {
+    static String lineToString(double x0, double y0, double x1, double y1, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Color strokeColor) {
         return String.format(
                 "%s<line x1=\"%s\" y1=\"%s\" x2=\"%s\" y2=\"%s\" %s/>%n",
                 indent.toString(),
@@ -246,7 +284,7 @@ public final class SVGUtils {
                 convertToString(y0),
                 convertToString(x1),
                 convertToString(y1),
-                convertToString(defs, null, stroke)
+                convertToString(defs, null, stroke, strokeColor)
         );
     }
 
@@ -262,42 +300,42 @@ public final class SVGUtils {
      * @param fill   the fill of the rounded rectangle
      * @return an SVG element representation of a circle
      */
-    static String circleToString(double x, double y, double r, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    static String circleToString(double x, double y, double r, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
         return String.format(
                 "%s<circle cx=\"%s\" cy=\"%s\" r=\"%s\" %s/>%n",
                 indent.toString(),
                 convertToString(x + r),
                 convertToString(y + r),
                 convertToString(r),
-                convertToString(defs, fill, stroke)
+                convertToString(defs, fill, stroke, strokeColor)
         );
     }
 
-    static String pathToString(String pathD, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Fill fill) {
+    static String pathToString(String pathD, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
         return String.format(
                 "%s<path d=\"%s\" %s/>%n",
                 indent.toString(),
                 pathD,
-                convertToString(defs, fill, stroke));
+                convertToString(defs, fill, stroke, strokeColor));
     }
 
-    static String polygonToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
+    static String polygonToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Paint fill, final Color strokeColor) {
         final StringBuilder points = new StringBuilder(indent.toString()).append("<polygon points=\"");
         for (int i = 0; i < numPoints; ++i) {
             points.append(String.format("%s,%s ", convertToString(xPoints[i]), convertToString(yPoints[i])));
         }
-        return points.append("\" ").append(convertToString(defs, fill, stroke)).append("/>\n").toString();
+        return points.append("\" ").append(convertToString(defs, fill, stroke, strokeColor)).append("/>\n").toString();
     }
 
-    static String polylineToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke) {
+    static String polylineToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, final Color strokeColor) {
         final StringBuilder points = new StringBuilder(indent.toString()).append("<polyline points=\"");
         for (int i = 0; i < numPoints; ++i) {
             points.append(String.format("%s,%s ", convertToString(xPoints[i]), convertToString(yPoints[i])));
         }
-        return points.append("\" ").append(convertToString(defs, null, stroke)).append("/>\n").toString();
+        return points.append("\" ").append(convertToString(defs, null, stroke, strokeColor)).append("/>\n").toString();
     }
 
-    public static String textToString(final String text, double x, double y, net.mahdilamb.charts.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
+    public static String textToString(final String text, double x, double y, net.mahdilamb.charts.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Paint fill, final Color strokeColor) {
         return String.format(
                 "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s>%s</text>%n",
                 indent.toString(),
@@ -307,13 +345,13 @@ public final class SVGUtils {
                 convertToString(font.getSize()),
                 convertToString(font.getWeight()),
                 convertToString(font.getStyle()),
-                convertToString(defs, fill, stroke),
+                convertToString(defs, fill, stroke, strokeColor),
                 text
         );
 
     }
 
-    public static String rotatedTextToString(final String text, double x, double y, double rotationDegrees, double pivotX, double pivotY, net.mahdilamb.charts.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Fill fill) {
+    public static String rotatedTextToString(final String text, double x, double y, double rotationDegrees, double pivotX, double pivotY, net.mahdilamb.charts.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Paint fill, final Color strokeColor) {
         return String.format(
                 "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s transform=\"rotate(%s,%s,%s)\">%s</text>%n",
                 indent.toString(),
@@ -323,7 +361,7 @@ public final class SVGUtils {
                 convertToString(font.getSize()),
                 convertToString(font.getWeight()),
                 convertToString(font.getStyle()),
-                convertToString(defs, fill, stroke),
+                convertToString(defs, fill, stroke, strokeColor),
                 convertToString(rotationDegrees),
                 convertToString(pivotX),
                 convertToString(pivotY),

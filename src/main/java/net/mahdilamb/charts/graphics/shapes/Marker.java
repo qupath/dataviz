@@ -4,6 +4,7 @@ import net.mahdilamb.charts.graphics.ChartCanvas;
 import net.mahdilamb.charts.graphics.MarkerShape;
 
 public class Marker implements Shape {
+    public static final Marker MARKER = new Marker();
     public MarkerShape shape = MarkerShape.CIRCLE;
 
     public double x = 8, y = 8, size = 16;

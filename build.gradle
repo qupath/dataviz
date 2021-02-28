@@ -14,13 +14,9 @@ repositories {
 
 dependencies {
     testCompile("junit:junit:4.13")
-    testCompile group: 'org.openjdk.jmh', name: 'jmh-core', version: '1.27'
-    compile project(':geom2d')
-    compile project(':statistics')
     compile project(':dataframe')
     compile 'net.mahdilamb:utils-tuples:0.3.1'
-    compile 'net.mahdilamb:utils-functions:0.1.22-SNAPSHOT'
-    compile 'net.mahdilamb:colormap:0.9.48-SNAPSHOT'
+    compile 'net.mahdilamb:colormap:0.9.49-SNAPSHOT'
 
 }
 
@@ -31,4 +27,12 @@ test {
 task swingBasicTest(type: JavaExec, dependsOn: ['testClasses']) {
     classpath sourceSets.test.runtimeClasspath
     main = "net.mahdilamb.charts.tests.SwingBasicTest"
+}
+task swingTest(type: JavaExec, dependsOn: ['testClasses']) {
+    classpath sourceSets.test.runtimeClasspath
+    main = "net.mahdilamb.charts.tests.SwingTest"
+}
+task traceTests(type: JavaExec, dependsOn: ['testClasses']) {
+    classpath sourceSets.test.runtimeClasspath
+    main = "net.mahdilamb.charts.data.TraceTests"
 }

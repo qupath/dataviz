@@ -8,8 +8,8 @@ import net.mahdilamb.colormap.Color;
 /**
  * A title is text that takes up space in a layout
  */
-public class Title extends ChartComponent {
-    double paddingX = 20, paddingY = 20;
+public class Title extends Component {
+    double paddingX = 5, paddingY = 5;
     private boolean isVisible = true;
 
     HAlign textAlign = HAlign.CENTER;
@@ -57,19 +57,19 @@ public class Title extends ChartComponent {
      *
      * @param text the text of the title
      */
-    public void setTitle(String text) {
+    public void setText(String text) {
         this.text = text;
-        redraw();
+        refresh();
     }
 
     public void setFont(final Font font) {
         this.font = font;
-        redraw();
+        refresh();
     }
 
     public void setVisible(boolean visible) {
         this.isVisible = visible;
-        redraw();
+        refresh();
     }
 
     /**
@@ -106,20 +106,8 @@ public class Title extends ChartComponent {
         }
     }
 
-
     @Override
-    protected void drawComponent(Figure<?, ?> source, ChartCanvas<?> canvas) {
-        if (!isVisible()) {
-            return;
-        }
-        canvas.setFill(color);
-        canvas.setFont(font);
-        canvas.fillText(text, posX + paddingX * 0.5, posY + baselineOffset + paddingX * 0.5);
-
-    }
-
-    @Override
-    protected void layoutComponent(Figure<?, ?> source, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer<?> source, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             sizeX = 0;
             sizeY = 0;
@@ -139,6 +127,17 @@ public class Title extends ChartComponent {
         if (textAlign != HAlign.LEFT) {
             posX += (textAlign == HAlign.RIGHT ? 1 : 0.5) * (maxX - minX - sizeX);
         }
+
+    }
+
+    @Override
+    protected void drawComponent(Renderer<?> source, ChartCanvas<?> canvas) {
+        if (!isVisible()) {
+            return;
+        }
+        canvas.setFill(color);
+        canvas.setFont(font);
+        canvas.fillText(text, posX + paddingX * 0.5, posY + baselineOffset + paddingX * 0.5);
 
     }
 

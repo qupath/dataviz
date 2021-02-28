@@ -1,11 +1,10 @@
 package net.mahdilamb.charts.io;
 
-import net.mahdilamb.charts.Chart;
 import net.mahdilamb.charts.ChartExporter;
-import net.mahdilamb.charts.Figure;
+import net.mahdilamb.charts.Renderer;
 import net.mahdilamb.charts.graphics.*;
+import net.mahdilamb.charts.utils.Numbers;
 import net.mahdilamb.colormap.Color;
-import net.mahdilamb.geom2d.geometries.Geometries;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -28,27 +27,28 @@ public class SVGExporter extends ChartExporter {
         final StringBuilder out = new StringBuilder();
         final StringBuilder indent = new StringBuilder("\t");
         SVGDefinitions defs;
-        final Figure<?, T> chart;
+        final Renderer<T> renderer;
         private final File output;
 
         boolean isClipped = false;
-        Fill fill;
-        Stroke stroke;
+        Paint fill = Paint.BLACK_FILL;
+        Color strokeColor = Color.BLACK;
+        Stroke stroke = Stroke.SOLID;
 
         private static final StringBuilder pathD = new StringBuilder();
         private Font font = new Font(Font.Family.SANS_SERIF, 12);
         boolean compressed;
 
-        SVGWriter(File output, Figure<?, T> chart, boolean compressed) {
+        SVGWriter(File output, Renderer<T> renderer, boolean compressed) {
             this.compressed = compressed;
-            this.chart = chart;
+            this.renderer = renderer;
             this.output = output;
-            layoutChart(this, chart);
+            layoutChart(this, renderer);
 
         }
 
-        SVGWriter(File output, Figure<?, T> chart) {
-            this(output, chart, false);
+        SVGWriter(File output, Renderer<T> renderer) {
+            this(output, renderer, false);
         }
 
         @Override
@@ -58,18 +58,19 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void reset() {
-            fill = Fill.BLACK_FILL;
-            stroke = Stroke.BLACK_STROKE;
+            fill = Paint.BLACK_FILL;
+            strokeColor = Color.BLACK;
+            stroke = Stroke.SOLID;
             isClipped = false;
             out.setLength(0);
             indent.setLength(0);
             indent.append('\t');
             defs = new SVGDefinitions();
-            final String backgroundColor = chart.getBackgroundColor() == null ? EMPTY_STRING : String.format("style=\"background-color:%s\" ", convertToString(chart.getBackgroundColor()));
+            final String backgroundColor = getFigure(renderer).getBackgroundColor() == null ? EMPTY_STRING : String.format("style=\"background-color:%s\" ", convertToString(getFigure(renderer).getBackgroundColor()));
             header = String.format(
                     "<svg version=\"1.1\" baseProfile=\"full\" width=\"%s\" height=\"%s\" %sxmlns=\"http://www.w3.org/2000/svg\" xmlns:xlink=\"http://www.w3.org/1999/xlink\">%n",
-                    convertToString(chart.getWidth()),
-                    convertToString(chart.getHeight()),
+                    convertToString(getFigure(renderer).getWidth()),
+                    convertToString(getFigure(renderer).getHeight()),
                     backgroundColor
             );
 
@@ -99,30 +100,30 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void strokePolygon(double[] xPoints, double[] yPoints, int numPoints) {
-            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, stroke, null));
+            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, stroke, null, strokeColor));
         }
 
 
         @Override
         public void strokePolyline(double[] xPoints, double[] yPoints, int numPoints) {
-            out.append(polylineToString(xPoints, yPoints, numPoints, defs, indent, stroke));
+            out.append(polylineToString(xPoints, yPoints, numPoints, defs, indent, stroke, strokeColor));
 
         }
 
         @Override
         public void fillPolygon(double[] xPoints, double[] yPoints, int numPoints) {
-            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, null, fill));
+            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, null, fill, null));
 
         }
 
         @Override
         public void fillText(String text, double x, double y) {
-            out.append(textToString(text, x, y, font, defs, indent, null, fill));
+            out.append(textToString(text, x, y, font, defs, indent, null, fill, null));
         }
 
         @Override
         public void fillText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
-            out.append(rotatedTextToString(text, x, y, rotationDegrees, pivotX, pivotY, font, defs, indent, null, fill));
+            out.append(rotatedTextToString(text, x, y, rotationDegrees, pivotX, pivotY, font, defs, indent, null, fill, null));
 
         }
 
@@ -134,7 +135,6 @@ public class SVGExporter extends ChartExporter {
         @Override
         public void setClip(ClipShape shape, double x, double y, double width, double height) {
             out.append(String.format("%s<g clip-path=\"url(#%s)\">%n", indent, defs.addClip(shape, x, y, width, height)));
-
             indent.append('\t');
             isClipped = true;
         }
@@ -151,7 +151,7 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void drawImage(T o, double x, double y) {
-            out.append(imageToString(imageToBytes(o, chart), x, y, getImageWidth(o, chart), getImageHeight(o, chart), indent));
+            out.append(imageToString(imageToBytes(o, renderer), x, y, getImageWidth(o, renderer), getImageHeight(o, renderer), indent));
         }
 
         @Override
@@ -176,69 +176,73 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void fill() {
-            out.append(pathToString(pathD.toString(), defs, indent, null, fill));
+            out.append(pathToString(pathD.toString(), defs, indent, null, fill, null));
 
         }
 
         @Override
         public void stroke() {
-            out.append(pathToString(pathD.toString(), defs, indent, stroke, null));
+            out.append(pathToString(pathD.toString(), defs, indent, stroke, null, strokeColor));
 
         }
 
         @Override
         public void strokeRect(double x, double y, double width, double height) {
-            out.append(rectangleToString(x, y, width, height, defs, indent, stroke, null));
+            out.append(rectangleToString(x, y, width, height, defs, indent, stroke, null, strokeColor));
         }
 
         @Override
         public void fillRect(double x, double y, double width, double height) {
-            out.append(rectangleToString(x, y, width, height, defs, indent, null, fill));
+            out.append(rectangleToString(x, y, width, height, defs, indent, null, fill, null));
         }
 
         @Override
         public void strokeRoundRect(double x, double y, double width, double height, double arcWidth, double arcHeight) {
-            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, stroke, null));
+            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, stroke, null, strokeColor));
         }
 
         @Override
         public void fillRoundRect(double x, double y, double width, double height, double arcWidth, double arcHeight) {
-            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, null, fill));
+            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, null, fill, null));
         }
 
         @Override
         public void strokeOval(double x, double y, double width, double height) {
             if (width == height) {
-                out.append(circleToString(x, y, width * .5, defs, indent, stroke, null));
+                out.append(circleToString(x, y, width * .5, defs, indent, stroke, null, strokeColor));
             } else {
-                out.append(ellipseToString(x, y, width, height, defs, indent, stroke, null));
+                out.append(ellipseToString(x, y, width, height, defs, indent, stroke, null, strokeColor));
             }
         }
 
         @Override
         public void fillOval(double x, double y, double width, double height) {
             if (width == height) {
-                out.append(circleToString(x, y, width * .5, defs, indent, null, fill));
+                out.append(circleToString(x, y, width * .5, defs, indent, null, fill, null));
             } else {
-                out.append(ellipseToString(x, y, width, height, defs, indent, null, fill));
+                out.append(ellipseToString(x, y, width, height, defs, indent, null, fill, null));
             }
         }
 
         @Override
         public void strokeLine(double x0, double y0, double x1, double y1) {
-            out.append(lineToString(x0, y0, x1, y1, defs, indent, stroke));
+            out.append(lineToString(x0, y0, x1, y1, defs, indent, stroke, strokeColor));
         }
 
 
         @Override
-        public void setFill(Fill fill) {
+        public void setFill(Paint fill) {
             this.fill = fill;
         }
-
 
         @Override
         public void setStroke(Stroke stroke) {
             this.stroke = stroke;
+        }
+
+        @Override
+        public void setStroke(Color color) {
+            this.strokeColor = color;
         }
 
         @Override
@@ -264,7 +268,7 @@ public class SVGExporter extends ChartExporter {
      * @param output the file output
      * @param chart  the chart to convert
      */
-    public static <T>void toSVG(final File output, final Figure<?, T> chart) {
+    public static <T> void toSVG(final File output, final Renderer<T> chart) {
         new SVGWriter<>(output, chart);
     }
 
@@ -274,7 +278,7 @@ public class SVGExporter extends ChartExporter {
      * @param file  the output file
      * @param chart the chart to convert
      */
-    public static<T> void toSVGZ(File file, Figure<?, T> chart) {
+    public static <T> void toSVGZ(File file, Renderer<T> chart) {
         new SVGWriter<>(file, chart, true);
     }
 
@@ -359,7 +363,7 @@ public class SVGExporter extends ChartExporter {
          * @param gradient the gradient to add
          * @return the id of the gradient
          */
-        final String addGradient(final Fill.Gradient gradient) {
+        final String addGradient(final Paint.Gradient gradient) {
             return add(gradient, () -> {
                 final StringBuilder stops = new StringBuilder();
                 for (final Map.Entry<Float, Color> entry : gradient.getColorMap().entrySet()) {
@@ -370,7 +374,7 @@ public class SVGExporter extends ChartExporter {
                             entry.getValue().alpha() == 1 ? EMPTY_STRING : String.format(" stop-opacity=\"%s\"", convertToString(entry.getValue().alpha()))
                     ));
                 }
-                if (gradient.getType() == Fill.GradientType.LINEAR) {
+                if (gradient.getType() == Paint.GradientType.LINEAR) {
                     return add(
                             "linear-gradient-",
                             "linearGradient",
@@ -391,7 +395,7 @@ public class SVGExporter extends ChartExporter {
                                     "gradientUnits=\"userSpaceOnUse\" cx=\"%s\" cy=\"%s\" r=\"%s\" ",
                                     convertToString(gradient.getStartX()),
                                     convertToString(gradient.getStartY()),
-                                    convertToString(Geometries.distance(gradient.getStartX(), gradient.getStartY(), gradient.getEndX(), gradient.getEndY()))
+                                    convertToString(Numbers.distance(gradient.getStartX(), gradient.getStartY(), gradient.getEndX(), gradient.getEndY()))
                             )
                     );
                 }

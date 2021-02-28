@@ -10,12 +10,12 @@ public interface ChartCanvas<IMAGE> {
     /**
      * Clears a specific rectangular area of the canvas.
      *
-     * @apiNote Exporter canvases may ignore this. I.e. GUI-based canvas will use this and ignore reset (unless it's
-     * the first draw), and exporter-canvases will ignore the reset
      * @param x      top-left x
      * @param y      top-left y
      * @param width  width of the rectangle
      * @param height height of the rectangle
+     * @apiNote Exporter canvases may ignore this. I.e. GUI-based canvas will use this and ignore reset (unless it's
+     * the first draw), and exporter-canvases will ignore the reset
      */
     void resetRect(double x, double y, double width, double height);
 
@@ -103,13 +103,12 @@ public interface ChartCanvas<IMAGE> {
      */
     void strokeLine(double x0, double y0, double x1, double y1);
 
-
     /**
      * Set the fill
      *
      * @param fill the fill to set
      */
-    void setFill(Fill fill);
+    void setFill(Paint fill);
 
     /**
      * Set the fill to a single color
@@ -117,7 +116,7 @@ public interface ChartCanvas<IMAGE> {
      * @param color the color to set the fill
      */
     default void setFill(Color color) {
-        setFill(new Fill(color));
+        setFill(new Paint(color));
     }
 
     /**
@@ -139,6 +138,24 @@ public interface ChartCanvas<IMAGE> {
      * @param stroke the stroke
      */
     void setStroke(Stroke stroke);
+
+    /**
+     * Set the color of the stroke
+     *
+     * @param color the color of the stroke
+     */
+    void setStroke(final Color color);
+
+    /**
+     * Set the color and stroke
+     *
+     * @param stroke the stroke style
+     * @param color  the stroke color
+     */
+    default void setStroke(Stroke stroke, final Color color) {
+        setStroke(color);
+        setStroke(stroke);
+    }
 
     /**
      * Begin a path

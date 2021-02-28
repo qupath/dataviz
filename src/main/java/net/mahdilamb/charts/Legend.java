@@ -1,51 +1,65 @@
 package net.mahdilamb.charts;
 
-import net.mahdilamb.charts.graphics.*;
-import net.mahdilamb.colormap.Color;
+import net.mahdilamb.charts.graphics.ChartCanvas;
+import net.mahdilamb.charts.graphics.Orientation;
+import net.mahdilamb.charts.graphics.VAlign;
+import net.mahdilamb.charts.graphics.shapes.Marker;
 
-public interface Legend extends KeyArea<Legend> {
-    @Override
-    Legend setFloating(boolean floating);
+public class Legend extends KeyArea {
 
-    @Override
-    Legend setOrientation(Orientation orientation);
-
-    @Override
-    Legend setGroupSpacing(double spacing);
+    Legend(Figure figure) {
+        super(figure);
+    }
 
     @Override
-    Legend setTitleFont(Font font);
+    protected void layoutComponent(Renderer<?> source, double minX, double minY, double maxX, double maxY) {
+        if (orientation == Orientation.VERTICAL) {
+            //TODO deal with title
+            double lineHeight = source.getTextLineHeight(itemFont);
+            sizeY = 0;
+            sizeX = 0;
+            for (final PlotLayout plot : figure.plots) {
+                if (plot.traces.size() != 0) {
+                    for (final PlotData<?> trace : plot.traces) {
+                        trace.layoutLegendItems(this, source, lineHeight);
+                    }
+                }
+            }
+            //todo add title height
+            switch (side) {
+                case RIGHT:
+                    posX = maxX - sizeX;
+                    posY = minY;
+                    if (vAlign != VAlign.TOP) {
+                        double height = maxY - minY;
+                        if (vAlign == VAlign.MIDDLE) {
+                            posY += .5 * height - .5 * sizeY;
+                        } else {
+                            posY += height - sizeY;
+                        }
+                    }
+                    break;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+
+        } else {
+            throw new UnsupportedOperationException();
+        }
+
+    }
 
     @Override
-    Legend setTitleColor(Color color);
-
-    @Override
-    Legend setValueColor(Color color);
-
-    @Override
-    Legend setValueFont(final Font font);
-
-    @Override
-    Legend setXOffset(double x);
-
-    @Override
-    Legend setYOffset(double y);
-
-    @Override
-    Legend setSide(Side side);
-
-    @Override
-    Legend setAlignment(HAlign alignment);
-
-    @Override
-    Legend setAlignment(VAlign alignment);
-
-    @Override
-    Legend setMaxItemWidth(double width);
-
-    @Override
-    Legend setBorder(final Stroke stroke);
-
-    @Override
-    Legend setBackground(final Color color);
+    protected void drawComponent(Renderer<?> source, ChartCanvas<?> canvas) {
+        double lineHeight = source.getTextLineHeight(itemFont);
+        double baseOffset = source.getTextBaselineOffset(itemFont);
+        canvas.setFont(itemFont);
+        for (final PlotLayout plot : figure.plots) {
+            if (plot.traces.size() != 0) {
+                for (final PlotData<?> trace : plot.traces) {
+                    trace.drawLegendItems(this, source, canvas, lineHeight, baseOffset);
+                }
+            }
+        }
+    }
 }

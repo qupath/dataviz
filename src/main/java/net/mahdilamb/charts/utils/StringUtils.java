@@ -1,8 +1,10 @@
 package net.mahdilamb.charts.utils;
 
-import net.mahdilamb.charts.dataframe.DataType;
+import net.mahdilamb.charts.graphics.Stroke;
 import net.mahdilamb.colormap.*;
-import net.mahdilamb.utils.functions.CharacterPredicate;
+import net.mahdilamb.dataframe.DataType;
+import net.mahdilamb.dataframe.functions.CharacterPredicate;
+import net.mahdilamb.dataframe.utils.StringParseException;
 
 import java.util.Arrays;
 
@@ -13,9 +15,6 @@ public final class StringUtils {
     private StringUtils() {
 
     }
-
-    private static final double[] POWER_OF_TWO_PLUS_ONE = {1.0, 3.0, 5.0, 9.0, 17.0, 33.0, 65.0, 129.0, 257.0, 513.0, 1025.0, 2049.0, 4097.0, 8193.0, 16385.0, 32769.0, 65537.0, 131073.0, 262145.0, 524289.0, 1048577.0, 2097153.0, 4194305.0, 8388609.0, 1.6777217E7, 3.3554433E7, 6.7108865E7, 1.34217729E8, 2.68435457E8, 5.36870913E8, 1.073741825E9, 2.147483649E9, 4.294967297E9, 8.589934593E9, 1.7179869185E10, 3.4359738369E10, 6.8719476737E10, 1.37438953473E11, 2.74877906945E11, 5.49755813889E11, 1.099511627777E12, 2.199023255553E12, 4.398046511105E12, 8.796093022209E12, 1.7592186044417E13, 3.5184372088833E13, 7.0368744177665E13, 1.40737488355329E14, 2.81474976710657E14, 5.62949953421313E14, 1.125899906842625E15, 2.251799813685249E15, 4.503599627370497E15, 9.007199254740992E15};
-
 
     /**
      * Cyan as appears in matplotlib
@@ -153,32 +152,106 @@ public final class StringUtils {
         return a.length() >= b.length() ? a : b;
     }
 
+    public static int nextIndexOf(final String text, int offset, char needle) {
+        int i = offset;
+        while (i < text.length()) {
+            if (text.charAt(i) == needle) {
+                return i;
+            }
+            ++i;
+        }
+        return offset;
+    }
+
+    public static int nextIndexOf(final String text, int offset, char needle, char orNeedle) {
+        int i = offset;
+        while (i < text.length()) {
+            if (text.charAt(i) == needle || text.charAt(i) == orNeedle) {
+                return i;
+            }
+            ++i;
+        }
+        return offset;
+    }
+
     /**
-     * Extended version of finding a color from a string. Includes the one character version from matplotlib and
-     * creating grays from a floating point value, or integer type
+     * Extended version of finding a color from a string.
+     * Possible inputs:
+     * - following single characters as per matplotlib: r, g, b, c, m, y, k, w
+     * - grays from int value (e.g. 128) and floating point (e.g 0.5)
+     * - css style colors (e.g. rgba(255, 0, 0, 0.8) or rgb(255, 255, 0))
+     * - color by name in css, or tableau. (e.g. "salmon")
+     * - hexadecimal color value (e.g. "#FF00000")
      *
      * @param colorName the color name
      * @return the associated color or {@code null} if no such color exists
      */
     public static Color convertToColor(final String colorName) {
         if (colorName.length() == 1) {
-            switch (colorName) {
-                case "b":
+            switch (colorName.charAt(0)) {
+                case 'b':
                     return Color.blue;
-                case "g":
+                case 'g':
                     return Color.green;
-                case "r":
+                case 'r':
                     return Color.red;
-                case "c":
+                case 'c':
                     return mpl_cyan;
-                case "m":
+                case 'm':
                     return mpl_magenta;
-                case "y":
+                case 'y':
                     return mpl_yellow;
-                case "k":
+                case 'k':
                     return Color.black;
-                case "w":
+                case 'w':
                     return Color.white;
+            }
+        }
+        if (colorName.startsWith("rgb")) {
+            int i = colorName.indexOf('(');
+            if (i != -1) {
+                double a = 1;
+                double r = Double.NaN, g = Double.NaN, b = Double.NaN;
+                boolean isFloat = false;
+                boolean done = false;
+                while (i < colorName.length()) {
+                    switch (colorName.charAt(i)) {
+                        case ' ':
+                            break;
+                        case ',':
+                        case '(':
+                            ++i;
+                            int j = i;
+                            while (isDigit(colorName.charAt(j)) || colorName.charAt(j) == '.' || colorName.charAt(j) == ' ') {
+                                ++j;
+                            }
+                            final String k = colorName.substring(i, j);
+                            if (!done) {
+                                isFloat |= k.indexOf('.') != -1;
+                            }
+                            if (Double.isNaN(r)) {
+                                r = Double.parseDouble(k);
+                            } else if (Double.isNaN(g)) {
+                                g = Double.parseDouble(k);
+                            } else if (Double.isNaN(b)) {
+                                b = Double.parseDouble(k);
+                                done = true;
+                            } else {
+                                a = Double.parseDouble(k);
+                            }
+                            continue;
+                    }
+                    ++i;
+                }
+                if (done) {
+                    if (isFloat) {
+                        return new Color(r, g, b, a);
+                    } else {
+                        return new Color(((int) r), ((int) g), ((int) b), (int) Math.round(a * 255));
+                    }
+                } else {
+                    throw new StringParseException(colorName, i);
+                }
             }
         }
         if (DataType.LONG.matches(colorName)) {
@@ -197,6 +270,38 @@ public final class StringUtils {
         return Color.get(colorName);
     }
 
+    /**
+     * Get a stroke from a string representation
+     *
+     * @param stroke the string
+     * @return a stroke from the string
+     */
+    public static Stroke convertToStroke(final String stroke) {
+        switch (stroke) {
+            case "solid":
+            case "-":
+                return Stroke.SOLID;
+            case "--":
+            case "dashed":
+            case "dash":
+                return Stroke.DASHED;
+            case "-.":
+            case "dashdot":
+                return Stroke.DASH_DOT;
+            case ":":
+            case "dotted":
+            case "dot":
+            case ".":
+                return Stroke.DOTTED;
+            case "None":
+            case "":
+            case " ":
+                return Stroke.NONE;
+            default:
+                throw new UnsupportedOperationException();
+        }
+    }
+
     public static Colormap convertToQualitativeColormap(final String... names) {
         return convertToColormap(true, names);
     }
@@ -206,14 +311,34 @@ public final class StringUtils {
     }
 
     public static Colormap convertToColormap(boolean useQualitative, final String... names) {
-        final Color[] colors = new Color[names.length];
-        for (int i = 0; i < names.length; ++i) {
-            colors[i] = convertToColor(names[i]);
-            if (colors[i] == null) {
-                throw new IllegalArgumentException(String.format("Color with the name %s could not be found", names[i]));
-            }
-        }
-        return useQualitative ? new QualitativeColormap(colors) : new SequentialColormap(colors);
+        return VarArgsUtils.process(
+                names,
+                va -> {
+                    throw new IllegalArgumentException("Must be at least one name");
+                }, va -> {
+                    final Color[] colors = new Color[names.length];
+                    for (int i = 0; i < names.length; ++i) {
+                        colors[i] = convertToColor(names[i]);
+                        if (colors[i] == null) {
+                            throw new IllegalArgumentException(String.format("Color with the name %s could not be found", names[i]));
+                        }
+                    }
+                    return useQualitative ? new QualitativeColormap(colors) : new SequentialColormap(colors);
+                }
+        );
+
+    }
+
+    /**
+     * @param c the character
+     * @return whether the character is a format specifier
+     */
+    public static boolean isFormatSpecifier(final char c) {
+        return c == 'x' || c == 'X' || c == 't' || c == 'T' || c == 's' || c == 'S' || c == 'n' || c == 'o' || c == 'f' || c == 'e' || c == 'E' || c == 'h' || c == 'H' || c == 'd' || c == 'c' || c == 'b' || c == 'B' || c == 'a' || c == 'A';
+    }
+
+    public static boolean isDigit(char c) {
+        return c >= '0' && c <= '9';
     }
 
 
