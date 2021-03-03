@@ -1,38 +1,96 @@
-plugins {
-    id 'java'
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+
+    }
+    dependencies {
+        classpath("com.bmuschko:gradle-nexus-plugin:2.3.1")
+    }
 }
 
+plugins {
+    id 'java'
+    id("maven")
+    id("signing")
+}
+apply plugin: "com.bmuschko.nexus"
+compileJava {
+    sourceCompatibility = JavaVersion.VERSION_1_9
+//will work with Java 1.8, but this is required as there is a module-info.java
+    targetCompatibility = JavaVersion.VERSION_1_9
+}
 group 'net.mahdilamb'
 version '0.1.0-SNAPSHOT'
 
 repositories {
+    jcenter()
     mavenCentral()
     maven {
-        url "https://oss.sonatype.org/content/repositories/snapshots/"
+        url 'https://oss.sonatype.org/content/repositories/snapshots/'
     }
 }
-
 dependencies {
     testCompile("junit:junit:4.13")
-    compile project(':dataframe')
     compile 'net.mahdilamb:utils-tuples:0.3.1'
     compile 'net.mahdilamb:colormap:0.9.49-SNAPSHOT'
-
+    compile 'net.mahdilamb:dataframe:0.1.0-SNAPSHOT'
 }
 
 test {
     useJUnit()
 }
 
-task swingBasicTest(type: JavaExec, dependsOn: ['testClasses']) {
-    classpath sourceSets.test.runtimeClasspath
-    main = "net.mahdilamb.charts.tests.SwingBasicTest"
-}
+
 task swingTest(type: JavaExec, dependsOn: ['testClasses']) {
     classpath sourceSets.test.runtimeClasspath
-    main = "net.mahdilamb.charts.tests.SwingTest"
+    main = "net.mahdilamb.dataviz.tests.SwingTest"
 }
-task traceTests(type: JavaExec, dependsOn: ['testClasses']) {
-    classpath sourceSets.test.runtimeClasspath
-    main = "net.mahdilamb.charts.data.TraceTests"
+
+javadoc {
+    options.tags = ["apiNote", "implNote", "implSpec"]
+}
+modifyPom {
+
+    project {
+        name = "charts"
+        description = "Charts"
+        url = "https://github.com/mahdilamb/charts"
+        inceptionYear = "2020"
+
+        licenses {
+            license {
+                name = "The Apache Software License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "repo"
+            }
+        }
+        developers {
+            developer {
+                id = "mahdilamb"
+                name = "Mahdi Lamb"
+                email = "mahdilamb[at]gmail[dot]com"
+            }
+        }
+        scm {
+            url = "https://github.com/mahdilamb/charts"
+            connection = "scm:https://mahdilamb@github.com/mahdilamb/charts.git"
+            developerConnection = "scm:git://github.com/mahdilamb/charts.git"
+        }
+
+
+    }
+
+}
+
+extraArchive {
+    sources = true
+    tests = true
+    javadoc = true
+}
+
+nexus {
+    sign = !version.endsWith("SNAPSHOT")
+    repositoryUrl = "https://oss.sonatype.org/service/local/staging/deploy/maven2/"
+    snapshotRepositoryUrl = "https://oss.sonatype.org/content/repositories/snapshots/"
 }
