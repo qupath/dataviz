@@ -1,5 +1,6 @@
 package net.mahdilamb.dataviz;
 
+import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataviz.graphics.ChartCanvas;
 import net.mahdilamb.dataviz.graphics.Font;
 import net.mahdilamb.dataviz.graphics.Title;
@@ -25,7 +26,6 @@ public abstract class Renderer<IMG> {
         supportedFormats.put(".png", ImageExporter::toPNG);
         supportedFormats.put(".bmp", ImageExporter::toBMP);
     }
-
 
     protected double startX, startY;
     protected boolean horizontalInputEnabled = true,
@@ -59,8 +59,6 @@ public abstract class Renderer<IMG> {
      * @return the height of a line of the given text
      */
     protected abstract double getTextLineHeight(Title title);
-
-    protected abstract double getTextLineHeight(final Title title, double maxWidth, double lineSpacing);
 
     /**
      * Get the baseline offset of a font
@@ -112,6 +110,7 @@ public abstract class Renderer<IMG> {
      * @return the packed into from an image at a specific position
      */
     protected abstract int argbFromImage(IMG image, int x, int y);
+
     /*  Export methods  */
 
     /**
@@ -151,10 +150,22 @@ public abstract class Renderer<IMG> {
 
     }
 
-    protected void pan(double x, double y) {
+    protected Tooltip getHoverText(double x, double y) {
+        return figure.layout.getHoverText(x, y);
+    }
+
+    protected void mouseMoved(double x, double y) {
+        final Tooltip hoverText = figure.layout.getHoverText(x, y);
+
+
+    }
+
+    protected void mouseDragged(double x, double y) {
+
         if (!horizontalInputEnabled && !verticalInputEnabled) {
             return;
         }
+
         double minX = figure.getLayout().getXAxis().getLowerBound(),
                 minY = figure.getLayout().getYAxis().getLowerBound(),
                 maxX = figure.getLayout().getXAxis().getUpperBound(),
@@ -178,7 +189,7 @@ public abstract class Renderer<IMG> {
         startY = y;
     }
 
-    protected void zoom(double ex, double ey, double zoom) {
+    protected void mouseWheelMoved(double ex, double ey, double zoom) {
           /*if (!initMouseInput(e.getX(), e.getY())) {
             return;
         }*/
@@ -259,5 +270,37 @@ public abstract class Renderer<IMG> {
 
     protected static double transformY(PlotLayout layout, final double y) {
         return layout.transformY(y);
+    }
+
+    protected static boolean needsRedraw(final Component component) {
+        return component.drawNeedsRefresh;
+    }
+
+    protected static final class Tooltip {
+        final String[] text;
+        final Color[] background;
+
+        Tooltip(final Color[] background, String[] text) {
+            this.text = text;
+            this.background = background;
+        }
+
+        public int numLines() {
+            return text.length;
+
+        }
+
+        public String getLine(int i) {
+            return text[i];
+        }
+
+        public Color getBackground(int i) {
+            return background[i];
+        }
+
+        public Color getForeground(int i) {
+            return getBackground(i).calculateLuminance() > 0.1791 ? Color.BLACK : Color.WHITE;
+        }
+
     }
 }

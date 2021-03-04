@@ -7,7 +7,7 @@ import java.util.function.Function;
 /**
  * Provide easy access to figure methods from components of the figure
  *
- * @param <O> the type of the object
+ * @param <O> the concrete type of the implementing class
  */
 interface FigureComponent<O> {
     /**

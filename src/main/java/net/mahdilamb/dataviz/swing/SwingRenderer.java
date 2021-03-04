@@ -26,8 +26,74 @@ import static net.mahdilamb.dataviz.swing.SwingUtils.convert;
  * Default Swing renderer
  */
 public final class SwingRenderer extends Renderer<BufferedImage> {
+    private static final class Overlay extends JPanel {
+        final Rectangle2D.Double rect = new Rectangle2D.Double();
+        private final Panel panel;
+        public int x;
+        public int y;
+        public Tooltip hoverText;
+        private BufferedImage currentState;
+
+
+        Overlay(Panel panel) {
+            this.panel = panel;
+        }
+
+        BufferedImage getCurrentState() {
+            if (currentState == null) {
+                currentState = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+                Graphics g = currentState.getGraphics();
+                final BufferedImage c = currentState;
+                panel.paintAll(g);
+                currentState = c;
+                g.dispose();
+                return currentState;
+            }
+            if (currentState.getWidth() < getWidth() || currentState.getHeight() < getHeight()) {
+                BufferedImage newBufferedImage = new BufferedImage(getWidth(), getHeight(), BufferedImage.TYPE_INT_ARGB);
+                Graphics g = newBufferedImage.getGraphics();
+                g.drawImage(currentState, 0, 0, null);
+                g.dispose();
+                currentState = newBufferedImage;
+            }
+            return currentState;
+        }
+
+
+        void draw() {
+
+            final Graphics2D g = (Graphics2D) getGraphics();
+            g.drawImage(getCurrentState(), 0, 0, null);
+            if (hoverText != null) {
+                double y = 0;
+                double x= this.x + 16;
+                for (int i = 0; i < hoverText.numLines(); ++i) {
+                    final String line = hoverText.getLine(i);
+                    double width =  SwingUtils.getTextWidth(g.getFontMetrics(), line);
+                    rect.setRect(x, this.y  + y, width, g.getFontMetrics().getHeight());
+                    g.setColor(SwingUtils.convert(hoverText.getBackground(i)));
+                    g.fill(rect);
+                    g.setColor(SwingUtils.convert(hoverText.getForeground(i)));
+                    g.draw(rect);
+                    g.drawString(line,SwingUtils.convert(x), SwingUtils.convert(this.y  + y+g.getFontMetrics().getAscent()));
+                    y += g.getFontMetrics().getHeight();
+                }
+
+            }
+            g.dispose();
+
+        }
+
+        void clear() {
+            hoverText = null;
+            x = -1;
+            y = -1;
+        }
+
+    }
 
     private final Panel panel;
+    Overlay overlay;
     double scrollFactor = 0.05;
 
     /**
@@ -48,7 +114,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
     public SwingRenderer(Figure figure, boolean headless) {
         super(figure);
         panel = new Panel(this);
-
         if (!headless) {
             try {
                 SwingUtilities.invokeAndWait(this::show);
@@ -56,7 +121,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
                 e.printStackTrace();
             }
         }
-
     }
 
     @Override
@@ -64,51 +128,10 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         return panel;
     }
 
-    /**
-     * Calculate the height of wrapped text
-     *
-     * @param fontMetrics the font metrics to use
-     * @param text        the text to display
-     * @param maxWidth    the maximum width of the text
-     * @param lineSpacing the line spacing
-     * @return the height of wrapped text
-     */
-    private static double getTextLineHeight(final FontMetrics fontMetrics, final String text, double maxWidth, double lineSpacing) {
-        int lineCount = 0;
-        int i = 0;
-        int wordStart = 0;
-        double currentWidth = 0;
-        while (i < text.length()) {
-            char c = text.charAt(i++);
-            if (Character.isWhitespace(c) && i != 0) {
-                final String word = text.substring(wordStart, i);
-                currentWidth += fontMetrics.stringWidth(word);
-                if (currentWidth > maxWidth) {
-                    ++lineCount;
-                    currentWidth = 0;
-                }
-                wordStart = i;
-            }
-        }
-        if (currentWidth > 0) {
-            ++lineCount;
-        }
-        return lineSpacing * lineCount * fontMetrics.getHeight();
-    }
-
-    @Override
-    protected double getTextLineHeight(Title title, double maxWidth, double lineSpacing) {
-        if (title.getText() == null || title.getText().length() == 0) {
-            return 0;
-        }
-        return getTextLineHeight(panel.getFontMetrics(SwingUtils.convert(title.getFont())), title.getText(), maxWidth, lineSpacing);
-    }
-
     @Override
     protected double getTextBaselineOffset(Font font) {
         return panel.getTextBaselineOffset(font);
     }
-
 
     @Override
     protected double getTextWidth(Font font, String text) {
@@ -172,8 +195,12 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
 
         @Override
         public void paintComponent(Graphics g) {
+            super.paintComponent(g);
             for (final Consumer<Graphics2D> h : queue) {
                 h.accept((Graphics2D) g);
+            }
+            if (renderer.overlay != null) {
+                renderer.overlay.currentState = null;
             }
         }
 
@@ -321,7 +348,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
                     g.setColor(convert(renderer.figure.getBackgroundColor()));
                 } else {
                     g.setColor(Color.WHITE);
-
                 }
                 g.fillRect(0, 0, getWidth(), getHeight());
                 g.setColor(Color.BLACK);
@@ -459,11 +485,14 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         int width = (int) Math.ceil(figure.getWidth()),
                 height = (int) Math.ceil(figure.getHeight());
         panel.setSize(width, height);
+        overlay = new Overlay(panel);
+
         panel.setPreferredSize(panel.getSize());
+        overlay.setPreferredSize(panel.getSize());
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
-                mouseInit(e.getX(),e.getY());
+                mouseInit(e.getX(), e.getY());
                 super.mousePressed(e);
             }
 
@@ -471,23 +500,36 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         panel.addMouseMotionListener(new MouseMotionAdapter() {
             @Override
             public void mouseDragged(MouseEvent e) {
-                pan(e.getX(), e.getY());
+                SwingRenderer.this.mouseDragged(e.getX(), e.getY());
                 super.mouseDragged(e);
+            }
 
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                SwingRenderer.this.mouseMoved(e.getX(), e.getY());
+                overlay.clear();
+                overlay.x = e.getX();
+                overlay.y = e.getY();
+                overlay.hoverText = SwingRenderer.this.getHoverText(e.getX(), e.getY());
+                overlay.draw();
+                super.mouseMoved(e);
             }
         });
         panel.addMouseWheelListener(new MouseAdapter() {
             @Override
             public void mouseWheelMoved(MouseWheelEvent e) {
-                zoom(e.getX(), e.getY(), e.getPreciseWheelRotation() * scrollFactor);
+                SwingRenderer.this.mouseWheelMoved(e.getX(), e.getY(), e.getPreciseWheelRotation() * scrollFactor);
                 super.mouseWheelMoved(e);
             }
         });
+        overlay.setSize(panel.getSize());
+        overlay.setOpaque(false);
         frame.getContentPane().add(panel);
+        frame.getContentPane().add(overlay);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.pack();
-        frame.setLayout(null);
         frame.setVisible(true);
+        frame.setLayout(null);
         refresh();
     }
 

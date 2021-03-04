@@ -13,7 +13,7 @@ import java.util.*;
 /**
  * Layouts for plot areas
  */
-public abstract class PlotLayout extends Component {
+public abstract class PlotLayout extends Component implements Themeable<PlotLayout> {
     Figure figure;
     String title;
     final List<PlotData<?>> data = new LinkedList<>();
@@ -24,11 +24,18 @@ public abstract class PlotLayout extends Component {
     Style selectedStyle = SelectedStyle.DEFAULT_SELECTED_STYLE;
     Style unselectedStyle = UnselectedStyle.DEFAULT_UNSELECTED_STYLE;
 
+
     protected static class Rectangular extends PlotLayout {
         final Axis x, y;
 
         public Rectangular() {
             this(new Axis.XAxis(), new Axis.YAxis());
+        }
+
+        public Rectangular(Axis x, Axis y) {
+            this.x = x;
+            this.y = y;
+
         }
 
         @Override
@@ -50,7 +57,6 @@ public abstract class PlotLayout extends Component {
 
         @Override
         protected void drawComponent(Renderer<?> source, ChartCanvas<?> canvas) {
-
 
             canvas.setFill(background);
             canvas.fillRect(x.posX, y.posY, x.sizeX, y.sizeY);
@@ -106,23 +112,21 @@ public abstract class PlotLayout extends Component {
                         }
                     }
                 } else {
-                    for (final Node2D<Runnable> n : markers.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY)) {
-                        final PlotData.PlotShape p = (PlotData.PlotShape) n;
-                        if (!p.isVisible()) {
+                    @SuppressWarnings("unchecked") final Set<PlotData.PlotMarker> foundMarkers = ((Set<PlotData.PlotMarker>) markers.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotData.PlotMarker.ORDER_COMPARATOR), minX, minY, maxX, maxY));
+                    for (final PlotData.PlotMarker n : foundMarkers) {
+                        if (!n.isVisible()) {
                             continue;
                         }
-                        if (p instanceof PlotData.PlotMarker) {
-                            canvas.setFill(p.getColor() == null ? p.getSource().getColor(-1) : p.getColor());
-                            Marker.MARKER.x = ((PlotData.XYData<?>) p.getSource()).getX(p.i());
-                            Marker.MARKER.y = ((PlotData.XYData<?>) p.getSource()).getY(p.i());
-                            Marker.MARKER.shape = p.getShape();
-                            Marker.MARKER.size = p.getSize();
-                            transformMarker(Marker.MARKER);
-                            Marker.MARKER.fill(canvas);
-                            if (trace.showEdge()) {
-                                canvas.setStroke(trace.getEdgeStroke(),trace.getEdgeColor());
-                                Marker.MARKER.stroke(canvas);
-                            }
+                        canvas.setFill(n.getColor() == null ? (n).getSource().getColor(-1) : n.getColor());
+                        Marker.MARKER.x = ((PlotData.XYData<?>) (n).getSource()).getX(((PlotData.PlotShape) n).i());
+                        Marker.MARKER.y = ((PlotData.XYData<?>) (n).getSource()).getY(((PlotData.PlotShape) n).i());
+                        Marker.MARKER.shape = n.getShape();
+                        Marker.MARKER.size = n.getSize();
+                        transformMarker(Marker.MARKER);
+                        Marker.MARKER.fill(canvas);
+                        if (trace.showEdge()) {
+                            canvas.setStroke(trace.getEdgeStroke(), trace.getEdgeColor());
+                            Marker.MARKER.stroke(canvas);
                         }
                     }
                 }
@@ -148,12 +152,6 @@ public abstract class PlotLayout extends Component {
             super.markDrawAsOld();
         }
 
-        public Rectangular(Axis x, Axis y) {
-            this.x = x;
-            this.y = y;
-
-        }
-
         @Override
         public Axis getXAxis() throws NullPointerException {
             return x;
@@ -176,6 +174,7 @@ public abstract class PlotLayout extends Component {
             x.upper = Math.max(minX, maxX);
             y.lower = Math.min(minY, maxY);
             y.upper = Math.max(minY, maxY);
+
             if (figure != null) {
                 figure.markLayoutAsOld();
                 figure.refresh();
@@ -186,6 +185,35 @@ public abstract class PlotLayout extends Component {
         @Override
         public String toString() {
             return String.format("RectangularPlot {%s}", title);
+        }
+
+        @Override
+        public PlotLayout apply(Theme theme) {
+            x.apply(theme);
+            y.apply(theme);
+            return super.apply(theme);
+        }
+
+        @Override
+        public Renderer.Tooltip getHoverText(double x, double y) {
+            double xMin = this.x.getValueFromPosition(x);
+            double yMin = this.y.getValueFromPosition(y);
+            final SortedSet<Node2D<Runnable>> found = new TreeSet<>(PlotData.PlotMarker.ORDER_COMPARATOR);
+            for (final PlotData<?> trace : data) {
+                markers.getOrDefault(trace, RTree.emptyTree()).search(found, xMin, yMin, xMin, yMin);
+                if (!found.isEmpty()) {
+                    final String[] text = new String[found.size()];
+                    final Color[] colors = new Color[found.size()];
+                    int i = 0;
+                    for (Node2D<Runnable> marker : found) {
+                        colors[i] = ((PlotData.PlotMarker) marker).getColor();
+                        text[i++] = trace.getHoverText(((PlotData.PlotMarker) marker).i);
+                    }
+                    return new Renderer.Tooltip(colors, text);
+                }
+            }
+
+            return null;
         }
 
         @Override
@@ -262,7 +290,7 @@ public abstract class PlotLayout extends Component {
     abstract boolean canAdd(PlotData<?> trace);
 
     public PlotLayout setTitle(String title) {
-        if (figure != null){
+        if (figure != null) {
             figure.setTitle(title);
             return this;
         }
@@ -379,5 +407,12 @@ public abstract class PlotLayout extends Component {
 
     public abstract PlotLayout setRange(double minX, double maxX, double minY, double maxY);
 
+    @Override
+    public PlotLayout apply(Theme theme) {
+        theme.layout.accept(this);
+        return this;
+    }
+
+    abstract Renderer.Tooltip getHoverText(double x, double y);
 
 }

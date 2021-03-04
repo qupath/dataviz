@@ -6,7 +6,7 @@ import net.mahdilamb.dataviz.graphics.*;
 /**
  * Either a colorscale or legend
  */
-abstract class KeyArea<K extends KeyArea<K>> extends Component {
+abstract class KeyArea<K extends KeyArea<K>> extends Component implements Themeable<K> {
     final Figure figure;
     boolean showBorder = false;
     Stroke border = Stroke.SOLID;
@@ -59,5 +59,6 @@ abstract class KeyArea<K extends KeyArea<K>> extends Component {
     protected K refresh() {
         return (K) super.refresh();
     }
+
 
 }

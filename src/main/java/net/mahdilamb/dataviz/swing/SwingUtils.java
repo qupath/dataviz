@@ -153,16 +153,16 @@ public final class SwingUtils {
         return maxWidth;
     }
 
-    public static void drawMultilineTextLeft(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
-        drawMultilineText(g, text, x, y, lineSpacing, width, 0);
+    public static double drawMultilineTextLeft(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
+        return drawMultilineText(g, text, x, y, lineSpacing, width, 0);
 
     }
 
-    public static void drawMultilineTextCenter(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
-        drawMultilineText(g, text, x, y, lineSpacing, width, .5);
+    public static double drawMultilineTextCenter(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {
+        return drawMultilineText(g, text, x, y, lineSpacing, width, .5);
     }
 
-    private static void drawMultilineText(final Graphics2D g, String text, double x, double y, double lineSpacing, double width, double frac) {
+    private static double drawMultilineText(final Graphics2D g, String text, double x, double y, double lineSpacing, double width, double frac) {
         int lineHeight = g.getFontMetrics().getHeight();
         int currentY = 0;
         int i = 0;
@@ -182,6 +182,7 @@ public final class SwingUtils {
             double pad = frac == 0 ? 0 : ((g.getFontMetrics().stringWidth(line) - width) * frac);
             g.drawString(line, SwingUtils.convert(x - pad), currentY + SwingUtils.convert(y));
         }
+        return currentY;
     }
 
     public static void drawMultilineTextRight(final Graphics2D g, String text, double x, double y, double lineSpacing, double width) {

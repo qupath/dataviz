@@ -77,6 +77,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         default boolean isVisible() {
             return getSource().isVisible(i());
         }
+
     }
 
     protected static final class PlotMarker extends PointNode<Runnable> implements PlotShape {
@@ -100,6 +101,16 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         @Override
         public PlotData<?> getSource() {
             return parent;
+        }
+
+        @Override
+        public boolean intersects(double minX, double minY, double maxX, double maxY) {
+            if (minX == maxX && maxY == minY) {
+                double a = getSize() * .5 / ((PlotLayout.Rectangular) parent.layout).x.scale;
+                double b = getSize() * .5 / ((PlotLayout.Rectangular) parent.layout).y.scale;
+                return RectangularNode.intersects(minX, minY, maxX, maxY, getMidX() - a, getMidY() - b, getMidX() + a, getMidY() + b);
+            }
+            return super.intersects(minX, minY, maxX, maxY);
         }
 
         @Override
@@ -319,7 +330,6 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             getPoints();
             return maxX;
         }
-
 
         @Override
         public double getMaxY() {
@@ -884,11 +894,11 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
     }
 
-    protected <T extends PlotTrace> T addAttribute(final Attribute attribute, T traceGroup) {
+    protected <T extends PlotTrace> T addAttribute(T traceGroup) {
         if (attributes == null) {
             attributes = new LinkedHashMap<>(Attribute.values().length);
         }
-        removeAttribute(attribute);
+        removeAttribute(traceGroup.attribute);
         for (final Map.Entry<Attribute, PlotTrace> a : attributes()) {
 
             PlotTrace candidate = a.getValue();
@@ -904,7 +914,11 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             }
 
         }
-        attributes.put(attribute, traceGroup);
+        attributes.put(traceGroup.attribute, traceGroup);
+        if (traceGroup.attribute == Attribute.SIZE && traceGroup instanceof PlotTrace.Numeric && ((PlotTrace.Numeric) traceGroup).scaleMin < 0) {
+            ((PlotTrace.Numeric) traceGroup).scaleMin = Scatter.DEFAULT_MARKER_SIZE;
+            ((PlotTrace.Numeric) traceGroup).scaleMin = Scatter.DEFAULT_MAX_MARKER_SIZE;
+        }
         return traceGroup;
     }
 
@@ -979,16 +993,17 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
      */
     protected abstract void init(PlotLayout plotLayout);
 
-    final boolean showsColorBar(){
+    final boolean showsColorBar() {
         return showScale & colors != null & (colors instanceof PlotTrace.Numeric);
     }
+
     void layoutColorBar(Renderer<?> source, ColorScales scales) {
-            ((PlotTrace.Numeric) colors).layoutColorBar(source, scales);
+        ((PlotTrace.Numeric) colors).layoutColorBar(source, scales);
 
     }
 
     void drawColorBar(Renderer<?> source, ChartCanvas<?> canvas, ColorScales scales) {
-        ((PlotTrace.Numeric) colors).drawColorBar(source,canvas, scales);
+        ((PlotTrace.Numeric) colors).drawColorBar(source, canvas, scales);
 
     }
 

@@ -16,6 +16,8 @@ import static net.mahdilamb.statistics.ArrayUtils.linearlySpaced;
 public class SwingTest {
     static final DataFrame iris = loadDataFromResource("iris.csv");
     static final DataFrame gapminder = loadDataFromResource("gapminder.csv");
+    static final DataFrame tips = loadDataFromResource("tips.csv");
+
 
     /**
      * Create a basic scatter plot from an array of doubles
@@ -166,16 +168,18 @@ public class SwingTest {
     }
 
     static void colorDimensionScatter1() {
-        int N = 100000;
+        int N = 100_000;
         new Scatter(ArrayUtils.full(ThreadLocalRandom.current()::nextGaussian, N), ArrayUtils.full(ThreadLocalRandom.current()::nextGaussian, N))
                 .setColors(ArrayUtils.full(ThreadLocalRandom.current()::nextGaussian, N))
                 .setColormap("viridis")
-                .setShape(",")
+                .setSize(8)
+                .showEdges(true)
                 .show();
     }
 
 
     public static void main(String[] args) {
-        colorDimensionScatter();
+        line2();
+
     }
 }

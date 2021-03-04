@@ -1,9 +1,6 @@
 package net.mahdilamb.dataviz.utils.rtree;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 import java.util.function.Predicate;
 
 /**
@@ -73,7 +70,7 @@ public class RTree<T> extends AbstractRTree<T> {
         }
 
         @Override
-        public Collection<? extends Node2D<T>> search(double minX, double minY, double maxX, double maxY) {
+        public List<? extends Node2D<T>> search(double minX, double minY, double maxX, double maxY) {
             return searchRecursive(minX, minY, maxX, maxY);
         }
 
@@ -112,6 +109,20 @@ public class RTree<T> extends AbstractRTree<T> {
     @Override
     public List<? extends Node2D<T>> search(double minX, double minY, double maxX, double maxY) {
         return super.searchNonRecursive(minX, minY, maxX, maxY);
+    }
+
+    /**
+     * Return a set of matches in the given range. This can be useful if, for example, the matches need to be in a
+     * specific order
+     *
+     * @param minX the minimum x component of the data
+     * @param minY the maximum x component of the data
+     * @param maxX the minimum y component of the data
+     * @param maxY the maximum y component of the data
+     * @return the leaf nodes in the given range
+     */
+    public Set<? extends Node2D<T>> search(final Set<Node2D<T>> out, double minX, double minY, double maxX, double maxY) {
+        return super.searchRecursive(out, minX, minY, maxX, maxY);
     }
 
     @Override

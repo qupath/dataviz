@@ -12,7 +12,7 @@ import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 /**
  * Axis component of a plot
  */
-public abstract class Axis extends Component {
+public abstract class Axis extends Component implements Themeable<Axis> {
 
     private static final DecimalFormat DECIMAL_FORMAT = new DecimalFormat();
 
@@ -106,7 +106,7 @@ public abstract class Axis extends Component {
 
         @Override
         void drawAxis(ChartCanvas<?> canvas) {
-            if (showAxisLine) {
+            if (showAxisLine && axisStroke.getWidth() > 0) {
                 canvas.setStroke(axisStroke, axisColor);
                 canvas.strokeLine(posX, posY, posX + sizeX, posY);
             }
@@ -315,7 +315,7 @@ public abstract class Axis extends Component {
 
         @Override
         void drawAxis(ChartCanvas<?> canvas) {
-            if (showAxisLine) {
+            if (showAxisLine && axisStroke.getWidth() > 0) {
                 canvas.setStroke(axisStroke, axisColor);
                 canvas.strokeLine(posX + sizeX, posY, posX + sizeX, posY + sizeY);
             }
@@ -534,6 +534,12 @@ public abstract class Axis extends Component {
     }
 
     @Override
+    public Axis apply(Theme theme) {
+        theme.axis.accept(this);
+        return this;
+    }
+
+    @Override
     public String toString() {
         return String.format(
                 "{%s%s%s%s%s}",
@@ -546,7 +552,7 @@ public abstract class Axis extends Component {
     }
 
     //from https://stackoverflow.com/questions/8506881/nice-label-algorithm-for-charts-with-minimum-ticks#:~:text=For%20example%2C%20if%20the%20data,a%20tick%20spacing%20of%200.05.
-    private static double niceNum(double range, boolean round) {
+    static double niceNum(double range, boolean round) {
         double exponent; /* exponent of range */
         double fraction; /* fractional part of range */
         double niceFraction; /* nice, rounded fraction */

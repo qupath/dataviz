@@ -4,11 +4,11 @@ package net.mahdilamb.dataviz.utils.rtree;
 import java.util.*;
 import java.util.function.Predicate;
 
+import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 import static net.mahdilamb.dataviz.utils.rtree.Node2D.distBBox;
 import static net.mahdilamb.dataviz.utils.rtree.Node2D.union;
 import static net.mahdilamb.dataviz.utils.rtree.RectangularNode.enlargedArea;
 import static net.mahdilamb.dataviz.utils.rtree.RectangularNode.intersectionArea;
-import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
 
 /**
@@ -88,7 +88,7 @@ abstract class AbstractRTree<T> {
      * @return the leaf nodes in the given range
      * @implNote this implementation is here to provide an example of using one of the functional approaches
      */
-    public abstract Collection<? extends Node2D<T>> search(double minX, double minY, double maxX, double maxY);
+    public abstract List<? extends Node2D<T>> search(double minX, double minY, double maxX, double maxY);
 
     /**
      * Traverse through the tree. If leafFunction is true, then the traversal terminates
@@ -193,6 +193,22 @@ abstract class AbstractRTree<T> {
         return results;
     }
 
+    private Set<? extends Node2D<T>> searchRecursive0(double minX, double minY, double maxX, double maxY, Node2D<T> node, Set<Node2D<T>> results) {
+        if (node == null) {
+            return results;
+        }
+        if (node.intersects(minX, minY, maxX, maxY)) {
+            if (node.leaf) {
+                results.add(node);
+            } else {
+                for (int i = 0; i < node.children.size(); i++) {
+                    searchRecursive0(minX, minY, maxX, maxY, node.children.get(i), results);
+                }
+            }
+        }
+        return results;
+    }
+
     List<? extends Node2D<T>> searchNonRecursive(double minX, double minY, double maxX, double maxY) {
         if (!root.intersects(minX, minY, maxX, maxY)) {
             return Collections.emptyList();
@@ -219,6 +235,13 @@ abstract class AbstractRTree<T> {
         return searchRecursive0(minX, minY, maxX, maxY, this.root, new LinkedList<>());
     }
 
+    Set<? extends Node2D<T>> searchRecursive(Set<Node2D<T>> out, double minX, double minY, double maxX, double maxY) {
+        if (!this.root.intersects(minX, minY, maxX, maxY)) {
+            return Collections.emptySet();
+        }
+        return searchRecursive0(minX, minY, maxX, maxY, this.root, out);
+    }
+
     private void traverseRecursive0(Predicate<Node2D<T>> nodePredicate, Predicate<Node2D<T>> leafFunction, Node2D<T> node) {
         if (node == null) {
             return;
@@ -242,15 +265,16 @@ abstract class AbstractRTree<T> {
         final Stack<Node2D<T>> nodesToSearch = getStack(this.root);
         while (!nodesToSearch.isEmpty()) {
             Node2D<T> node = nodesToSearch.pop();
-            if (nodePredicate.test(node)) {
-                if (node.leaf) {
-                    if (leafPredicate.test(node)) {
-                        return;
-                    }
-                } else {
+            if (node.leaf) {
+                if (leafPredicate.test(node)) {
+                    return;
+                }
+            } else {
+                if (nodePredicate.test(node)) {
                     nodesToSearch.addAll(node.children);
                 }
             }
+
         }
     }
 

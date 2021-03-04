@@ -222,4 +222,10 @@ public abstract class Node2D<T> {
         );
     }
 
+    /**
+     * @return whether this is a leaf node or not
+     */
+    public final boolean isLeaf() {
+        return leaf;
+    }
 }

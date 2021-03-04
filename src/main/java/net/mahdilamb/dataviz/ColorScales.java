@@ -1,21 +1,26 @@
 package net.mahdilamb.dataviz;
 
+import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.dataviz.graphics.ChartCanvas;
 import net.mahdilamb.dataviz.graphics.Orientation;
 import net.mahdilamb.dataviz.graphics.Paint;
+import net.mahdilamb.dataviz.graphics.Stroke;
+import net.mahdilamb.dataviz.utils.Numbers;
+
+import static net.mahdilamb.dataviz.Axis.niceNum;
 
 /**
  * The color scales area of a figure
  */
 public final class ColorScales extends KeyArea<ColorScales> {
-    protected static final class ModifiableGradient extends Paint.Gradient {
+    private static final class ModifiableGradient extends Paint.Gradient {
 
-        protected ModifiableGradient(Colormap colorMap, double startX, double startY, double endX, double endY) {
+        ModifiableGradient(Colormap colorMap, double startX, double startY, double endX, double endY) {
             super(Paint.GradientType.LINEAR, colorMap, startX, startY, endX, endY);
         }
 
-        void update(ColorScales scales, ColorBar colorBar) {
+        final void update(ColorScales scales, ColorBar colorBar) {
             endX = scales.padding + colorBar.posX;
             endY = colorBar.posY;
             startX = endX + colorBar.sizeX;
@@ -25,21 +30,24 @@ public final class ColorScales extends KeyArea<ColorScales> {
     }
 
     private static final class ModifiablePaint extends Paint {
-        ModifiableGradient gradient;
+        final ModifiableGradient gradient;
 
-        public ModifiablePaint(ModifiableGradient gradient) {
+        ModifiablePaint(ModifiableGradient gradient) {
             super(gradient);
             this.gradient = gradient;
         }
 
-
     }
 
-    protected static final class ColorBar extends Component {
+    static final class ColorBar extends Component {
+        static final int MAX_TICKS = 8;
         private final PlotTrace.Numeric trace;
         ModifiablePaint gradient;
+        double[] values;
+        String[] labels;
+        double labelWidth, barWidth, barHeight;
 
-        public ColorBar(PlotTrace.Numeric trace) {
+        ColorBar(PlotTrace.Numeric trace) {
             this.trace = trace;
         }
 
@@ -53,20 +61,79 @@ public final class ColorScales extends KeyArea<ColorScales> {
             //ignored
         }
 
+        void clear() {
+            labelWidth = 0;
+            labels = null;
+            values = null;
+        }
+
         void computeSize(Renderer<?> source, ColorScales scales) {
-            //TODO deal with tick marks and labels + title
+
             if (scales.orientation == Orientation.VERTICAL) {
-                sizeX = scales.thickness;
-                sizeY = scales.size * scales.sizeY;
+                barWidth = sizeX = scales.thickness;
+                barHeight = sizeY = scales.size * scales.sizeY;
+                if (scales.showTicks) {
+                    sizeX += scales.tickLength;
+                }
             } else {
-                sizeY = scales.thickness;
-                sizeX = scales.size;
+                barHeight = sizeY = scales.thickness;
+                barWidth = sizeX = scales.size;
+            }
+            if (scales.showLabels) {
+                if (labels == null) {
+                    double upper = trace.valMax;
+                    double lower = trace.valMin;
+                    final double range = niceNum(upper - lower, false);
+                    double spacing = niceNum(range / MAX_TICKS, true);
+                    double first = Math.floor(lower / spacing) * spacing;
+                    double last = Math.ceil(upper / spacing) * spacing;
+                    labels = new String[MAX_TICKS + 1];
+                    values = new double[MAX_TICKS + 1];
+                    int i = 0;
+                    for (double d = first; d <= last && i < values.length; d += spacing, ++i) {
+                        values[i] = d;
+                        labels[i] = String.valueOf(Numbers.approximateDouble(values[i]));
+                        labelWidth = Math.max(source.getTextWidth(scales.itemFont, labels[i]), labelWidth);
+                    }
+                }
+                sizeX += labelWidth;
+
             }
         }
 
         void drawColorBar(Renderer<?> source, ChartCanvas<?> canvas, ColorScales scales) {
-            canvas.setFill(getGradient());
-            canvas.fillRect(scales.padding+posX, posY, sizeX, sizeY);
+            if (scales.showLabels) {
+                double upper = trace.valMax;
+                double lower = trace.valMin;
+                final double range = upper - lower;
+                if (scales.orientation == Orientation.VERTICAL) {
+                    double baselineOffset = source.getTextBaselineOffset(scales.itemFont);
+                    baselineOffset -= source.getTextLineHeight(scales.itemFont) * .5;
+                    canvas.setStroke(scales.tickStyle, Color.black);
+                    canvas.setFill(Color.BLACK);
+                    canvas.setFont(scales.itemFont);
+                    double barEnd = scales.padding + posX + barWidth;
+                    for (int i = 0; i < values.length; ++i) {
+                        final double d = values[i];
+                        if (d < trace.valMin || d > trace.valMax || labels[i] == null) {
+                            continue;
+                        }
+                        double y = posY + (((upper - d) / range) * sizeY);
+                        if (scales.showTicks) {
+                            canvas.strokeLine(barEnd, y, barEnd + scales.tickLength, y);
+                        }
+                        if (scales.showLabels) {
+                            canvas.fillText(labels[i], barEnd + (scales.showTicks ? (scales.tickLength ) : 0)+ 2, y + baselineOffset);
+
+                        }
+                    }
+                    canvas.setFill(getGradient());
+                    canvas.fillRect(scales.padding + posX, posY, barWidth, barHeight);
+                } else {
+                    throw new UnsupportedOperationException();//TODO
+                }
+            }
+
         }
 
         private ModifiablePaint getGradient() {
@@ -78,9 +145,13 @@ public final class ColorScales extends KeyArea<ColorScales> {
 
     }
 
-    double size = .9;
-    double thickness = 30;
-    double padding = 10;
+    double size = .9,
+            thickness = 30,
+            padding = 10,
+            tickLength = 5;
+    Stroke tickStyle = Stroke.SOLID;
+    boolean showLabels = true,
+            showTicks = false;
 
     ColorScales(Figure figure) {
         super(figure);
@@ -100,11 +171,11 @@ public final class ColorScales extends KeyArea<ColorScales> {
                 sizeX += ((PlotTrace.Numeric) trace.colors).getColorBar().sizeX;
                 ((PlotTrace.Numeric) trace.colors).getColorBar().posY = posY + (.5 * (1 - size)) * sizeY;
             }
-            posX = maxX - sizeX-padding;
+            posX = maxX - sizeX - padding;
             if (sizeX == 0) {
                 sizeY = 0;
             } else {
-                double x = posX ;
+                double x = posX;
                 sizeX += padding;
                 for (final PlotData<?> trace : figure.layout.data) {
                     if (!trace.showsColorBar()) {
@@ -116,7 +187,6 @@ public final class ColorScales extends KeyArea<ColorScales> {
 
                 }
             }
-
         } else {
             throw new UnsupportedOperationException();//TODO
         }
@@ -124,12 +194,20 @@ public final class ColorScales extends KeyArea<ColorScales> {
 
     @Override
     protected void drawComponent(Renderer<?> source, ChartCanvas<?> canvas) {
-            for (final PlotData<?> trace : figure.layout.data) {
-                if (!trace.showsColorBar()) {
-                    continue;
-                }
-                trace.drawColorBar(source, canvas, this);
+        for (final PlotData<?> trace : figure.layout.data) {
+            if (!trace.showsColorBar()) {
+                continue;
             }
+            trace.drawColorBar(source, canvas, this);
+        }
 
     }
+
+    @Override
+    public ColorScales apply(Theme theme) {
+        theme.colorScales.accept(this);
+        return this;
+    }
+
+
 }

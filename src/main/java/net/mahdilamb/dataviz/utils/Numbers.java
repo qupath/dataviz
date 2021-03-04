@@ -1,7 +1,5 @@
 package net.mahdilamb.dataviz.utils;
 
-import static net.mahdilamb.dataviz.utils.Ryu.*;
-
 /**
  * Utility methods for working with numbers
  */
@@ -38,6 +36,21 @@ public final class Numbers {
     }
 
     /**
+     * Find the square of the distance distance between two 2D points
+     *
+     * @param ax x of point a
+     * @param ay y of point a
+     * @param bx x of point b
+     * @param by y of point b
+     * @return square of the distance between a and b
+     */
+    public static double distanceSq(final double ax, final double ay, final double bx, final double by) {
+        final double deltaX = ax - bx;
+        final double deltaY = ay - by;
+        return deltaX * deltaX + deltaY * deltaY;
+    }
+
+    /**
      * Find the distance between two 2D points
      *
      * @param ax x of point a
@@ -47,9 +60,7 @@ public final class Numbers {
      * @return distance between a and b
      */
     public static double distance(final double ax, final double ay, final double bx, final double by) {
-        final double deltaX = ax - bx;
-        final double deltaY = ay - by;
-        return Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+        return Math.sqrt(distanceSq(ax, ay, bx, by));
     }
 
     /**

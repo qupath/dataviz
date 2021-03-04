@@ -67,8 +67,7 @@ public abstract class PlotTrace extends Component {
             return categories[indices[i]];
         }
 
-        //todo make private
-        public int getRaw(int i) {
+        int getRaw(int i) {
             return indices[i];
         }
 
@@ -88,7 +87,6 @@ public abstract class PlotTrace extends Component {
                 legendItems = new Legend.LegendItem[categories.length];
                 for (int j = 0; j < categories.length; ++j) {
                     legendItems[j] = createLegendItem(data, this, j);
-
                 }
             }
             return legendItems[i];
@@ -232,8 +230,7 @@ public abstract class PlotTrace extends Component {
             return lerp(min, max, easeOutExpo(t));
         }
 
-        //TODO make not private
-        public double getRaw(int index) {
+        double getRaw(int index) {
             return values[index];
         }
 
@@ -345,8 +342,9 @@ public abstract class PlotTrace extends Component {
         void layoutColorBar(Renderer<?> source, ColorScales scales) {
             getColorBar().computeSize(source, scales);
         }
-        void drawColorBar(Renderer<?> source,ChartCanvas<?> canvas, ColorScales scales) {
-            getColorBar().drawColorBar(source, canvas,scales);
+
+        void drawColorBar(Renderer<?> source, ChartCanvas<?> canvas, ColorScales scales) {
+            getColorBar().drawColorBar(source, canvas, scales);
         }
     }
 
@@ -568,7 +566,9 @@ public abstract class PlotTrace extends Component {
             out.glyph.color = new Color(baseColor.red(), baseColor.green(), baseColor.blue(), trace.attribute == PlotData.Attribute.COLOR ? .8 : 1);
             return out;
         } else {
-            return new Legend.LegendItem(trace.categories[j], new Legend.XYDataGlyph(ScatterMode.MARKER_ONLY));
+            final Legend.LegendItem out = new Legend.LegendItem(trace.categories[j], new Legend.XYDataGlyph(ScatterMode.MARKER_ONLY));
+            //TODO update color
+            return out;
         }
     }
 

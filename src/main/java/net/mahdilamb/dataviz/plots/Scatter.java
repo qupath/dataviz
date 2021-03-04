@@ -139,7 +139,7 @@ public final class Scatter extends PlotData.XYData<Scatter> {
     }
 
     public Scatter setSizes(double[] values) {
-        markerSizes = addAttribute(Attribute.SIZE, new PlotTrace.Numeric(this, Attribute.SIZE, null, values));
+        markerSizes = addAttribute(new PlotTrace.Numeric(this, Attribute.SIZE, null, values));
         return this;
     }
 
@@ -148,7 +148,7 @@ public final class Scatter extends PlotData.XYData<Scatter> {
     }
 
     public Scatter setColors(final double[] values) {
-        colors = addAttribute(Attribute.COLOR, new PlotTrace.Numeric(this, Attribute.COLOR, null, values, 0, 1));
+        colors = addAttribute(new PlotTrace.Numeric(this, Attribute.COLOR, null, values, 0, 1));
         return this;
     }
 
@@ -182,9 +182,9 @@ public final class Scatter extends PlotData.XYData<Scatter> {
     @Override
     protected Color getEdgeColor() {
         if (edgeColor == null && markerColor != null) {
-            edgeColor = Colors.calculateLuminance(markerColor.red() *getBackgroundColor(layout).red(),markerColor.green() *getBackgroundColor(layout).green(),markerColor.blue() *getBackgroundColor(layout).blue() ) > 0.1791 ? Color.BLACK : Color.WHITE;
+            edgeColor = Colors.calculateLuminance(markerColor.red() * getBackgroundColor(layout).red(), markerColor.green() * getBackgroundColor(layout).green(), markerColor.blue() * getBackgroundColor(layout).blue()) > 0.1791 ? Color.BLACK : Color.WHITE;
         }
-        if (edgeColor!= null){
+        if (edgeColor != null) {
             return edgeColor;
         }
         return super.getEdgeColor();
@@ -209,24 +209,24 @@ public final class Scatter extends PlotData.XYData<Scatter> {
     }
 
     private void setMarkerSizes(final Series<?> s) {
-        markerSizes = addAttribute(PlotData.Attribute.SIZE, new PlotTrace.Categorical(this, PlotData.Attribute.SIZE, s));
+        markerSizes = addAttribute(new PlotTrace.Categorical(this, PlotData.Attribute.SIZE, s));
         addToHoverText(markerSizes, "%s=%{size:s}", () -> markerSizes.getName(), "size", ((PlotTrace.Categorical) markerSizes)::get);
     }
 
     private void setMarkerSizes(final Series<?> s, double minSize, double maxSize) {
-        markerSizes = addAttribute(Attribute.SIZE, new PlotTrace.Numeric(this, PlotData.Attribute.SIZE, s, minSize, maxSize));
-        addToHoverText(markerSizes, "%s=%{size:.1f}", () -> markerSizes.getName(), "size", ((PlotTrace.Numeric) markerSizes)::getRaw);
+        markerSizes = addAttribute(new PlotTrace.Numeric(this, PlotData.Attribute.SIZE, s, minSize, maxSize));
+        addToHoverText(markerSizes, "%s=%{size:.1f}", () -> markerSizes.getName(), "size", i -> getRaw(((PlotTrace.Numeric) markerSizes), i));
     }
 
     private void setColorsQualitative(final Series<?> s) {
-        colors = addAttribute(PlotData.Attribute.COLOR, new PlotTrace.Categorical(this, PlotData.Attribute.COLOR, s));
+        colors = addAttribute(new PlotTrace.Categorical(this, PlotData.Attribute.COLOR, s));
         addToHoverText(colors, "%s=%{color:s}", () -> colors.getName(), "color", ((PlotTrace.Categorical) colors)::get);
 
     }
 
     private void setColorsSequential(final Series<?> s) {
-        colors = addAttribute(PlotData.Attribute.COLOR, new PlotTrace.Numeric(this, PlotData.Attribute.COLOR, s));
-        addToHoverText(colors, "%s=%{color:.1f}", () -> colors.getName(), "color", ((PlotTrace.Numeric) colors)::getRaw);
+        colors = addAttribute(new PlotTrace.Numeric(this, PlotData.Attribute.COLOR, s));
+        addToHoverText(colors, "%s=%{color:.1f}", () -> colors.getName(), "color", i -> getRaw(((PlotTrace.Numeric) colors), i));
     }
 
     @Override
@@ -249,7 +249,7 @@ public final class Scatter extends PlotData.XYData<Scatter> {
     @Override
     protected MarkerShape getShape(int i) {
         if (markerShapes != null) {
-            return MarkerShape.get(markerShapes.getRaw(i));
+            return MarkerShape.get(getRaw(markerShapes, i));
         }
         return shape;
     }
@@ -307,7 +307,7 @@ public final class Scatter extends PlotData.XYData<Scatter> {
             throw new UnsupportedOperationException("Cannot use a double series to set shapes");
         }
         clear();
-        markerShapes = addAttribute(PlotData.Attribute.SHAPE, new PlotTrace.Categorical(this, PlotData.Attribute.SHAPE, series.asString()));
+        markerShapes = addAttribute(new PlotTrace.Categorical(this, PlotData.Attribute.SHAPE, series.asString()));
         addToHoverText(markerShapes, "%s=%{shape:s}", () -> markerShapes.getName(), "shape", ((PlotTrace.Categorical) markerShapes)::get);
         return this;
     }

@@ -67,7 +67,7 @@ public final class Line extends PlotData.XYData<Line> {
             throw new UnsupportedOperationException("Series must not be double");
         }
         clear();
-        colors = addAttribute(PlotData.Attribute.COLOR, new PlotTrace.Categorical(this, Attribute.COLOR, s));
+        colors = addAttribute(new PlotTrace.Categorical(this, Attribute.COLOR, s));
         addToHoverText(colors, "%s=%{color:s}", () -> colors.getName(), "color", ((PlotTrace.Categorical) colors)::get);
         return this;
     }

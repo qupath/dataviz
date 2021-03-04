@@ -211,7 +211,7 @@ public class RectangularNode<T> extends Node2D<T> {
         return intersects(a.getMinX(), a.getMinY(), a.getMaxX(), a.getMaxY(), b.getMinX(), b.getMinY(), b.getMaxX(), b.getMaxY());
     }
 
-    static boolean intersects(double aMinX,
+    public static boolean intersects(double aMinX,
                               double aMinY,
                               double aMaxX,
                               double aMaxY
@@ -219,7 +219,7 @@ public class RectangularNode<T> extends Node2D<T> {
         return intersects(aMinX, aMinY, aMaxX, aMaxY, b.getMinX(), b.getMinY(), b.getMaxX(), b.getMaxY());
     }
 
-    static boolean intersects(
+    public static boolean intersects(
             double aMinX,
             double aMinY,
             double aMaxX,

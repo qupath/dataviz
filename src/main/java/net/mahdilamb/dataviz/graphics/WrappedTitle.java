@@ -33,7 +33,6 @@ public class WrappedTitle extends Title {
         super(text, font);
     }
 
-
     @Override
     protected void layoutComponent(Renderer<?> source, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {

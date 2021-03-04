@@ -15,7 +15,7 @@ import java.util.function.Function;
 
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
-public final class Figure extends Component implements FigureComponent<Figure> {
+public final class Figure extends Component implements FigureComponent<Figure>, Themeable<Figure> {
     private static final Colormap DEFAULT_QUALITATIVE_COLORMAP = Colormaps.get("Plotly");
     private static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = Colormaps.get("Viridis");
     private static final double DEFAULT_WIDTH = 800;
@@ -68,7 +68,7 @@ public final class Figure extends Component implements FigureComponent<Figure> {
             if (trace instanceof PlotData.XYData) {
                 final PlotLayout.Rectangular plot = new PlotLayout.Rectangular();
                 plot.figure = this;
-                if (trace.title != null){
+                if (trace.title != null) {
                     plot.title = trace.title;
                 }
                 title.setText(plot.title);
@@ -120,8 +120,12 @@ public final class Figure extends Component implements FigureComponent<Figure> {
      * @param theme the theme to apply
      * @return this figure
      */
+    @Override
     public Figure apply(final Theme theme) {
-        theme.apply(this);
+        theme.figure.accept(this);
+        layout.apply(theme);
+        legend.apply(theme);
+        colorScales.apply(theme);
         update();
         return this;
     }

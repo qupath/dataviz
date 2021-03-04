@@ -12,6 +12,8 @@ import java.util.Map;
  * The legend area of a figure
  */
 public final class Legend extends KeyArea<Legend> {
+
+
     static abstract class Glyph {
         Color color = Color.DARK_GRAY;
         double sizeX = Scatter.DEFAULT_MARKER_SIZE;
@@ -194,5 +196,11 @@ public final class Legend extends KeyArea<Legend> {
             canvas.setStroke(border, borderColor);
             canvas.strokeRect(posX, posY, sizeX, sizeY);
         }
+    }
+
+    @Override
+    public Legend apply(Theme theme) {
+        theme.legend.accept(this);
+        return this;
     }
 }
