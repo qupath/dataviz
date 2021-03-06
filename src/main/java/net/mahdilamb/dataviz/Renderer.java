@@ -15,6 +15,84 @@ import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public abstract class Renderer<IMG> {
+
+    protected static final class Tooltip {
+        double x, y;
+        String text;
+        Color background;
+        boolean hasChanges = true;
+
+        Tooltip() {
+
+        }
+
+        Tooltip set(final Color background, String text) {
+            hasChanges |= !Objects.equals(background, this.background) || !Objects.equals(text, this.text);
+            this.background = background;
+            this.text = text;
+            return this;
+        }
+
+        Tooltip set(double x, double y) {
+            hasChanges |= this.x != x || this.y != y;
+            this.x = x;
+            this.y = y;
+            return this;
+        }
+
+        Tooltip set(double x, double y, final Color background, String text) {
+            hasChanges |= !Objects.equals(background, this.background) || !Objects.equals(text, this.text) || this.x != x || this.y != y;
+            this.x = x;
+            this.y = y;
+            this.background = background;
+            this.text = text;
+            return this;
+        }
+
+        /**
+         * @return the text of the tool tip
+         */
+        public String getText() {
+            return text;
+        }
+
+        /**
+         * @return the background color
+         */
+        public Color getBackground() {
+            return background;
+        }
+
+        /**
+         * @return the foreground color
+         */
+        public Color getForeground() {
+            return background.calculateLuminance() > 0.1791 ? Color.BLACK : Color.WHITE;
+        }
+
+        /**
+         * @return the x position of the tooltip
+         */
+        public double getX() {
+            return x;
+        }
+
+        /**
+         * @return the y position of the tooltip
+         */
+        public double getY() {
+            return y;
+        }
+
+        /**
+         * @return whether the tooltip has changes from the last draw
+         */
+        public boolean hasChanges() {
+            return hasChanges;
+        }
+
+    }
+
     private static final Map<String, BiConsumer<File, Renderer<?>>> supportedFormats = new HashMap<>();
 
     static {
@@ -277,70 +355,21 @@ public abstract class Renderer<IMG> {
         return component.drawNeedsRefresh;
     }
 
-    protected static final class Tooltip {
-        double x, y;
-        String text;
-        Color background;
-        boolean hasChanges = true;
-
-        Tooltip() {
-
-        }
-
-        Tooltip set(final Color background, String text) {
-            hasChanges |= !Objects.equals(background, this.background) || !Objects.equals(text, this.text);
-            this.background = background;
-            this.text = text;
-            return this;
-        }
-
-        Tooltip set(double x, double y) {
-            hasChanges |= this.x != x || this.y != y;
-            this.x = x;
-            this.y = y;
-            return this;
-        }
-
-        Tooltip set(double x, double y, final Color background, String text) {
-            hasChanges |= !Objects.equals(background, this.background) || !Objects.equals(text, this.text) || this.x != x || this.y != y;
-            this.x = x;
-            this.y = y;
-            this.background = background;
-            this.text = text;
-            return this;
-        }
-
-        public String getLine() {
-            return text;
-        }
-
-        public Color getBackground() {
-            return background;
-        }
-
-        public Color getForeground() {
-            return background.calculateLuminance() > 0.1791 ? Color.BLACK : Color.WHITE;
-        }
-
-        public double getX() {
-            return x;
-        }
-
-        public double getY() {
-            return y;
-        }
-
-        public boolean hasChanges() {
-            return hasChanges;
-        }
-
-
-        public void drawn() {
-            hasChanges = false;
-        }
+    /**
+     * Reset the tooltip
+     *
+     * @param renderer the renderer
+     */
+    protected static void resetTooltip(final Renderer<?> renderer) {
+        renderer.figure.layout.tooltip.hasChanges = true;
     }
 
-    protected static void markHoverTextOld(final Renderer<?> renderer) {
-        renderer.figure.layout.tooltip.hasChanges = true;
+    /**
+     * Mark the tooltip as drawn
+     *
+     * @param renderer the renderer
+     */
+    protected static void markTooltipOld(final Renderer<?> renderer) {
+        renderer.figure.layout.tooltip.hasChanges = false;
     }
 }

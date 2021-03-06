@@ -69,7 +69,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
 
                     double y = hoverText.getY() - g.getFontMetrics().getHeight() * .5;
                     double x = hoverText.getX();
-                    final String line = hoverText.getLine();
+                    final String line = hoverText.getText();
                     double width = SwingUtils.getTextWidth(g.getFontMetrics(), line);
                     if ((x + width) > getWidth()) {
                         x -= width + 16;
@@ -82,12 +82,11 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
                     g.setColor(SwingUtils.convert(hoverText.getForeground()));
                     g.draw(rect);
                     g.drawString(line, SwingUtils.convert(x), SwingUtils.convert(y + g.getFontMetrics().getAscent()));
-                    hoverText.drawn();
+                    markTooltipOld(panel.renderer);
                 }
             }else {
-
                 g.drawImage(getCurrentState(), 0, 0, null);
-                markHoverTextOld(panel.renderer);
+                resetTooltip(panel.renderer);
 
             }
             g.dispose();

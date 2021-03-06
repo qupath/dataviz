@@ -29,8 +29,7 @@ public class Bar extends PlotData.CategoricalData<Bar> {
     }
 
     public Bar(DataFrame dataFrame, String x, String[] y) {
-        super(dataFrame, null, x);
-        categoryLabels = y;
-        //TODO
+        super(dataFrame, x, y);
+
     }
 }

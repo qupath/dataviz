@@ -47,7 +47,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
         return parent.isVisible(i);
     }
 
-    protected static final class PlotPolygon extends PlotShape {
+    protected static final class Polygon extends PlotShape {
         protected static final class PlotPoint extends PointNode<Runnable> {
 
             public PlotPoint(double x, double y, Runnable data) {
@@ -68,12 +68,12 @@ public abstract class PlotShape extends Node2D<Runnable> {
         IntArrayList ids;
         PlotPoint[] points;
 
-        protected PlotPolygon(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
+        protected Polygon(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
             super(parent, ids.size() == 0 ? -1 : ids.get(0), data);
             this.ids = ids;
         }
 
-        protected PlotPolygon(PlotData.RelationalData<?> parent, IntArrayList ids) {
+        protected Polygon(PlotData.RelationalData<?> parent, IntArrayList ids) {
             this(parent, ids, EMPTY_RUNNABLE);
         }
 
@@ -136,10 +136,10 @@ public abstract class PlotShape extends Node2D<Runnable> {
         }
     }
 
-    protected static final class PlotPolyLine extends PlotShape {
+    protected static final class PolyLine extends PlotShape {
 
         protected static final class Segment extends RectangularNode<Runnable> {
-            PlotPolyLine line;
+            PolyLine line;
             double startX, startY, endX, endY;
 
             private Segment(double startX, double startY, double endX, double endY) {
@@ -155,22 +155,22 @@ public abstract class PlotShape extends Node2D<Runnable> {
         IntArrayList ids;
         private Segment[] segs;
 
-        public PlotPolyLine(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
+        public PolyLine(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
             this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, data);
 
         }
 
-        public PlotPolyLine(PlotData.RelationalData<?> parent, IntArrayList ids) {
+        public PolyLine(PlotData.RelationalData<?> parent, IntArrayList ids) {
             this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, EMPTY_RUNNABLE);
 
         }
 
-        public PlotPolyLine(PlotData.RelationalData<?> parent, int i, IntArrayList ids) {
+        public PolyLine(PlotData.RelationalData<?> parent, int i, IntArrayList ids) {
             this(parent, i, ids, EMPTY_RUNNABLE);
 
         }
 
-        public PlotPolyLine(PlotData.RelationalData<?> parent, int i, IntArrayList ids, Runnable data) {
+        public PolyLine(PlotData.RelationalData<?> parent, int i, IntArrayList ids, Runnable data) {
             super(parent, i, data);
             this.ids = ids;
         }
@@ -259,11 +259,11 @@ public abstract class PlotShape extends Node2D<Runnable> {
         }
     }
 
-    protected static final class PlotRectangle extends PlotShape {
+    protected static final class Rectangle extends PlotShape {
 
         double x, y, w, h;
 
-        protected PlotRectangle(final PlotData<?> parent, int i, double x, double y, double w, double h, Runnable data) {
+        protected Rectangle(final PlotData<?> parent, int i, double x, double y, double w, double h, Runnable data) {
             super(parent, i, data);
             this.parent = parent;
             this.x = x;
@@ -272,7 +272,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
             this.h = h;
         }
 
-        protected PlotRectangle(final PlotData<?> parent, int i, double x, double y, double w, double h) {
+        protected Rectangle(final PlotData<?> parent, int i, double x, double y, double w, double h) {
             this(parent, i, x, y, w, h, EMPTY_RUNNABLE);
         }
 
@@ -297,47 +297,46 @@ public abstract class PlotShape extends Node2D<Runnable> {
         }
     }
 
-    protected static final class PlotMarker extends PlotShape {
+    protected static final class Marker extends PlotShape {
         final double size;
-        double xMin, xMax, yMin, yMax;
+        double x, y;
 
-        public PlotMarker(PlotData<?> parent, int i, double x, double y, double size, Runnable data) {
+        public Marker(PlotData<?> parent, int i, double x, double y, double size, Runnable data) {
             super(parent, i, data);
             this.size = size;
-            xMin = x;
-            xMax = x;
-            yMin = y;
-            yMax = y;
+            this.x = x;
+            this.y = y;
+
 
         }
 
-        public PlotMarker(PlotData<?> parent, int i, double x, double y, double size) {
+        public Marker(PlotData<?> parent, int i, double x, double y, double size) {
             this(parent, i, x, y, size, EMPTY_RUNNABLE);
         }
 
         @Override
         public double getMinX() {
-            return xMin;
+            return x;
         }
 
         @Override
         public double getMinY() {
-            return yMin;
+            return y;
         }
 
         @Override
         public double getMaxX() {
-            return xMax;
+            return x;
         }
 
         @Override
         public double getMaxY() {
-            return yMax;
+            return y;
         }
 
         @Override
         public String toString() {
-            return String.format("PlotMarker {%s, %s}", ((PlotData.RelationalData<?>) parent).getX(i), ((PlotData.RelationalData<?>) parent).getY(i));
+            return String.format("PlotMarker {%s, %s}", x, y);
         }
     }
 }

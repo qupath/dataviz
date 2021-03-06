@@ -4,9 +4,7 @@ import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.dataframe.Axis;
-import net.mahdilamb.dataframe.DataFrame;
-import net.mahdilamb.dataframe.DataType;
-import net.mahdilamb.dataframe.Series;
+import net.mahdilamb.dataframe.*;
 import net.mahdilamb.dataframe.utils.BooleanArrayList;
 import net.mahdilamb.dataframe.utils.DoubleArrayList;
 import net.mahdilamb.dataframe.utils.GroupBy;
@@ -275,19 +273,19 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         protected final RTree<Runnable> createMarkers(PlotLayout plotLayout) {
             RTree<Runnable> markers = new RTree<>();
-            final PlotShape.PlotMarker[] m;
+            final PlotShape.Marker[] m;
             if (facets != null) {
                 final IntArrayList ids = facets.key.get(plotLayout);
-                m = new PlotShape.PlotMarker[ids.size()];
+                m = new PlotShape.Marker[ids.size()];
                 int j = 0;
                 for (int i : ids) {
-                    PlotShape.PlotMarker marker = new PlotShape.PlotMarker(this, i, x.get(i), y.get(i), getSize(i));
+                    PlotShape.Marker marker = new PlotShape.Marker(this, i, x.get(i), y.get(i), getSize(i));
                     m[j++] = marker;
                 }
             } else {
-                m = new PlotShape.PlotMarker[size()];
+                m = new PlotShape.Marker[size()];
                 for (int i = 0; i < size(); ++i) {
-                    PlotShape.PlotMarker marker = new PlotShape.PlotMarker(this, i, x.get(i), y.get(i), getSize(i));
+                    PlotShape.Marker marker = new PlotShape.Marker(this, i, x.get(i), y.get(i), getSize(i));
                     m[i] = marker;
                 }
             }
@@ -300,9 +298,9 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             if (group == null || colors == null) {
                 RTree<Runnable> lines = new RTree<>();
                 if (colors != null && colors.getClass() == PlotTrace.Categorical.class) {
-                    final PlotShape.PlotPolyLine[] l = new PlotShape.PlotPolyLine[((PlotTrace.Categorical) colors).categories.length];
+                    final PlotShape.PolyLine[] l = new PlotShape.PolyLine[((PlotTrace.Categorical) colors).categories.length];
                     for (int i = 0; i < ((PlotTrace.Categorical) colors).categories.length; ++i) {
-                        l[i] = new PlotShape.PlotPolyLine(this, -1, new IntArrayList());
+                        l[i] = new PlotShape.PolyLine(this, -1, new IntArrayList());
                     }
                     for (int i = 0; i < ((PlotTrace.Categorical) colors).indices.length; ++i) {
                         l[((PlotTrace.Categorical) colors).indices[i]].ids.add(i);
@@ -312,7 +310,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
                     }
                     lines.putAll(l);
                 } else {
-                    final PlotShape.PlotPolyLine line = new PlotShape.PlotPolyLine(this, 0, new IntArrayList(ArrayUtils.intRange(x.size())));
+                    final PlotShape.PolyLine line = new PlotShape.PolyLine(this, 0, new IntArrayList(ArrayUtils.intRange(x.size())));
                     lines.put(line);
                 }
                 return lines;
@@ -331,10 +329,10 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
                 }
                 final GroupBy<GenericTuple<String>> lines = new GroupBy<>(keys);
                 //create lines
-                PlotShape.PlotPolyLine[] pLines = new PlotShape.PlotPolyLine[lines.numGroups()];
+                PlotShape.PolyLine[] pLines = new PlotShape.PolyLine[lines.numGroups()];
                 int i = 0;
                 for (final GroupBy.Group<GenericTuple<String>> group : lines) {
-                    pLines[i++] = new PlotShape.PlotPolyLine(this, group.getIndices().get(0), group.getIndices());
+                    pLines[i++] = new PlotShape.PolyLine(this, group.getIndices().get(0), group.getIndices());
                 }
                 RTree<Runnable> l = new RTree<>();
                 l.putAll(pLines);
@@ -346,14 +344,14 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         protected final RTree<Runnable> createPolygons(PlotLayout plotLayout) {
             RTree<Runnable> polygons = new RTree<>();
             if (numAttributes() == 0) {
-                final PlotShape.PlotPolygon polygon = new PlotShape.PlotPolygon(this, new IntArrayList(ArrayUtils.intRange(x.size())));
+                final PlotShape.Polygon polygon = new PlotShape.Polygon(this, new IntArrayList(ArrayUtils.intRange(x.size())));
                 polygon.i = 0;
                 polygons.put(polygon);
             } else {
                 if (colors != null && colors.getClass() == PlotTrace.Categorical.class) {
-                    final PlotShape.PlotPolygon[] p = new PlotShape.PlotPolygon[((PlotTrace.Categorical) colors).categories.length];
+                    final PlotShape.Polygon[] p = new PlotShape.Polygon[((PlotTrace.Categorical) colors).categories.length];
                     for (int i = 0; i < ((PlotTrace.Categorical) colors).categories.length; ++i) {
-                        p[i] = new PlotShape.PlotPolygon(this, new IntArrayList());
+                        p[i] = new PlotShape.Polygon(this, new IntArrayList());
                     }
                     for (int i = 0; i < ((PlotTrace.Categorical) colors).indices.length; ++i) {
                         p[((PlotTrace.Categorical) colors).indices[i]].ids.add(i);
@@ -404,7 +402,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
 
         protected CategoricalData(final DataFrame dataFrame, final String category, final String values) {
-            this.dataFrame = dataFrame;
+            Objects.requireNonNull(this.dataFrame = dataFrame);
             GroupBy<String> xyGrouping = new GroupBy<>(dataFrame.getStringSeries(category));
             init(xyGrouping.getGroups(new String[xyGrouping.numGroups()]), dataFrame.getDoubleSeries(values).toArray(new double[dataFrame.size(Axis.INDEX)]));
             categories = new IntArrayList(xyGrouping.toMeltedArray(new int[dataFrame.size(Axis.INDEX)]));
@@ -412,9 +410,33 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             valueLabel = values;
         }
 
+        protected CategoricalData(DataFrame dataFrame, String x, String[] y) {
+            String[] categoryLabels = dataFrame.get(x).asString().toArray(new String[dataFrame.size(Axis.INDEX)]);
+            this.dataFrame = dataFrame;
+            int count = categoryLabels.length * y.length;
+            this.categories = new IntArrayList(count);
+            double[] values = new double[count];
+            int[] colors = new int[count];
+            int k = 0;
+            for (int c = 0; c < y.length; ++c) {
+                final DoubleSeries series = dataFrame.get(y[c]).asDouble();
+                for (int row = 0; row < categoryLabels.length; ++row) {
+                    values[k]  =series.get(row);
+                    this.categories.add(row);
+                    colors[k++] = c;
+                }
+            }
+            init(categoryLabels,values);
+            this.colors = addAttribute(new PlotTrace.Categorical(this, Attribute.COLOR, categoryLabels, colors));
+            this.colors.name = "variable";
+            addToHoverText(this.colors, "%s=%{color:s}", () -> this.colors.getName(), "color", ((PlotTrace.Categorical) this.colors)::get);
+
+
+        }
+
         @SuppressWarnings("unchecked")
         void init(String[] categories, double[] values) {
-            valueMin = StatUtils.min(values);
+            valueMin = 0;
             valueMax = StatUtils.max(values);
             this.categoryLabels = categories;
             this.values = new DoubleArrayList(values);
@@ -445,10 +467,11 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         @Override
         protected void init(PlotLayout plotLayout) {
-            updateXYBounds(plotLayout, 0, categories.size(), 0, valueMax, false,true);
+            putRectangles(layout, this, createRectangles(layout));
+
+            updateXYBounds(plotLayout, 0, categoryLabels.length, valueMin, valueMax, false, true);
             plotLayout.getXAxis().majorTickSpacing = 1;
             plotLayout.getXAxis().minorTickSpacing = .2;
-            putRectangles(layout, this, createRectangles(layout));
 
         }
 
@@ -470,19 +493,31 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         protected final RTree<Runnable> createRectangles(PlotLayout layout) {
             if (colors != null) {
-                System.out.println(categories);
+                double[] posHeight = new double[categoryLabels.length];
+                double[] negHeight = new double[categoryLabels.length];
+                //TODO other barmodes
                 final RTree<Runnable> rectangles = new RTree<>();
-                final PlotShape.PlotRectangle[] r = new PlotShape.PlotRectangle[size()];
+                final PlotShape.Rectangle[] r = new PlotShape.Rectangle[size()];
                 for (int i = 0; i < size(); ++i) {
-                    r[i] = new PlotShape.PlotRectangle(this, i, i + .1, 0, .8, values.get(i));
+                    double v = values.get(i);
+                    if (v < 0) {
+                        r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, negHeight[categories.get(i)], .8, values.get(i));
+                        negHeight[categories.get(i)] -= v;
+                    } else {
+                        r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, posHeight[categories.get(i)], .8, values.get(i));
+                        posHeight[categories.get(i)] += v;
+                    }
                 }
                 rectangles.putAll(r);
+                valueMin = StatUtils.min(negHeight);
+                valueMax = StatUtils.max(posHeight);
                 return rectangles;
             } else {
+                //TODO check for multiple values at same index
                 final RTree<Runnable> rectangles = new RTree<>();
-                final PlotShape.PlotRectangle[] r = new PlotShape.PlotRectangle[size()];
+                final PlotShape.Rectangle[] r = new PlotShape.Rectangle[size()];
                 for (int i = 0; i < size(); ++i) {
-                    r[i] = new PlotShape.PlotRectangle(this, i, i + .1, 0, .8, values.get(i));
+                    r[i] = new PlotShape.Rectangle(this, i, i + .1, 0, .8, values.get(i));
                 }
                 rectangles.putAll(r);
                 return rectangles;

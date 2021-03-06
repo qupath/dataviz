@@ -313,17 +313,19 @@ public class SwingTest {
                 .setColors("medal")
                 .setTitle("Long-Form Input")
                 .apply(Theme.Plotly)
-                .show();
+                .show()
+        ;
     }
 
     static void wideFormBar() {
         new Bar(loadDataFromResource("medals_wide.csv"), "nation", new String[]{"gold", "silver", "bronze"})
                 .setTitle("Wide-Form Input")
-        // .show()
+                .apply(Theme.Plotly)
+                .show()
         ;
     }
 
     public static void main(String[] args) {
-        longFormBar();
+        wideFormBar();
     }
 }

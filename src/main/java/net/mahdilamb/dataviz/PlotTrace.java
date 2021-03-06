@@ -24,14 +24,12 @@ import static net.mahdilamb.statistics.ArrayUtils.linearlySpaced;
  */
 public abstract class PlotTrace extends Component {
 
-
     /**
      * A categorical trace
      */
     public static final class Categorical extends PlotTrace {
 
         protected String[] categories;
-
         boolean[] isVisible;
         int[] indices;
 
@@ -56,6 +54,14 @@ public abstract class PlotTrace extends Component {
         public Categorical(final PlotData<?> data, final PlotData.Attribute attribute, final Series<?> series) {
             this(data, attribute, series.getName(), series.asString().toArray(new String[series.size()]));
             this.series = series;
+        }
+
+        public Categorical(final PlotData<?> data, final PlotData.Attribute attribute, String[] categories, int[] indices) {
+            super(data, attribute);
+            this.categories = categories;
+            this.indices = indices;
+            isVisible = new boolean[categories.length];
+            Arrays.fill(isVisible, true);
         }
 
         /**

@@ -4,7 +4,6 @@ import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataframe.utils.GroupBy;
 import net.mahdilamb.dataframe.utils.Sorts;
 import net.mahdilamb.dataviz.graphics.*;
-import net.mahdilamb.dataviz.graphics.shapes.Marker;
 import net.mahdilamb.dataviz.utils.rtree.Node2D;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
@@ -87,15 +86,15 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                 if (trace instanceof PlotData.RelationalData) {
                     if (((PlotData.RelationalData<?>) trace).fillMode != FillMode.NONE) {
                         canvas.setFill(((PlotData.RelationalData<?>) trace).fillColor);
-                        @SuppressWarnings("unchecked") final Set<PlotShape.PlotPolygon> foundPolygons = (Set<PlotShape.PlotPolygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
-                        for (final PlotShape.PlotPolygon n : foundPolygons) {
+                        @SuppressWarnings("unchecked") final Set<PlotShape.Polygon> foundPolygons = (Set<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
+                        for (final PlotShape.Polygon n : foundPolygons) {
                             drawPolygon(canvas, n);
                         }
                     }
                     //canvas.setStroke(((PlotData.XYData<?>) trace).getLineStroke(), ((PlotData.XYData<?>) trace).lineColor);
                 }
-                @SuppressWarnings("unchecked") final Collection<PlotShape.PlotPolyLine> foundLines = (Collection<PlotShape.PlotPolyLine>) lines.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY);
-                for (final PlotShape.PlotPolyLine n : foundLines) {
+                @SuppressWarnings("unchecked") final Collection<PlotShape.PolyLine> foundLines = (Collection<PlotShape.PolyLine>) lines.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY);
+                for (final PlotShape.PolyLine n : foundLines) {
                     canvas.setStroke(n.getColor());
                     drawLine(canvas, n);
                 }
@@ -105,46 +104,46 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         if (!p.isVisible()) {
                             continue;
                         }
-                        if (p instanceof PlotShape.PlotMarker) {
+                        if (p instanceof PlotShape.Marker) {
                             final Color color = p.getColor() == null ? p.parent.getColor(-1) : p.getColor();
                             boolean selected = trace.selected.get(p.i);
                             canvas.setFill(new Color(color.red(), color.green(), color.blue(), selected ? .8 : 0.2));
-                            Marker.MARKER.x = ((PlotData.RelationalData<?>) p.parent).getX(p.i);
-                            Marker.MARKER.y = ((PlotData.RelationalData<?>) p.parent).getY(p.i);
-                            Marker.MARKER.shape = p.getShape();
-                            Marker.MARKER.size = p.getSize();
-                            transformMarker(Marker.MARKER);
-                            Marker.MARKER.fill(canvas);
+                            net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.x = ((PlotData.RelationalData<?>) p.parent).getX(p.i);
+                            net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.y = ((PlotData.RelationalData<?>) p.parent).getY(p.i);
+                            net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.shape = p.getShape();
+                            net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.size = p.getSize();
+                            transformMarker(net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER);
+                            net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.fill(canvas);
                             if (selected && trace.showEdge()) {
                                 canvas.setStroke(Stroke.SOLID, Color.white);
-                                Marker.MARKER.stroke(canvas);
+                                net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.stroke(canvas);
                             }
                         }
                     }
                 } else {
-                    @SuppressWarnings("unchecked") final Collection<PlotShape.PlotRectangle> foundRectangles = (Collection<PlotShape.PlotRectangle>) rectangles.getOrDefault(trace, RTree.emptyTree()).search(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
-                    for (final PlotShape.PlotRectangle rectangle : foundRectangles) {
+                    @SuppressWarnings("unchecked") final Collection<PlotShape.Rectangle> foundRectangles = (Collection<PlotShape.Rectangle>) rectangles.getOrDefault(trace, RTree.emptyTree()).search(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+                    for (final PlotShape.Rectangle rectangle : foundRectangles) {
                         if (!rectangle.isVisible()) {
                             continue;
                         }
                         canvas.setFill(rectangle.getColor());
                         drawRectangle(canvas, rectangle);
                     }
-                    @SuppressWarnings("unchecked") final Set<PlotShape.PlotMarker> foundMarkers = ((Set<PlotShape.PlotMarker>) markers.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.PlotMarker.ORDER_COMPARATOR), minX, minY, maxX, maxY));
-                    for (final PlotShape.PlotMarker n : foundMarkers) {
+                    @SuppressWarnings("unchecked") final Set<PlotShape.Marker> foundMarkers = ((Set<PlotShape.Marker>) markers.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.Marker.ORDER_COMPARATOR), minX, minY, maxX, maxY));
+                    for (final PlotShape.Marker n : foundMarkers) {
                         if (!n.isVisible()) {
                             continue;
                         }
                         canvas.setFill(n.getColor() == null ? (n).parent.getColor(-1) : n.getColor());
-                        Marker.MARKER.x = ((PlotData.RelationalData<?>) (n).parent).getX(n.i);
-                        Marker.MARKER.y = ((PlotData.RelationalData<?>) (n).parent).getY(n.i);
-                        Marker.MARKER.shape = n.getShape();
-                        Marker.MARKER.size = n.getSize();
-                        transformMarker(Marker.MARKER);
-                        Marker.MARKER.fill(canvas);
+                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.x = ((PlotData.RelationalData<?>) (n).parent).getX(n.i);
+                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.y = ((PlotData.RelationalData<?>) (n).parent).getY(n.i);
+                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.shape = n.getShape();
+                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.size = n.getSize();
+                        transformMarker(net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER);
+                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.fill(canvas);
                         if (trace.showEdge()) {
                             canvas.setStroke(trace.getEdgeStroke(), trace.getEdgeColor());
-                            Marker.MARKER.stroke(canvas);
+                            net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.stroke(canvas);
                         }
                     }
                 }
@@ -212,7 +211,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
             return super.apply(theme);
         }
 
-        boolean intersectMarker(PlotShape.PlotMarker marker, double x, double y) {
+        boolean intersectMarker(PlotShape.Marker marker, double x, double y) {
             double w = marker.size * .5 / getXAxis().scale;
             double h = marker.size * .5 / getYAxis().scale;
             return RectangularNode.intersects(x, y, x, y, marker.getMinX() - w, marker.getMinY() - h, marker.getMinX() + w, marker.getMinY() + h);
@@ -231,10 +230,10 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         private boolean pointIntersectsPaddedNode(Node2D<?> node, double x, double y, double w, double h) {
             return RectangularNode.intersects(x, y, x, y, node.getMinX() - w, node.getMinY() - h, node.getMaxX() + w, node.getMaxY() + h);
         }
-        private boolean markerContainsPoint(PlotShape.PlotMarker marker, double x, double y){
-            double w = marker.size * .5 / getXAxis().scale;
-            double h = marker.size * .5 / getYAxis().scale;
-            return RectangularNode.intersects(x, y, x, y, marker.xMin - w, marker.yMin - h, marker.xMax + w, marker.yMax + h);
+        private boolean markerContainsPoint(PlotShape.Marker marker, double x, double y){
+            double w = marker.size  / getXAxis().scale;
+            double h = marker.size  / getYAxis().scale;
+            return RectangularNode.intersects(x, y, x, y, marker.x - w, marker.y - h, marker.x + w, marker.y + h);
         }
         @Override
         public Renderer.Tooltip getHoverText(double x, double y) {
@@ -249,14 +248,14 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         h = b / getYAxis().scale;
                 markers.getOrDefault(trace, RTree.emptyTree()).findAll(found,
                         node -> pointIntersectsPaddedNode(node, xMin, yMin, w, h),
-                        node -> markerContainsPoint((PlotShape.PlotMarker) node,xMin, yMin)
+                        node -> markerContainsPoint((PlotShape.Marker) node,xMin, yMin)
                 );
                 if (!found.isEmpty()) {
                     return tooltip.set(this.x.getPositionFromValue(found.last().getMinX()), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
                 }
                 rectangles.getOrDefault(trace, RTree.emptyTree()).search(found, xMin, yMin, xMin, yMin);
                 if (!found.isEmpty()) {
-                    return tooltip.set(this.x.getPositionFromValue(found.last().getMinX()), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
+                    return tooltip.set(this.x.getPositionFromValue(found.last().getMinX() + ((PlotShape.Rectangle)found.last()).w), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
                 }
             }
 
@@ -430,7 +429,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         }
     }
 
-    final void transformMarker(Marker marker) {
+    final void transformMarker(net.mahdilamb.dataviz.graphics.shapes.Marker marker) {
         marker.x = transformX(marker.x);
         marker.y = transformY(marker.y);
 
@@ -444,18 +443,18 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         return getYAxis().posY + (((getYAxis().upper - y) / getYAxis().range) * getYAxis().sizeY);
     }
 
-    final void drawLine(ChartCanvas<?> canvas, PlotShape.PlotPolyLine n) {
-        for (final PlotShape.PlotPolyLine.Segment s : n.getSegments()) {
+    final void drawLine(ChartCanvas<?> canvas, PlotShape.PolyLine n) {
+        for (final PlotShape.PolyLine.Segment s : n.getSegments()) {
             canvas.strokeLine(transformX(s.startX), transformY(s.startY), transformX(s.endX), transformY(s.endY));
         }
     }
 
-    final void drawRectangle(ChartCanvas<?> canvas, PlotShape.PlotRectangle n) {
+    final void drawRectangle(ChartCanvas<?> canvas, PlotShape.Rectangle n) {
         canvas.fillRect(transformX(n.getMinX()), transformY(n.getMaxY()), ((XYLayout) n.parent.layout).x.scale * n.w, ((XYLayout) n.parent.layout).y.scale * n.h);
 
     }
 
-    final void drawPolygon(ChartCanvas<?> canvas, PlotShape.PlotPolygon n) {
+    final void drawPolygon(ChartCanvas<?> canvas, PlotShape.Polygon n) {
         canvas.beginPath();
         canvas.moveTo(transformX(n.getPoints()[0].getMidX()), transformY(n.getPoints()[0].getMidY()));
         for (int i = 1; i < n.getPoints().length; ++i) {
