@@ -885,4 +885,32 @@ abstract class AbstractRTree<T> {
         });
         return (Node2D<T>) out[0];
     }
+
+    /**
+     * @return the minimum x value in the tree
+     */
+    public double getMinX() {
+        return root.minX;
+    }
+
+    /**
+     * @return the minimum y value in the tree
+     */
+    public double getMinY() {
+        return root.minY;
+    }
+
+    /**
+     * @return the maximum x value in the tree
+     */
+    public double getMaxX() {
+        return root.maxX;
+    }
+
+    /**
+     * @return the maximum y value in the tree
+     */
+    public double getMaxY() {
+        return root.maxY;
+    }
 }

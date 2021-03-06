@@ -4,15 +4,14 @@ import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.Figure;
 import net.mahdilamb.dataviz.Theme;
 import net.mahdilamb.dataviz.graphics.FillMode;
-import net.mahdilamb.dataviz.plots.Bar;
-import net.mahdilamb.dataviz.plots.Line;
-import net.mahdilamb.dataviz.plots.Scatter;
-import net.mahdilamb.statistics.ArrayUtils;
+import net.mahdilamb.dataviz.plots.*;
+import net.mahdilamb.stats.ArrayUtils;
 
 import java.util.concurrent.ThreadLocalRandom;
 
 import static net.mahdilamb.dataviz.SeriesTests.loadDataFromResource;
-import static net.mahdilamb.statistics.ArrayUtils.*;
+import static net.mahdilamb.dataviz.TrendlinesExperimental.linear;
+import static net.mahdilamb.stats.ArrayUtils.*;
 
 public class SwingTest {
     static final DataFrame iris = loadDataFromResource("iris.csv");
@@ -52,9 +51,7 @@ public class SwingTest {
         new Scatter(iris, "sepal_width", "sepal_length")
                 .setColors("species")
                 .setSizes("petal_length")
-                .updateFigure(fig -> {
-                    fig.apply(Theme.Plotly);
-                })
+                .apply(Theme.Plotly)
                 .show()
         ;
     }
@@ -325,7 +322,90 @@ public class SwingTest {
         ;
     }
 
+    static void styledBar() {
+        new Bar(gapminder.query("country == 'Canada'"), "year", "pop")
+                .apply(Theme.Plotly)
+                .setColors("lifeExp")
+                .show();
+    }
+
+    static void stackedBar() {
+        //TODO
+        new Bar(tips, "sex", "total_bill")
+                .setColors("time")
+                .apply(Theme.Plotly)
+                .show();
+    }
+
+
+    static void histogram() {
+        new Histogram(iris, "petal_length")
+                .useDensity(true)
+                .setNumBins(20)
+                .getFigure()
+                .addTraces(
+                        new KDE(iris, "petal_length")
+
+
+                )
+                .show();
+    }
+
+    static void histogram2D() {
+        new Histogram2D(tips, "total_bill", "tip")
+                .setXBins(0, 60, 10)
+                .setYBins(0, 10, 10)
+                .apply(Theme.Plotly)
+                .getFigure()
+                .addTrace(
+                        new Scatter(tips, "total_bill", "tip")
+                                .setSize(4)
+                                .showEdges(true)
+                )
+                .show();
+    }
+
+    static void tempLinearTrend() {
+        linear(new Scatter(tips, "total_bill", "tip"))
+                .show();
+    }
+
+    static void density2d() {
+        DataFrame df = loadDataFromResource("tips.csv");
+        final String x = "total_bill";
+        final String y = "tip";
+        new Density2D(df, x, y)
+                .getFigure()
+                .addTrace(
+                        new Scatter(df, x, y)
+                                .setSize(4)
+                )
+
+                .show()
+        ;
+    }
+
+    /*static void contour() {
+        DataFrame df = loadDataFromResource("tips.csv");
+        final String x = "total_bill";
+        final String y = "tip";
+        new Contour(df, x, y)
+                .getFigure()
+                .addTrace(
+                        new Scatter(df, x, y)
+                                .setSize(4)
+                )
+
+                .show()
+        ;
+    }*/
+    static void table() {
+        new Table(loadDataFromResource("iris.csv"))
+                .show();
+    }
+
     public static void main(String[] args) {
-        wideFormBar();
+        histogram();
+
     }
 }

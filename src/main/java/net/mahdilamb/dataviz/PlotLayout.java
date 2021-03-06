@@ -4,11 +4,14 @@ import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataframe.utils.GroupBy;
 import net.mahdilamb.dataframe.utils.Sorts;
 import net.mahdilamb.dataviz.graphics.*;
+import net.mahdilamb.dataviz.plots.Scatter;
 import net.mahdilamb.dataviz.utils.rtree.Node2D;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
 
 import java.util.*;
+
+import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
 /**
  * Layouts for plot areas
@@ -66,12 +69,6 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
             x.draw(source, canvas, y);
             y.draw(source, canvas, x);
             canvas.setClip(ClipShape.RECTANGLE, x.posX, y.posY, x.sizeX, y.sizeY);
-          /*  if (title != null) {
-                System.out.println(">> Title <<");
-                System.out.println(title);
-            }
-
-            */
 
             for (final PlotData<?> trace : data) {
                 PlotTrace.Numeric size = (PlotTrace.Numeric) trace.getAttribute(PlotData.Attribute.SIZE);
@@ -86,12 +83,22 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                 if (trace instanceof PlotData.RelationalData) {
                     if (((PlotData.RelationalData<?>) trace).fillMode != FillMode.NONE) {
                         canvas.setFill(((PlotData.RelationalData<?>) trace).fillColor);
-                        @SuppressWarnings("unchecked") final Set<PlotShape.Polygon> foundPolygons = (Set<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
-                        for (final PlotShape.Polygon n : foundPolygons) {
-                            drawPolygon(canvas, n);
-                        }
                     }
-                    //canvas.setStroke(((PlotData.XYData<?>) trace).getLineStroke(), ((PlotData.XYData<?>) trace).lineColor);
+                    @SuppressWarnings("unchecked") final Set<PlotShape.Polygon> foundPolygons = (Set<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
+                    for (final PlotShape.Polygon n : foundPolygons) {
+                        fillPolygon(canvas, n);
+                    }
+                }
+                /*
+                if (trace instanceof Contour){
+                    @SuppressWarnings("unchecked") final Set<PlotShape.Polygon> foundPolygons = (Set<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
+                    for (final PlotShape.Polygon n : foundPolygons) {
+                        drawPolygon(canvas, n);
+                    }
+                }*/
+                canvas.setStroke(trace.getLineStroke());
+                if (trace.lineColor != null) {
+                    canvas.setStroke(trace.lineColor);
                 }
                 @SuppressWarnings("unchecked") final Collection<PlotShape.PolyLine> foundLines = (Collection<PlotShape.PolyLine>) lines.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY);
                 for (final PlotShape.PolyLine n : foundLines) {
@@ -127,6 +134,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                             continue;
                         }
                         canvas.setFill(rectangle.getColor());
+
                         drawRectangle(canvas, rectangle);
                     }
                     @SuppressWarnings("unchecked") final Set<PlotShape.Marker> foundMarkers = ((Set<PlotShape.Marker>) markers.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.Marker.ORDER_COMPARATOR), minX, minY, maxX, maxY));
@@ -211,12 +219,6 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
             return super.apply(theme);
         }
 
-        boolean intersectMarker(PlotShape.Marker marker, double x, double y) {
-            double w = marker.size * .5 / getXAxis().scale;
-            double h = marker.size * .5 / getYAxis().scale;
-            return RectangularNode.intersects(x, y, x, y, marker.getMinX() - w, marker.getMinY() - h, marker.getMinX() + w, marker.getMinY() + h);
-        }
-
         /**
          * Add padding to the intersection search of internal nodes in marker Rtree
          *
@@ -230,11 +232,13 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         private boolean pointIntersectsPaddedNode(Node2D<?> node, double x, double y, double w, double h) {
             return RectangularNode.intersects(x, y, x, y, node.getMinX() - w, node.getMinY() - h, node.getMaxX() + w, node.getMaxY() + h);
         }
-        private boolean markerContainsPoint(PlotShape.Marker marker, double x, double y){
-            double w = marker.size  / getXAxis().scale;
-            double h = marker.size  / getYAxis().scale;
+
+        private boolean markerContainsPoint(PlotShape.Marker marker, double x, double y) {
+            double w = marker.size / getXAxis().scale;
+            double h = marker.size / getYAxis().scale;
             return RectangularNode.intersects(x, y, x, y, marker.x - w, marker.y - h, marker.x + w, marker.y + h);
         }
+
         @Override
         public Renderer.Tooltip getHoverText(double x, double y) {
             double xMin = this.x.getValueFromPosition(x);
@@ -248,14 +252,14 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         h = b / getYAxis().scale;
                 markers.getOrDefault(trace, RTree.emptyTree()).findAll(found,
                         node -> pointIntersectsPaddedNode(node, xMin, yMin, w, h),
-                        node -> markerContainsPoint((PlotShape.Marker) node,xMin, yMin)
+                        node -> markerContainsPoint((PlotShape.Marker) node, xMin, yMin)
                 );
                 if (!found.isEmpty()) {
                     return tooltip.set(this.x.getPositionFromValue(found.last().getMinX()), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
                 }
                 rectangles.getOrDefault(trace, RTree.emptyTree()).search(found, xMin, yMin, xMin, yMin);
                 if (!found.isEmpty()) {
-                    return tooltip.set(this.x.getPositionFromValue(found.last().getMinX() + ((PlotShape.Rectangle)found.last()).w), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
+                    return tooltip.set(this.x.getPositionFromValue(found.last().getMinX() + ((PlotShape.Rectangle) found.last()).w), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
                 }
             }
 
@@ -265,13 +269,70 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         @Override
         boolean canAdd(PlotData<?> data) {
             if (data instanceof PlotData.RelationalData) {
-                return Objects.equals(x.getTitle(), ((PlotData.RelationalData<?>) data).getXLabel()) && Objects.equals(y.getTitle(), ((PlotData.RelationalData<?>) data).getYLabel()) && Objects.equals(data.title, title) && Arrays.equals(((PlotData.RelationalData<?>) data).xLabels, x.labels);
+                if (data instanceof Scatter) {
+                    return (((Scatter) data).xLab == Scatter.defaultXLabel || absentOrSame(x.getTitle(), ((PlotData.RelationalData<?>) data).getXLabel())) && (((Scatter) data).yLab == Scatter.defaultYLabel || absentOrSame(y.getTitle(), ((PlotData.RelationalData<?>) data).getYLabel())) && absentOrSame(data.title, title) && absentOrSame(((PlotData.RelationalData<?>) data).xLabels, x.labels);
+                }
+                return absentOrSame(x.getTitle(), ((PlotData.RelationalData<?>) data).getXLabel()) && absentOrSame(y.getTitle(), ((PlotData.RelationalData<?>) data).getYLabel()) && absentOrSame(data.title, title) && absentOrSame(((PlotData.RelationalData<?>) data).xLabels, x.labels);
+            } else if (data instanceof PlotData.DistributionData) {
+                return absentOrSame(x.getTitle(), ((PlotData.DistributionData<?>) data).xLabel) && absentOrSame(data.title, title);
             } else if (data instanceof PlotData.CategoricalData) {
-                return Objects.equals(x.getTitle(), ((PlotData.CategoricalData<?>) data).categoryLabel) && Objects.equals(y.getTitle(), ((PlotData.CategoricalData<?>) data).valueLabel) && Objects.equals(data.title, title);//&& Arrays.equals(((PlotData.CategoricalData<?>) trace).xLabels, x.labels);
+                return absentOrSame(x.getTitle(), ((PlotData.CategoricalData<?>) data).categoryLabel) && absentOrSame(y.getTitle(), ((PlotData.CategoricalData<?>) data).valueLabel) && absentOrSame(data.title, title);//&& Arrays.equals(((PlotData.CategoricalData<?>) trace).xLabels, x.labels);
+            } else if (data instanceof PlotData.DistributionData2D) {
+                return absentOrSame(x.getTitle(), ((PlotData.DistributionData2D<?>) data).xLabel) && absentOrSame(y.getTitle(), ((PlotData.DistributionData2D<?>) data).yLabel) && absentOrSame(data.title, title);
 
             }
             return false;
         }
+    }
+
+    protected static class TableLayout extends PlotLayout {
+        boolean used = false;
+
+        @Override
+        protected void layoutComponent(Renderer<?> source, double minX, double minY, double maxX, double maxY) {
+            setBoundsFromExtent(minX, minY, maxX, maxY);
+
+        }
+
+        @Override
+        protected void drawComponent(Renderer<?> source, ChartCanvas<?> canvas) {
+            double x = getX();
+            for (final PlotData<?> data : data) {
+                PlotData.TabularData<?> table = ((PlotData.TabularData<?>) data);
+                for (int i = 0; i < table.numColumns(); ++i) {
+                    canvas.fillText(table.getHeader(i),x,20);
+                    x += 200;
+                }
+            }
+        }
+
+        @Override
+        boolean canAdd(PlotData<?> trace) {
+            //TODO
+            return !used && trace instanceof PlotData.TabularData;
+        }
+
+        @Override
+        public PlotLayout setRange(double minX, double maxX, double minY, double maxY) {
+            return this;
+        }
+
+        @Override
+        Renderer.Tooltip getHoverText(double x, double y) {
+            //TODO
+            return null;
+        }
+
+        @Override
+        boolean add(PlotData<?> trace) {
+            boolean can = super.add(trace);
+            used |= can;
+            return can;
+        }
+    }
+
+    static boolean absentOrSame(Object a, Object b) {
+        return a == null || b == null || a == EMPTY_STRING || b == EMPTY_STRING || Objects.equals(a, b);
     }
 
     static final class FacetGrid extends XYLayout {
@@ -347,7 +408,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         return this;
     }
 
-    final boolean add(final PlotData<?> trace) {
+    boolean add(final PlotData<?> trace) {
         if (canAdd(trace)) {
             data.add(trace);
             if (trace.layout != null) {
@@ -444,13 +505,37 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
     }
 
     final void drawLine(ChartCanvas<?> canvas, PlotShape.PolyLine n) {
-        for (final PlotShape.PolyLine.Segment s : n.getSegments()) {
-            canvas.strokeLine(transformX(s.startX), transformY(s.startY), transformX(s.endX), transformY(s.endY));
+        if (n.getSegments().length == 1) {
+            canvas.strokeLine(transformX(n.getSegments()[0].startX), transformY(n.getSegments()[0].startY), transformX(n.getSegments()[0].endX), transformY(n.getSegments()[0].endY));
+            return;
         }
+        canvas.beginPath();
+        canvas.moveTo(transformX(n.getSegments()[0].startX), transformY(n.getSegments()[0].startY));
+        for (int i = 1; i < n.getSegments().length; ++i) {
+            canvas.lineTo(transformX(n.getSegments()[i].endX), transformY(n.getSegments()[i].endY));
+        }
+        canvas.stroke();
     }
 
     final void drawRectangle(ChartCanvas<?> canvas, PlotShape.Rectangle n) {
-        canvas.fillRect(transformX(n.getMinX()), transformY(n.getMaxY()), ((XYLayout) n.parent.layout).x.scale * n.w, ((XYLayout) n.parent.layout).y.scale * n.h);
+        double x = transformX(n.getMinX()),
+                y = transformY(n.getMaxY()),
+                w = ((XYLayout) n.parent.layout).x.scale * n.w,
+                h = ((XYLayout) n.parent.layout).y.scale * n.h;
+
+
+        canvas.fillRect(x, y, w, h);
+
+    }
+
+    final void fillPolygon(ChartCanvas<?> canvas, PlotShape.Polygon n) {
+        canvas.beginPath();
+        canvas.moveTo(transformX(n.getPoints()[0].getMidX()), transformY(n.getPoints()[0].getMidY()));
+        for (int i = 1; i < n.getPoints().length; ++i) {
+            canvas.lineTo(transformX(n.getPoints()[i].getMidX()), transformY(n.getPoints()[i].getMidY()));
+        }
+        canvas.closePath();
+        canvas.fill();
 
     }
 
@@ -461,7 +546,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
             canvas.lineTo(transformX(n.getPoints()[i].getMidX()), transformY(n.getPoints()[i].getMidY()));
         }
         canvas.closePath();
-        canvas.fill();
+        canvas.stroke();
 
     }
 

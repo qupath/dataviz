@@ -28,8 +28,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
     private static final class Overlay extends JPanel {
         final Rectangle2D.Double rect = new Rectangle2D.Double();
         private final Panel panel;
-        public int x;
-        public int y;
         public Tooltip hoverText;
         private BufferedImage currentState;
 
@@ -95,8 +93,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
 
         void clear() {
             hoverText = null;
-            x = -1;
-            y = -1;
+
         }
 
     }
@@ -531,8 +528,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             public void mouseMoved(MouseEvent e) {
                 SwingRenderer.this.mouseMoved(e.getX(), e.getY());
                 overlay.clear();
-                overlay.x = e.getX();
-                overlay.y = e.getY();
                 overlay.hoverText = SwingRenderer.this.getHoverText(e.getX(), e.getY());
                 overlay.draw();
                 super.mouseMoved(e);

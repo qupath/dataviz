@@ -17,7 +17,7 @@ import net.mahdilamb.dataviz.utils.VarArgsUtils;
 
 import java.util.function.DoubleUnaryOperator;
 
-import static net.mahdilamb.statistics.ArrayUtils.map;
+import static net.mahdilamb.stats.ArrayUtils.map;
 
 /**
  * Scatter series
@@ -43,6 +43,14 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
     Color edgeColor;
     Stroke edgeStroke;
     private double edgeWidth = .5;
+    /**
+     * The default x label if the source is a raw array
+     */
+    public static final String defaultXLabel = "x";
+    /**
+     * The default y label if the source is a raw array
+     */
+    public static final String defaultYLabel = "y";
 
     DoubleArrayList errorXLower, errorXUpper, errorYLower, errorYUpper;
 
@@ -65,8 +73,8 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
      */
     public Scatter(double[] x, double[] y) {
         super(x, y);
-        xLab = "x";
-        yLab = "y";
+        xLab = defaultXLabel;
+        yLab = defaultYLabel;
     }
 
     /**
@@ -116,12 +124,13 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
         opacity = 0.8;
         showEdge = true;
 
-        return PlotData.ifSeriesCategorical(
-                dataFrame,
-                seriesName,
-                this::setColorsQualitative,
-                this::setColorsSequential,
-                () -> this);
+        final Series<?> s = getSeries(seriesName);
+        if (s.getType() != DataType.DOUBLE) {
+            setColorsQualitative(s.asString());
+        } else {
+            setColorsSequential(s.asDouble());
+        }
+        return this;
 
     }
 
@@ -154,7 +163,7 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
     }
 
     public Scatter setColors(final double[] values) {
-        colors = addAttribute(new PlotTrace.Numeric(this, Attribute.COLOR, null, values, 0, 1));
+        setColors(new PlotTrace.Numeric(this, Attribute.COLOR, null, values, 0, 1));
         return this;
     }
 
@@ -225,14 +234,11 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
     }
 
     private void setColorsQualitative(final Series<?> s) {
-        colors = addAttribute(new PlotTrace.Categorical(this, PlotData.Attribute.COLOR, s));
-        addToHoverText(colors, "%s=%{color:s}", () -> colors.getName(), "color", ((PlotTrace.Categorical) colors)::get);
-
+        setColors(new PlotTrace.Categorical(this, PlotData.Attribute.COLOR, s));
     }
 
     private void setColorsSequential(final Series<?> s) {
-        colors = addAttribute(new PlotTrace.Numeric(this, PlotData.Attribute.COLOR, s));
-        addToHoverText(colors, "%s=%{color:.1f}", () -> colors.getName(), "color", i -> getRaw(((PlotTrace.Numeric) colors), i));
+        setColors(new PlotTrace.Numeric(this, PlotData.Attribute.COLOR, s));
     }
 
     @Override
@@ -336,7 +342,7 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
     protected void init(PlotLayout plotLayout) {
         if (numXLabels(plotLayout.getXAxis()) != -1) {
             double yBuff = (yMax - yMin) * .01;
-            updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, true,true);
+            updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, true, true);
             double major = 1;
             double b = xMax * .05;
             plotLayout.getXAxis().setRange(-b, xMax + b);
@@ -344,11 +350,11 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
         } else {
             if (markerMode != ScatterMode.MARKER_ONLY) {
                 double yBuff = (yMax - yMin) * .01;
-                updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, false,false);
+                updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, false, false);
             } else {
                 double xBuff = (xMax - xMin) * .01;
                 double yBuff = (yMax - yMin) * .01;
-                updateXYBounds(plotLayout, xMin - xBuff, xMax + xBuff, yMin - yBuff, yMax + yBuff, true,true);
+                updateXYBounds(plotLayout, xMin - xBuff, xMax + xBuff, yMin - yBuff, yMax + yBuff, true, true);
             }
 
         }

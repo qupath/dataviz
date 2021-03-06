@@ -6,7 +6,7 @@ import net.mahdilamb.dataviz.PlotData;
 /**
  * Bar chart
  */
-public class Bar extends PlotData.CategoricalData<Bar> {
+public final class Bar extends PlotData.CategoricalData<Bar> {
     /**
      * Create a bar chart with an array of categories and values
      *

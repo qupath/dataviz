@@ -80,6 +80,13 @@ public class Title extends Component {
         refresh();
     }
 
+    public void  setColor(final Color color){
+        this.color = color;
+        markDrawAsOld();
+        refresh();
+    }
+
+
     /**
      * @return the alignment of the label
      */

@@ -8,6 +8,8 @@ import java.util.Map;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
+import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
+
 public final class HoverText<O extends PlotData<O>> {
 
     public static class Segment {
@@ -69,6 +71,7 @@ public final class HoverText<O extends PlotData<O>> {
 
     void put(String key, IntFunction<?> getter) {
         formatters.put(key, getter);
+        clear();
     }
 
     public Segment add(final String formatting, Supplier<?>... suppliers) {
@@ -171,6 +174,9 @@ public final class HoverText<O extends PlotData<O>> {
                 sb.append(segment.formatting.charAt(j));
             }
             sb.append(join);
+        }
+        if (sb.length() < join.length()) {
+            return EMPTY_STRING;
         }
         sb.setLength(sb.length() - join.length());
         return sb.toString();

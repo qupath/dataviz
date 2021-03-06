@@ -63,4 +63,14 @@ interface FigureComponent<O> {
         getFigure().apply(theme);
         return (O) this;
     }
+
+    @SuppressWarnings("unchecked")
+    default O apply(final String theme) {
+        try {
+            return apply(Theme.get(theme));
+        } catch (IllegalAccessException e) {
+            System.err.println("Could not find theme called '" + theme + "'");
+        }
+        return (O) this;
+    }
 }

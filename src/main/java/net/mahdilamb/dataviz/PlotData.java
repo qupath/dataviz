@@ -16,10 +16,14 @@ import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.plots.DataFrameOnlyOperationException;
 import net.mahdilamb.dataviz.plots.Scatter;
 import net.mahdilamb.dataviz.plots.ScatterMode;
+import net.mahdilamb.dataviz.utils.MarchingSquares;
 import net.mahdilamb.dataviz.utils.StringUtils;
+import net.mahdilamb.dataviz.utils.SubVariant;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
-import net.mahdilamb.statistics.ArrayUtils;
-import net.mahdilamb.statistics.StatUtils;
+import net.mahdilamb.stats.ArrayUtils;
+import net.mahdilamb.stats.BinWidthEstimator;
+import net.mahdilamb.stats.Histogram;
+import net.mahdilamb.stats.StatUtils;
 import net.mahdilamb.utils.tuples.GenericTuple;
 import net.mahdilamb.utils.tuples.Tuple;
 
@@ -30,6 +34,8 @@ import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
+import static net.mahdilamb.stats.ArrayUtils.linearlySpaced;
+import static net.mahdilamb.stats.StatUtils.sum;
 
 public abstract class PlotData<O extends PlotData<O>> implements FigureComponent<O> {
 
@@ -52,11 +58,6 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         protected final DoubleArrayList x, y;
         protected double xMin, xMax, yMin, yMax;
-
-        protected Stroke lineStroke;
-        protected Color lineColor;
-        protected double lineWidth = 2;
-        protected double[] lineDashes;
 
         protected FillMode fillMode = FillMode.NONE;
         protected Color fillColor;
@@ -149,11 +150,19 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             hoverFormatter.add("%s=%{y:s}", this::getYLabel);
         }
 
-        protected double getX(int i) {
+        /**
+         * @param i the index
+         * @return the x value at the given index
+         */
+        public double getX(int i) {
             return x.get(i);
         }
 
-        protected double getY(int i) {
+        /**
+         * @param i the index
+         * @return the y value at the given index
+         */
+        public double getY(int i) {
             return y.get(i);
         }
 
@@ -162,6 +171,9 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             return x.size();
         }
 
+        /**
+         * @return the label of the x series
+         */
         public final String getXLabel() {
             if (layout != null) {
                 return layout.getXAxis().getTitle();
@@ -169,6 +181,9 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             return xLab;
         }
 
+        /**
+         * @return the label of the y series
+         */
         public final String getYLabel() {
             if (layout != null) {
                 return layout.getYAxis().getTitle();
@@ -254,15 +269,11 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             return setLineColor(StringUtils.convertToColor(color));
         }
 
-        Stroke getLineStroke() {
-            if (lineStroke == null) {
-                lineStroke = new Stroke(lineWidth, lineDashes);
-            }
-            return lineStroke;
-        }
-
         @SuppressWarnings("unchecked")
         public O setFillColor(Color color) {
+            if (fillMode == FillMode.NONE) {
+                fillMode = FillMode.TO_SELF;
+            }
             this.fillColor = color;
             return (O) this;
         }
@@ -297,15 +308,15 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         protected final RTree<Runnable> createLines(PlotLayout plotLayout) {
             if (group == null || colors == null) {
                 RTree<Runnable> lines = new RTree<>();
-                if (colors != null && colors.getClass() == PlotTrace.Categorical.class) {
-                    final PlotShape.PolyLine[] l = new PlotShape.PolyLine[((PlotTrace.Categorical) colors).categories.length];
-                    for (int i = 0; i < ((PlotTrace.Categorical) colors).categories.length; ++i) {
+                if (colors != null && colors.get() != null && colors.isA()) {
+                    final PlotShape.PolyLine[] l = new PlotShape.PolyLine[colors.asA().categories.length];
+                    for (int i = 0; i < colors.asA().categories.length; ++i) {
                         l[i] = new PlotShape.PolyLine(this, -1, new IntArrayList());
                     }
-                    for (int i = 0; i < ((PlotTrace.Categorical) colors).indices.length; ++i) {
-                        l[((PlotTrace.Categorical) colors).indices[i]].ids.add(i);
-                        if (l[((PlotTrace.Categorical) colors).indices[i]].i == -1) {
-                            l[((PlotTrace.Categorical) colors).indices[i]].i = i;
+                    for (int i = 0; i < colors.asA().indices.length; ++i) {
+                        l[colors.asA().indices[i]].ids.add(i);
+                        if (l[colors.asA().indices[i]].i == -1) {
+                            l[colors.asA().indices[i]].i = i;
                         }
                     }
                     lines.putAll(l);
@@ -316,16 +327,16 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
                 return lines;
             } else {
                 //Create possible combinations
-                @SuppressWarnings("unchecked") final GenericTuple<String>[][] keyCombinations = new GenericTuple[getCategories(group).length][getCategories((PlotTrace.Categorical) colors).length];
+                @SuppressWarnings("unchecked") final GenericTuple<String>[][] keyCombinations = new GenericTuple[getCategories(group).length][getCategories(colors.asA()).length];
                 for (int i = 0; i < getCategories(group).length; ++i) {
-                    for (int j = 0; j < getCategories((PlotTrace.Categorical) colors).length; ++j) {
-                        keyCombinations[i][j] = Tuple.of(getCategories((PlotTrace.Categorical) colors)[j], getCategories(group)[i]);
+                    for (int j = 0; j < getCategories(colors.asA()).length; ++j) {
+                        keyCombinations[i][j] = Tuple.of(getCategories(colors.asA())[j], getCategories(group)[i]);
                     }
                 }
                 //Create group by
                 @SuppressWarnings("unchecked") final GenericTuple<String>[] keys = new GenericTuple[size()];
                 for (int i = 0; i < size(); ++i) {
-                    keys[i] = keyCombinations[getRaw(group, i)][getRaw(((PlotTrace.Categorical) colors), i)];
+                    keys[i] = keyCombinations[getRaw(group, i)][getRaw((colors.asA()), i)];
                 }
                 final GroupBy<GenericTuple<String>> lines = new GroupBy<>(keys);
                 //create lines
@@ -348,15 +359,15 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
                 polygon.i = 0;
                 polygons.put(polygon);
             } else {
-                if (colors != null && colors.getClass() == PlotTrace.Categorical.class) {
-                    final PlotShape.Polygon[] p = new PlotShape.Polygon[((PlotTrace.Categorical) colors).categories.length];
-                    for (int i = 0; i < ((PlotTrace.Categorical) colors).categories.length; ++i) {
+                if (colors != null && colors.get() != null && colors.isA()) {
+                    final PlotShape.Polygon[] p = new PlotShape.Polygon[colors.asA().categories.length];
+                    for (int i = 0; i < colors.asA().categories.length; ++i) {
                         p[i] = new PlotShape.Polygon(this, new IntArrayList());
                     }
-                    for (int i = 0; i < ((PlotTrace.Categorical) colors).indices.length; ++i) {
-                        p[((PlotTrace.Categorical) colors).indices[i]].ids.add(i);
-                        if (p[((PlotTrace.Categorical) colors).indices[i]].i == -1) {
-                            p[((PlotTrace.Categorical) colors).indices[i]].i = i;
+                    for (int i = 0; i < colors.asA().indices.length; ++i) {
+                        p[colors.asA().indices[i]].ids.add(i);
+                        if (p[colors.asA().indices[i]].i == -1) {
+                            p[colors.asA().indices[i]].i = i;
                         }
                     }
                     polygons.putAll(p);
@@ -387,7 +398,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     /**
      * Data structure for categorical data
      *
-     * @param <O> the concrete type of the XY daata
+     * @param <O> the concrete type of the XY data
      */
     public static abstract class CategoricalData<O extends CategoricalData<O>> extends PlotData<O> {
 
@@ -421,15 +432,14 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             for (int c = 0; c < y.length; ++c) {
                 final DoubleSeries series = dataFrame.get(y[c]).asDouble();
                 for (int row = 0; row < categoryLabels.length; ++row) {
-                    values[k]  =series.get(row);
+                    values[k] = series.get(row);
                     this.categories.add(row);
                     colors[k++] = c;
                 }
             }
-            init(categoryLabels,values);
-            this.colors = addAttribute(new PlotTrace.Categorical(this, Attribute.COLOR, categoryLabels, colors));
-            this.colors.name = "variable";
-            addToHoverText(this.colors, "%s=%{color:s}", () -> this.colors.getName(), "color", ((PlotTrace.Categorical) this.colors)::get);
+            init(categoryLabels, values);
+            setColors(new PlotTrace.Categorical(this, Attribute.COLOR, categoryLabels, colors));
+            this.colors.asA().name = "variable";
 
 
         }
@@ -469,9 +479,9 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         protected void init(PlotLayout plotLayout) {
             putRectangles(layout, this, createRectangles(layout));
 
-            updateXYBounds(plotLayout, 0, categoryLabels.length, valueMin, valueMax, false, true);
-            plotLayout.getXAxis().majorTickSpacing = 1;
-            plotLayout.getXAxis().minorTickSpacing = .2;
+            updateXYBounds(plotLayout, 0, categoryLabels.length, valueMin, valueMax, true, true);
+            plotLayout.getXAxis().showZeroLine = false;
+            plotLayout.getYAxis().showZeroLine = false;
 
         }
 
@@ -482,50 +492,99 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         @SuppressWarnings("unchecked")
         public O setColors(String series) throws DataFrameOnlyOperationException {
             final Series<?> s = getSeries(series);
-            if (s.getType() == DataType.DOUBLE) {
-                throw new UnsupportedOperationException("Series must not be double");
-            }
             clear();
-            colors = addAttribute(new PlotTrace.Categorical(this, Attribute.COLOR, s));
-            addToHoverText(colors, "%s=%{color:s}", () -> colors.getName(), "color", ((PlotTrace.Categorical) colors)::get);
+            if (s.getType() == DataType.DOUBLE) {
+                setColors(new PlotTrace.Numeric(this, Attribute.COLOR, s));
+                return (O) this;
+            }
+            setColors(new PlotTrace.Categorical(this, Attribute.COLOR, s));
             return (O) this;
         }
 
         protected final RTree<Runnable> createRectangles(PlotLayout layout) {
-            if (colors != null) {
-                double[] posHeight = new double[categoryLabels.length];
-                double[] negHeight = new double[categoryLabels.length];
-                //TODO other barmodes
-                final RTree<Runnable> rectangles = new RTree<>();
-                final PlotShape.Rectangle[] r = new PlotShape.Rectangle[size()];
+
+
+            //TODO other barmodes
+            final RTree<Runnable> rectangles = new RTree<>();
+            final PlotShape.Rectangle[] r = new PlotShape.Rectangle[size()];
+            /* todo
+            if (colors != null && colors.isA() && colors.asA().categories.length > 1) {
+                double[] posOffset = new double[categoryLabels.length];
+                double[] negOffset = new double[posOffset.length];
                 for (int i = 0; i < size(); ++i) {
                     double v = values.get(i);
                     if (v < 0) {
-                        r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, negHeight[categories.get(i)], .8, values.get(i));
-                        negHeight[categories.get(i)] -= v;
+                        negOffset[categories.get(i) ] -= v;
                     } else {
-                        r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, posHeight[categories.get(i)], .8, values.get(i));
-                        posHeight[categories.get(i)] += v;
+                        posOffset[categories.get(i) ] += v;
                     }
                 }
-                rectangles.putAll(r);
-                valueMin = StatUtils.min(negHeight);
-                valueMax = StatUtils.max(posHeight);
-                return rectangles;
-            } else {
-                //TODO check for multiple values at same index
-                final RTree<Runnable> rectangles = new RTree<>();
-                final PlotShape.Rectangle[] r = new PlotShape.Rectangle[size()];
+                System.out.println(Arrays.toString(posOffset));
+
+
+                double[][] posHeight = new double[colors.asA().categories.length][categoryLabels.length];
+                double[][] negHeight = new double[colors.asA().categories.length][categoryLabels.length];
                 for (int i = 0; i < size(); ++i) {
-                    r[i] = new PlotShape.Rectangle(this, i, i + .1, 0, .8, values.get(i));
+                    double v = values.get(i);
+                    if (v < 0) {
+                        r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, negOffset[colors.asA().getRaw(i)] + negHeight[colors.asA().getRaw(i)][categories.get(i)], .8, values.get(i));
+                        negHeight[colors.asA().getRaw(i)][categories.get(i)] -= v;
+                    } else {
+                        r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, posOffset[colors.asA().getRaw(i)] + posHeight[colors.asA().getRaw(i)][categories.get(i)], .8, values.get(i));
+                        posHeight[colors.asA().getRaw(i)][categories.get(i)] += v;
+                    }
                 }
-                rectangles.putAll(r);
-                return rectangles;
+
+                valueMin = StatUtils.min(negHeight[0]);
+                valueMax = StatUtils.max(posHeight[0]);
+            } else {*/
+            double[] posHeight = new double[categoryLabels.length];
+            double[] negHeight = new double[categoryLabels.length];
+            for (int i = 0; i < size(); ++i) {
+                double v = values.get(i);
+                if (v < 0) {
+                    r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, negHeight[categories.get(i)], .8, values.get(i));
+                    negHeight[categories.get(i)] -= v;
+                } else {
+                    r[i] = new PlotShape.Rectangle(this, i, categories.get(i) + .1, posHeight[categories.get(i)], .8, values.get(i));
+                    posHeight[categories.get(i)] += v;
+                }
             }
+            valueMin = StatUtils.min(negHeight);
+            valueMax = StatUtils.max(posHeight);
+            /*}*/
+            rectangles.putAll(r);
+
+            return rectangles;
+
 
         }
 
 
+    }
+
+    public static abstract class TabularData<O extends TabularData<O>> extends PlotData<O> {
+
+        protected TabularData(DataFrame dataFrame) {
+            this.dataFrame = dataFrame;
+        }
+
+        @Override
+        protected int size() {
+            return dataFrame.size();
+        }
+
+        public int numColumns() {
+            return dataFrame.size(Axis.COLUMN);
+        }
+
+        public int numRows() {
+            return dataFrame.size(Axis.INDEX);
+        }
+
+        public String getHeader(int col) {
+            return dataFrame.get(col).getName();
+        }
     }
 
     protected Figure figure;
@@ -537,7 +596,8 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
     protected PlotTrace.Categorical group;
     private Map<Attribute, PlotTrace> attributes;
-    protected PlotTrace colors, opacities;
+    protected PlotTrace opacities;
+    protected SubVariant<PlotTrace.Categorical, PlotTrace.Numeric, PlotTrace> colors;
     protected double opacity = 1;
 
     protected Facets facets;
@@ -551,6 +611,11 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     BooleanArrayList selected = null;
 
     Colormap colormap;
+
+    protected Stroke lineStroke;
+    protected Color lineColor;
+    protected double lineWidth = 2;
+    protected double[] lineDashes;
 
     protected List<Color> defaultColor = Collections.emptyList();
     protected List<Color> selectedColor = Collections.emptyList();
@@ -597,7 +662,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     }
 
     public O setColormap(String... colormap) {
-        if (colors == null || colors instanceof PlotTrace.Numeric) {
+        if (colors == null || colors.get() == null || colors.isB()) {
             return setColormap(StringUtils.convertToSequentialColormap(colormap));
         } else {
             return setColormap(StringUtils.convertToQualitativeColormap(colormap));
@@ -668,7 +733,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
      * @return whether the element at the index is visible
      */
     protected boolean isVisible(int index) {
-        return isVisible(colors, index) && isVisible(opacities, index);
+        return (colors == null || isVisible(colors.get(), index)) && isVisible(opacities, index);
     }
 
     protected static boolean isVisible(final PlotTrace group, int index) {
@@ -676,13 +741,13 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     }
 
     protected final String getHoverText(int i) {
-        if (hoverText == null) {
+        if (hoverText == null && hoverFormatter != null) {
             hoverText = new ArrayList<>(size());
-            for (int j = 0; j < size(); ) {
-                hoverText.add(hoverFormatter.get(j++));
+            for (int j = 0; j < size(); ++j) {
+                hoverText.add(hoverFormatter.get(j));
             }
         }
-        if (hoverText.isEmpty()) {
+        if (hoverText == null || hoverText.isEmpty()) {
             return EMPTY_STRING;
         }
         return hoverText.get(i);
@@ -701,11 +766,15 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
         return selectedColor.get(i);
 
+    }
+
+    protected Colormap getSequentialColormap() {
+        return this.colormap != null ? this.colormap : figure.sequentialColormap;
 
     }
 
-    Colormap getColormap() {
-        return this.colormap != null ? this.colormap : (colors instanceof PlotTrace.Numeric) ? figure.sequentialColormap : figure.qualitativeColormap;
+    protected Colormap getColormap() {
+        return this.colormap != null ? this.colormap : (colors != null && colors.isB()) ? figure.sequentialColormap : figure.qualitativeColormap;
     }
 
     protected Color getDefaultColor(int i) {
@@ -716,7 +785,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             defaultColor = new ArrayList<>(size());
             final Colormap colormap = getColormap();
             for (int j = 0; j < size(); ++j) {
-                defaultColor.add(opacity == 1 ? colors.get(colormap, j) : new Color(colors.get(colormap, j).red(), colors.get(colormap, j).green(), colors.get(colormap, j).blue(), opacity));
+                defaultColor.add(opacity == 1 ? colors.get().get(colormap, j) : new Color(colors.get().get(colormap, j).red(), colors.get().get(colormap, j).green(), colors.get().get(colormap, j).blue(), opacity));
             }
         }
         return defaultColor.get(i);
@@ -820,6 +889,26 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         return traceGroup;
     }
 
+    protected void setColors(final PlotTrace.Categorical trace) {
+        if (colors == null) {
+            this.colors = SubVariant.ofA(addAttribute(trace));
+        } else {
+            this.colors.setToA(addAttribute(trace));
+        }
+        addToHoverText(this.colors.asA(), "%s=%{color:s}", () -> this.colors.get().getName(), "color", this.colors.asA()::get);
+    }
+
+    protected void setColors(final PlotTrace.Numeric trace) {
+        if (colors == null) {
+            this.colors = SubVariant.ofB(addAttribute(trace));
+        } else {
+            colors.setToB(addAttribute(trace));
+        }
+        addToHoverText(colors.asB(), "%s=%{color:.s}", () -> colors.get().getName(), "color", this.colors.asB()::getRaw);
+        trace.scaleMin = 0;
+        trace.scaleMax = 1;
+    }
+
     protected int numAttributes() {
         return attributes == null ? 0 : attributes.size();
     }
@@ -892,16 +981,16 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     protected abstract void init(PlotLayout plotLayout);
 
     final boolean showsColorBar() {
-        return showScale & colors != null & (colors instanceof PlotTrace.Numeric);
+        return showScale & colors != null && (colors.isB());
     }
 
     void layoutColorBar(Renderer<?> source, ColorScales scales) {
-        ((PlotTrace.Numeric) colors).layoutColorBar(source, scales);
+        colors.asB().layoutColorBar(source, scales);
 
     }
 
     void drawColorBar(Renderer<?> source, ChartCanvas<?> canvas, ColorScales scales) {
-        ((PlotTrace.Numeric) colors).drawColorBar(source, canvas, scales);
+        colors.asB().drawColorBar(source, canvas, scales);
 
     }
 
@@ -957,7 +1046,14 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
 
     }
-
+    protected static  void updateXYBounds(PlotLayout plotLayout, RTree<Runnable> rectangles, boolean xUseNice, boolean yUseNice) {
+        plotLayout.getXAxis().dataLower = Math.min(plotLayout.getXAxis().dataLower, rectangles.getMinX());
+        plotLayout.getYAxis().dataLower = Math.min(plotLayout.getYAxis().dataLower, rectangles.getMinY());
+        plotLayout.getXAxis().dataUpper = Math.max(plotLayout.getXAxis().dataUpper, rectangles.getMaxX());
+        plotLayout.getYAxis().dataUpper = Math.max(plotLayout.getYAxis().dataUpper, rectangles.getMaxY());
+        plotLayout.getXAxis().reset(xUseNice);
+        plotLayout.getYAxis().reset(yUseNice);
+    }
     /**
      * @param trace the trace
      * @return the categories from a trace
@@ -1000,5 +1096,211 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     protected static void setTicks(final net.mahdilamb.dataviz.Axis axis, double major) {
         axis.majorTickSpacing = major;
         axis.minorTickSpacing = major * .2;
+    }
+
+    public static abstract class DistributionData<O extends DistributionData<O>> extends PlotData<O> {
+        protected double[] values;
+        protected double valMin, valMax;
+        protected String yLabel = COUNT_LABEL;
+        String xLabel;
+        protected static final String COUNT_LABEL = "Count";
+        protected static final String DENSITY_LABEL = "Density";
+
+        protected DistributionData(final DataFrame dataFrame, final String y) {
+            this.dataFrame = dataFrame;
+            init(dataFrame.getDoubleSeries(y).toArray(new double[dataFrame.size(Axis.INDEX)]));
+            xLabel = y;
+        }
+
+        protected DistributionData(final double[] values) {
+            init(values);
+        }
+
+        protected void init(double[] values) {
+            this.values = values;
+            valMin = StatUtils.NaNMin(values);
+            valMax = StatUtils.NaNMax(values);
+        }
+
+        @Override
+        protected int size() {
+            return values.length;
+        }
+
+        public double getMin() {
+            return valMin;
+        }
+
+        public double getMax() {
+            return valMax;
+        }
+
+        @Override
+        protected void clear() {
+
+        }
+
+
+        protected final RTree<Runnable> createRectangles(PlotLayout layout, Histogram histogram, boolean useDensity) {
+            final double binWidth = (histogram.getBinEdges()[histogram.getCount().length] - histogram.getBinEdges()[0]) / histogram.getCount().length;
+            final long n = sum(histogram.getCount());
+            final double denom;
+            if (useDensity) {
+                denom = 1 / binWidth / n;
+            } else {
+                denom = 1;
+            }
+            final RTree<Runnable> rectangles = new RTree<>();
+            final PlotShape.Rectangle[] r = new PlotShape.Rectangle[histogram.numBins()];
+            double width = histogram.getBinEdges()[1] - histogram.getBinEdges()[0];
+            for (int i = 0; i < histogram.numBins(); ++i) {
+                r[i] = new PlotShape.Rectangle(this, i, histogram.getBinEdges()[i], 0, width, histogram.getCount(i) * denom);
+            }
+            rectangles.putAll(r);
+
+            return rectangles;
+
+
+        }
+
+        protected final RTree<Runnable> createLines(PlotLayout layout, double[] xs, double[] ys) {
+            final RTree<Runnable> lines = new RTree<>();
+            final PlotShape.PolyLine line = new PlotShape.PolyLine(this, xs, ys);
+            lines.put(line);
+            return lines;
+        }
+    }
+
+    public static abstract class DistributionData2D<O extends DistributionData2D<O>> extends PlotData<O> {
+        protected DoubleArrayList x, y;
+        double[] count;
+        protected double[] xEdges, yEdges;
+
+        String xLabel, yLabel;
+        protected double xMin, xMax, yMin, yMax;
+
+        public DistributionData2D(DataFrame dataFrame, String x, String y) {
+            Objects.requireNonNull(this.dataFrame = dataFrame);
+            init(dataFrame.getDoubleSeries(x).toArray(new double[dataFrame.size(Axis.INDEX)]), dataFrame.getDoubleSeries(y).toArray(new double[dataFrame.size(Axis.INDEX)]));
+            xLabel = x;
+            yLabel = y;
+        }
+
+        @SuppressWarnings("unchecked")
+        protected void init(double[] x, double[] y) {
+            xMin = StatUtils.min(x);
+            xMax = StatUtils.max(x);
+            yMin = StatUtils.min(y);
+            yMax = StatUtils.max(y);
+            this.x = new DoubleArrayList(x);
+            this.y = new DoubleArrayList(y);
+            final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
+            //formatters.put("ybin", i->String.format("%s",getYEdges()[i%(getXEdges().length)]));
+            //formatters.put("y", this.y::get);
+            formatters.put("count", i -> (int)this.getCounts()[i]);
+            hoverFormatter = new HoverText<>((O) this, formatters);
+
+            //hoverFormatter.add("(%{x:s}, %{y:s})");
+        }
+
+        protected void addCountToHoverText() {
+            hoverFormatter.add("(count=%{count:d})");
+        }
+
+        @Override
+        protected int size() {
+            return getCounts().length;
+        }
+
+        @Override
+        protected void clear() {
+
+        }
+
+        protected double[] getXEdges() {
+            if (xEdges == null) {
+                double[] xs = x.toArray();
+                xEdges = StatUtils.histogramBinEdges(BinWidthEstimator.NUMPY_AUTO, xs);
+            }
+            return xEdges;
+        }
+
+        protected double[] getYEdges() {
+            if (yEdges == null) {
+                double[] ys = y.toArray();
+                yEdges = StatUtils.histogramBinEdges(BinWidthEstimator.NUMPY_AUTO, ys);
+            }
+            return yEdges;
+        }
+
+        double[] getCounts() {
+            if (count == null) {
+                count = new double[getXEdges().length * getYEdges().length];
+                for (int i = 0; i < x.size(); ++i) {
+                    int xi = ArrayUtils.bisectRight(x.get(i), getXEdges())- 1;
+                    if (x.get(i) == getXEdges()[getXEdges().length - 1]) {
+                        --xi;
+                    }
+                    int yi = ArrayUtils.bisectRight(y.get(i), getYEdges())- 1;
+                    if (y.get(i) == getYEdges()[getYEdges().length - 1]) {
+                        --yi;
+                    }
+                    ++count[(xi ) * getXEdges().length + (yi )];
+                }
+            }
+            return count;
+        }
+
+        protected static RTree<Runnable> createRectangles(DistributionData2D<?> data) {
+            final RTree<Runnable> rectangles = new RTree<>();
+            PlotShape.Rectangle[] rs = new PlotShape.Rectangle[data.getCounts().length];
+            double width = data.getXEdges()[1] - data.getXEdges()[0];
+            double height = data.getYEdges()[1] - data.getYEdges()[0];
+            for (int i = 0; i < data.getXEdges().length; ++i) {
+                for (int j = 0, k = i * data.getYEdges().length; j < data.getYEdges().length; ++j, ++k) {
+                    rs[k] = new PlotShape.Rectangle(data, k, data.getXEdges()[i], data.getYEdges()[j], width, height);
+                }
+            }
+            data.setColors(new PlotTrace.Numeric(data, Attribute.COLOR, "count", data.count));
+            rectangles.putAll(rs);
+            return rectangles;
+        }
+
+        protected static RTree<Runnable> createRectangles(DistributionData2D<?> density2D, double[][] densities, double xMin, double yMin, double w, double h) {
+            final RTree<Runnable> rectangles = new RTree<>();
+            PlotShape.Rectangle[] rs = new PlotShape.Rectangle[densities.length * densities[0].length];
+            for (int y = 0, i = 0; y < densities.length; ++y) {
+                for (int x = 0; x < densities[0].length; ++x) {
+                    rs[i] = new PlotShape.Rectangle(density2D, i, xMin + x * w, yMin + y * h, w, h);
+                    ++i;
+                }
+            }
+            rectangles.putAll(rs);
+
+            return rectangles;
+        }
+
+        protected static RTree<Runnable> createContours(DistributionData2D<?> density2D, double[] kdes, double minDensity, double maxDensity, int xBins, double xMin, double yMin, double cellWidth, double cellHeight) {
+            final RTree<Runnable> polygons = new RTree<>();
+            final double[] isolines = linearlySpaced(minDensity * .1, maxDensity * 1.1, 100);
+            for (double threshold : isolines) {
+                final List<PlotShape.Polygon.PlotPoint> points = new LinkedList<>();
+                MarchingSquares.marchingSquares(kdes, xBins, threshold, (x, y) -> points.add(new PlotShape.Polygon.PlotPoint(xMin + x * cellWidth, yMin + y * cellHeight)));
+                PlotShape.Polygon polygon = new PlotShape.Polygon(density2D, -1, points.toArray(new PlotShape.Polygon.PlotPoint[0]));
+                polygons.put(polygon);
+            }
+            return polygons;
+        }
+    }
+
+    Stroke getLineStroke() {
+        if (lineStroke == null) {
+            lineStroke = new Stroke(lineWidth, lineDashes);
+        }
+        return lineStroke;
+    }
+
+    protected void putFormatter(String key, IntFunction<?> getter) {
+        hoverFormatter.put(key, getter);
     }
 }

@@ -2,8 +2,6 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormaps;
-import net.mahdilamb.dataviz.graphics.HAlign;
-import net.mahdilamb.dataviz.graphics.Side;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.graphics.VAlign;
 
@@ -40,7 +38,33 @@ public final class Theme {
             },
             "plotly");
 
+    public static final Theme PlotlyDark = new Theme(
+            fig -> {
+                fig.qualitativeColormap = Colormaps.get("Plotly");
+                fig.sequentialColormap = Colormaps.get("plasma");
+                //fig.title.setAlignment(HAlign.LEFT);
+                fig.setBackgroundColor(Color.BLACK);
+            },
+            layout -> {
+                layout.background = Color.BLACK;
 
+
+            },
+            axis -> {
+                axis.axisStroke = Stroke.NONE;
+                axis.majorGridStroke = new Stroke(1);
+                axis.zeroGridStroke = new Stroke(2);
+                axis.labelColor = Color.WHITE;
+                axis.majorLineColor = new Color(1., 1., 1., .2);
+                axis.title.setColor(Color.WHITE);
+            },
+            legend -> {
+                legend.vAlign = VAlign.TOP;
+            },
+            colorScale -> {
+
+            },
+            "plotly_dark", "plotly dark");
     String[] names;
 
     final Consumer<Figure> figure;
@@ -60,7 +84,6 @@ public final class Theme {
         this.axis = axis;
         this.names = names;
     }
-
 
     /**
      * @param name the name of the theme

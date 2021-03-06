@@ -84,6 +84,21 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
                     throw new RuntimeException("Rectangular plot seems to be unable to add this XY trace");
                 }
                 layout = plot;
+            } else if (trace instanceof PlotData.DistributionData) {
+                final PlotLayout.XYLayout plot = new PlotLayout.XYLayout();
+                plot.figure = this;
+                if (trace.title != null) {
+                    plot.title = trace.title;
+                }
+                title.setText(plot.title);
+                plot.x.title.setText(((PlotData.DistributionData<?>) trace).xLabel);
+                plot.x.figure = this;
+                plot.y.title.setText(((PlotData.DistributionData<?>) trace).yLabel);
+                plot.y.figure = this;
+                if (!plot.add(trace)) {
+                    throw new RuntimeException("Rectangular plot seems to be unable to add this XY trace");
+                }
+                layout = plot;
             } else if (trace instanceof PlotData.CategoricalData) {
                 final PlotLayout.XYLayout plot = new PlotLayout.XYLayout();
                 plot.figure = this;
@@ -99,6 +114,32 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
                 plot.y.figure = this;
                 if (!plot.add(trace)) {
                     throw new RuntimeException("Rectangular plot seems to be unable to add this Categorical trace");
+                }
+                layout = plot;
+            } else if (trace instanceof PlotData.DistributionData2D) {
+                final PlotLayout.XYLayout plot = new PlotLayout.XYLayout();
+                plot.figure = this;
+                if (trace.title != null) {
+                    plot.title = trace.title;
+                }
+                title.setText(plot.title);
+                plot.x.title.setText(((PlotData.DistributionData2D<?>) trace).xLabel);
+                plot.x.figure = this;
+                plot.y.title.setText(((PlotData.DistributionData2D<?>) trace).yLabel);
+                plot.y.figure = this;
+                if (!plot.add(trace)) {
+                    throw new RuntimeException("Rectangular plot seems to be unable to add this XY trace");
+                }
+                layout = plot;
+            } else if (trace instanceof PlotData.TabularData) {
+                final PlotLayout.TableLayout plot = new PlotLayout.TableLayout();
+                plot.figure = this;
+                if (trace.title != null) {
+                    plot.title = trace.title;
+                }
+                title.setText(plot.title);
+                if (!plot.add(trace)) {
+                    throw new RuntimeException("Rectangular plot seems to be unable to add this XY trace");
                 }
                 layout = plot;
             } else {
@@ -213,6 +254,12 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
      */
     public Color getBackgroundColor() {
         return backgroundColor;
+    }
+
+    public Figure setBackgroundColor(Color color) {
+        this.backgroundColor = color;
+        update();
+        return this;
     }
 
     /**

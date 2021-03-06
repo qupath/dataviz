@@ -48,6 +48,8 @@ public abstract class PlotShape extends Node2D<Runnable> {
     }
 
     protected static final class Polygon extends PlotShape {
+
+
         protected static final class PlotPoint extends PointNode<Runnable> {
 
             public PlotPoint(double x, double y, Runnable data) {
@@ -71,6 +73,17 @@ public abstract class PlotShape extends Node2D<Runnable> {
         protected Polygon(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
             super(parent, ids.size() == 0 ? -1 : ids.get(0), data);
             this.ids = ids;
+        }
+
+        public Polygon(PlotData.DistributionData2D<?> parent, int i, PlotPoint[] points) {
+            super(parent, i, EMPTY_RUNNABLE);
+            this.points = points;
+            for (PlotPoint p : points) {
+                minX = Math.min(minX, p.getMidX());
+                minY = Math.min(minY, p.getMidY());
+                maxX = Math.max(maxX, p.getMidX());
+                maxY = Math.max(maxY, p.getMidY());
+            }
         }
 
         protected Polygon(PlotData.RelationalData<?> parent, IntArrayList ids) {
@@ -132,7 +145,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
 
         @Override
         public String toString() {
-            return String.format("Polygon {min=%s,%s, min=%s,%s, n=%s}", getMinX(), getMinY(), getMaxX(), getMaxY(), ids.size() + 1);
+            return String.format("Polygon {min=%s,%s, min=%s,%s, n=%s}", getMinX(), getMinY(), getMaxX(), getMaxY(), ids == null?"null":ids.size() + 1);
         }
     }
 
@@ -154,6 +167,8 @@ public abstract class PlotShape extends Node2D<Runnable> {
         double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
         IntArrayList ids;
         private Segment[] segs;
+        double[] xs;
+        double[] ys;
 
         public PolyLine(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
             this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, data);
@@ -163,6 +178,12 @@ public abstract class PlotShape extends Node2D<Runnable> {
         public PolyLine(PlotData.RelationalData<?> parent, IntArrayList ids) {
             this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, EMPTY_RUNNABLE);
 
+        }
+
+        public PolyLine(PlotData<?> parent, double[] xs, double[] ys) {
+            super(parent, -1, EMPTY_RUNNABLE);
+            this.xs = xs;
+            this.ys = ys;
         }
 
         public PolyLine(PlotData.RelationalData<?> parent, int i, IntArrayList ids) {
@@ -177,7 +198,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
 
         @Override
         public Color getColor() {
-            if (((PlotData.RelationalData<?>) parent).lineColor != null) {
+            if (((PlotData<?>) parent).lineColor != null) {
                 return ((PlotData.RelationalData<?>) parent).lineColor;
             }
             return parent.getColor(i);
@@ -189,49 +210,33 @@ public abstract class PlotShape extends Node2D<Runnable> {
                 minY = Double.POSITIVE_INFINITY;
                 maxX = Double.NEGATIVE_INFINITY;
                 maxY = Double.NEGATIVE_INFINITY;
-                if (ids.size() < 2) {
-                    segs = new Segment[0];
-                } else {
-                    segs = new Segment[ids.size() - 1];
-                    for (int i = 1, h = 0; i < ids.size(); h = i++) {
-                        segs[h] = new Segment(((PlotData.RelationalData<?>) parent).getX(ids.get(h)), ((PlotData.RelationalData<?>) parent).getY(ids.get(h)), ((PlotData.RelationalData<?>) parent).getX(ids.get(i)), ((PlotData.RelationalData<?>) parent).getY(ids.get(i)));
+                if (xs != null) {
+                    segs = new Segment[xs.length - 1];
+                    for (int i = 1, h = 0; i < xs.length; h = i++) {
+                        segs[h] = new Segment(xs[h], ys[h], xs[i], ys[i]);
                         segs[h].line = this;
                         minX = Math.min(minX, segs[h].getMinX());
                         minY = Math.min(minY, segs[h].getMinY());
                         maxX = Math.max(maxX, segs[h].getMaxX());
                         maxY = Math.max(maxY, segs[h].getMaxY());
                     }
+                } else {
+                    if (ids.size() < 2) {
+                        segs = new Segment[0];
+                    } else {
+                        segs = new Segment[ids.size() - 1];
+                        for (int i = 1, h = 0; i < ids.size(); h = i++) {
+                            segs[h] = new Segment(((PlotData.RelationalData<?>) parent).getX(ids.get(h)), ((PlotData.RelationalData<?>) parent).getY(ids.get(h)), ((PlotData.RelationalData<?>) parent).getX(ids.get(i)), ((PlotData.RelationalData<?>) parent).getY(ids.get(i)));
+                            segs[h].line = this;
+                            minX = Math.min(minX, segs[h].getMinX());
+                            minY = Math.min(minY, segs[h].getMinY());
+                            maxX = Math.max(maxX, segs[h].getMaxX());
+                            maxY = Math.max(maxY, segs[h].getMaxY());
+                        }
+                    }
                 }
             }
             return segs;
-        }
-
-        public double getStartX() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[0].startX;
-        }
-
-        public double getStartY() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[0].startY;
-        }
-
-        public double getEndX() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[getSegments().length - 1].endX;
-        }
-
-        public double getEndY() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[getSegments().length - 1].endY;
         }
 
         @Override

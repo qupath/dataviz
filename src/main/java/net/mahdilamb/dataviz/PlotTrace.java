@@ -11,13 +11,13 @@ import net.mahdilamb.dataviz.plots.Scatter;
 import net.mahdilamb.dataviz.plots.ScatterMode;
 import net.mahdilamb.dataviz.utils.Interpolations;
 import net.mahdilamb.dataviz.utils.Numbers;
-import net.mahdilamb.statistics.StatUtils;
+import net.mahdilamb.stats.StatUtils;
 
 import java.util.Arrays;
 
 import static net.mahdilamb.dataviz.utils.Interpolations.easeOutExpo;
 import static net.mahdilamb.dataviz.utils.Interpolations.lerp;
-import static net.mahdilamb.statistics.ArrayUtils.linearlySpaced;
+import static net.mahdilamb.stats.ArrayUtils.linearlySpaced;
 
 /**
  * A subset of data that contains either a categorical or scalar characteristic
@@ -182,7 +182,7 @@ public abstract class PlotTrace extends Component {
             this.values = values;
             valMin = scaleMin = StatUtils.min(values);
             valMax = scaleMax = StatUtils.max(values);
-            showInLegend = name != null && name.length() > 1;
+            showInLegend = name != null && name.length() > 1 && attribute != PlotData.Attribute.COLOR;
 
         }
 

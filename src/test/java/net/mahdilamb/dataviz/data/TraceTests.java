@@ -12,7 +12,7 @@ import net.mahdilamb.dataframe.DataFrame;
 import java.util.concurrent.ThreadLocalRandom;
 
 import static net.mahdilamb.dataviz.SeriesTests.loadDataFromResource;
-import static net.mahdilamb.statistics.ArrayUtils.*;
+import static net.mahdilamb.stats.ArrayUtils.*;
 
 public final class TraceTests {
     private TraceTests() {

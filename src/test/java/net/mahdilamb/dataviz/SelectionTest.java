@@ -5,8 +5,8 @@ import org.junit.Test;
 
 import java.util.concurrent.ThreadLocalRandom;
 
-import static net.mahdilamb.statistics.ArrayUtils.full;
-import static net.mahdilamb.statistics.ArrayUtils.linearlySpaced;
+import static net.mahdilamb.stats.ArrayUtils.full;
+import static net.mahdilamb.stats.ArrayUtils.linearlySpaced;
 
 public class SelectionTest {
     @Test
