@@ -101,6 +101,21 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
                     throw new RuntimeException("Rectangular plot seems to be unable to add this Categorical trace");
                 }
                 layout = plot;
+            } else if (trace instanceof PlotData.Distribution2D) {
+                final PlotLayout.XYLayout plot = new PlotLayout.XYLayout();
+                plot.figure = this;
+                if (trace.title != null) {
+                    plot.title = trace.title;
+                }
+                title.setText(plot.title);
+                plot.x.title.setText(((PlotData.Distribution2D<?>) trace).xLabel);
+                plot.x.figure = this;
+                plot.y.title.setText(((PlotData.Distribution2D<?>) trace).yLabel);
+                plot.y.figure = this;
+                if (!plot.add(trace)) {
+                    throw new RuntimeException("Rectangular plot seems to be unable to add this XY trace");
+                }
+                layout = plot;
             } else {
                 throw new UnsupportedOperationException();
             }

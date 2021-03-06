@@ -34,7 +34,6 @@ public final class Line extends PlotData.RelationalData<Line> {
 
     @Override
     protected void init(PlotLayout plotLayout) {
-
         putLines(plotLayout, this, createLines(plotLayout));
         updateXYBounds(plotLayout, xMin, xMax, yMin, yMax,false,true);
     }
@@ -45,8 +44,7 @@ public final class Line extends PlotData.RelationalData<Line> {
             throw new UnsupportedOperationException("Series must not be double");
         }
         clear();
-        colors = addAttribute(new PlotTrace.Categorical(this, Attribute.COLOR, s));
-        addToHoverText(colors, "%s=%{color:s}", () -> colors.getName(), "color", ((PlotTrace.Categorical) colors)::get);
+        setColors(new PlotTrace.Categorical(this, Attribute.COLOR, s));
         return this;
     }
 

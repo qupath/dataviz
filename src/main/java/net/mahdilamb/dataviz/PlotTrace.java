@@ -182,7 +182,7 @@ public abstract class PlotTrace extends Component {
             this.values = values;
             valMin = scaleMin = StatUtils.min(values);
             valMax = scaleMax = StatUtils.max(values);
-            showInLegend = name != null && name.length() > 1;
+            showInLegend = name != null && name.length() > 1 && attribute != PlotData.Attribute.COLOR;
 
         }
 

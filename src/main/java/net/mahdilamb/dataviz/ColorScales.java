@@ -2,7 +2,10 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
-import net.mahdilamb.dataviz.graphics.*;
+import net.mahdilamb.dataviz.graphics.ChartCanvas;
+import net.mahdilamb.dataviz.graphics.Gradient;
+import net.mahdilamb.dataviz.graphics.Orientation;
+import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.utils.Numbers;
 
 import static net.mahdilamb.dataviz.Axis.niceNum;
@@ -110,7 +113,7 @@ public final class ColorScales extends KeyArea<ColorScales> {
                             canvas.strokeLine(barEnd, y, barEnd + scales.tickLength, y);
                         }
                         if (scales.showLabels) {
-                            canvas.fillText(labels[i], barEnd + (scales.showTicks ? (scales.tickLength ) : 0)+ 2, y + baselineOffset);
+                            canvas.fillText(labels[i], barEnd + (scales.showTicks ? (scales.tickLength) : 0) + 2, y + baselineOffset);
 
                         }
                     }
@@ -155,8 +158,8 @@ public final class ColorScales extends KeyArea<ColorScales> {
                     continue;
                 }
                 trace.layoutColorBar(source, this);
-                sizeX += ((PlotTrace.Numeric) trace.colors).getColorBar().sizeX;
-                ((PlotTrace.Numeric) trace.colors).getColorBar().posY = posY + (.5 * (1 - size)) * sizeY;
+                sizeX += trace.colors.asB().getColorBar().sizeX;
+                trace.colors.asB().getColorBar().posY = posY + (.5 * (1 - size)) * sizeY;
             }
             posX = maxX - sizeX - padding;
             if (sizeX == 0) {
@@ -168,9 +171,10 @@ public final class ColorScales extends KeyArea<ColorScales> {
                     if (!trace.showsColorBar()) {
                         continue;
                     }
-                    ((PlotTrace.Numeric) trace.colors).getColorBar().posX = x;
-                    ((PlotTrace.Numeric) trace.colors).getColorBar().getGradient().update(this, ((PlotTrace.Numeric) trace.colors).getColorBar());
-                    x -= ((PlotTrace.Numeric) trace.colors).getColorBar().sizeX;
+
+                    trace.colors.asB().getColorBar().posX = x;
+                    trace.colors.asB().getColorBar().getGradient().update(this, trace.colors.asB().getColorBar());
+                    x -= trace.colors.asB().getColorBar().sizeX;
 
                 }
             }

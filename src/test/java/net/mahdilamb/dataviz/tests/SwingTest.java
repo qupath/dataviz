@@ -5,6 +5,7 @@ import net.mahdilamb.dataviz.Figure;
 import net.mahdilamb.dataviz.Theme;
 import net.mahdilamb.dataviz.graphics.FillMode;
 import net.mahdilamb.dataviz.plots.Bar;
+import net.mahdilamb.dataviz.plots.Histogram2D;
 import net.mahdilamb.dataviz.plots.Line;
 import net.mahdilamb.dataviz.plots.Scatter;
 import net.mahdilamb.statistics.ArrayUtils;
@@ -325,7 +326,32 @@ public class SwingTest {
         ;
     }
 
+    static void styledBar() {
+        new Bar(gapminder.query("country == 'Canada'"), "year", "pop")
+                .apply(Theme.Plotly)
+                .setColors("lifeExp")
+                .show();
+    }
+
+    static void stackedBar() {
+        //TODO
+        new Bar(tips, "sex", "total_bill")
+                .setColors("time")
+                .apply(Theme.Plotly)
+                .show();
+    }
+
+    static void densityHeatmap() {
+        new Histogram2D(tips, "total_bill", "tip")
+                .setXBins(15)
+                .setYBins(15)
+                .apply(Theme.Plotly)
+                .setColormap("ice")
+                .getFigure()
+                .show();
+    }
+
     public static void main(String[] args) {
-        wideFormBar();
+        densityHeatmap();
     }
 }
