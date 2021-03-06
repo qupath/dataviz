@@ -21,7 +21,7 @@ public class SelectionTest {
                 .add(0.8, 5.5)
                 .add(0, 5.5)
                 .close();
-        PlotLayout p = new PlotLayout.Rectangular();
+        PlotLayout p = new PlotLayout.XYLayout();
         p.add(scatter);
 
         polygon.apply(p);

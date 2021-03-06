@@ -108,6 +108,16 @@ public class Title extends Component {
         return color;
     }
 
+    /**
+     * Set the alignment of the title
+     *
+     * @param alignment the alignment
+     */
+    public void setAlignment(HAlign alignment) {
+        textAlign = alignment;
+        markLayoutAsOld();
+    }
+
     protected static double getAlignFrac(HAlign textAlign) {
         switch (textAlign) {
             case CENTER:
@@ -156,6 +166,5 @@ public class Title extends Component {
     public String toString() {
         return String.format("Title {%s, %s}", text, font);
     }
-
 
 }

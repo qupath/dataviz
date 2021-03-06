@@ -3,6 +3,7 @@ package net.mahdilamb.dataviz;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataviz.graphics.ChartCanvas;
 import net.mahdilamb.dataviz.graphics.Font;
+import net.mahdilamb.dataviz.graphics.HAlign;
 
 /**
  * A component in a chart

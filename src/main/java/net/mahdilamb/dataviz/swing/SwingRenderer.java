@@ -62,21 +62,32 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         void draw() {
 
             final Graphics2D g = (Graphics2D) getGraphics();
-            g.drawImage(getCurrentState(), 0, 0, null);
+
             if (hoverText != null) {
-                double y = 0;
-                double x = this.x + 16;
-                for (int i = 0; i < hoverText.numLines(); ++i) {
-                    final String line = hoverText.getLine(i);
+                if (hoverText.hasChanges()){
+                    g.drawImage(getCurrentState(), 0, 0, null);
+
+                    double y = hoverText.getY() - g.getFontMetrics().getHeight() * .5;
+                    double x = hoverText.getX();
+                    final String line = hoverText.getLine();
                     double width = SwingUtils.getTextWidth(g.getFontMetrics(), line);
-                    rect.setRect(x, this.y + y, width, g.getFontMetrics().getHeight());
-                    g.setColor(SwingUtils.convert(hoverText.getBackground(i)));
+                    if ((x + width) > getWidth()) {
+                        x -= width + 16;
+                    } else {
+                        x += 16;
+                    }
+                    rect.setRect(x, y, width, g.getFontMetrics().getHeight());
+                    g.setColor(SwingUtils.convert(hoverText.getBackground()));
                     g.fill(rect);
-                    g.setColor(SwingUtils.convert(hoverText.getForeground(i)));
+                    g.setColor(SwingUtils.convert(hoverText.getForeground()));
                     g.draw(rect);
-                    g.drawString(line, SwingUtils.convert(x), SwingUtils.convert(this.y + y + g.getFontMetrics().getAscent()));
-                    y += g.getFontMetrics().getHeight();
+                    g.drawString(line, SwingUtils.convert(x), SwingUtils.convert(y + g.getFontMetrics().getAscent()));
+                    hoverText.drawn();
                 }
+            }else {
+
+                g.drawImage(getCurrentState(), 0, 0, null);
+                markHoverTextOld(panel.renderer);
 
             }
             g.dispose();
@@ -176,7 +187,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
 
         final Queue<Consumer<Graphics2D>> queue = new ArrayDeque<>();
         private final SwingRenderer renderer;
-        private final Variant<net.mahdilamb.colormap.Color,Gradient> currentFill = Variant.ofLeft(net.mahdilamb.colormap.Color.BLACK);
+        private final Variant<net.mahdilamb.colormap.Color, Gradient> currentFill = Variant.ofA(net.mahdilamb.colormap.Color.BLACK);
         private net.mahdilamb.dataviz.graphics.Stroke currentStroke = net.mahdilamb.dataviz.graphics.Stroke.SOLID;
         private net.mahdilamb.colormap.Color currentStrokeColor = net.mahdilamb.colormap.Color.BLACK;
 
@@ -207,11 +218,11 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             queue.add(g -> {
                 if (!usingFill) {
                     if (currentFill != null) {
-                        if (currentFill.isLeft()) {
-                            g.setColor(convert(currentFill.asLeft()));
+                        if (currentFill.isA()) {
+                            g.setColor(convert(currentFill.asA()));
                             g.setPaint(g.getColor());
                         } else {
-                            g.setPaint(convert(currentFill.asRight()));
+                            g.setPaint(convert(currentFill.asB()));
                         }
                     }
                     usingFill = true;
@@ -292,7 +303,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         @Override
         public void setFill(net.mahdilamb.colormap.Color color) {
             queue.add(g -> {
-                this.currentFill.setToLeft(color);
+                this.currentFill.setToA(color);
 
                 g.setColor(convert(color));
                 g.setPaint(g.getColor());
@@ -304,7 +315,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         @Override
         public void setFill(Gradient gradient) {
             queue.add(g -> {
-                this.currentFill.setToRight(gradient);
+                this.currentFill.setToB(gradient);
                 g.setPaint(convert(gradient));
 
                 usingFill = true;

@@ -68,12 +68,12 @@ public abstract class PlotShape extends Node2D<Runnable> {
         IntArrayList ids;
         PlotPoint[] points;
 
-        protected PlotPolygon(PlotData.XYData<?> parent, IntArrayList ids, Runnable data) {
+        protected PlotPolygon(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
             super(parent, ids.size() == 0 ? -1 : ids.get(0), data);
             this.ids = ids;
         }
 
-        protected PlotPolygon(PlotData.XYData<?> parent, IntArrayList ids) {
+        protected PlotPolygon(PlotData.RelationalData<?> parent, IntArrayList ids) {
             this(parent, ids, EMPTY_RUNNABLE);
         }
 
@@ -84,14 +84,14 @@ public abstract class PlotShape extends Node2D<Runnable> {
                 maxX = Double.NEGATIVE_INFINITY;
                 maxY = Double.NEGATIVE_INFINITY;
 
-                switch (((PlotData.XYData<?>) parent).fillMode) {
+                switch (((PlotData.RelationalData<?>) parent).fillMode) {
                     case NONE:
                         points = new PlotPoint[0];
                         break;
                     case TO_SELF:
                         points = new PlotPoint[ids.size() + 1];
                         for (int i : ids) {
-                            points[i] = new PlotPoint(((PlotData.XYData<?>) parent).getX(ids.get(i)), ((PlotData.XYData<?>) parent).getY(ids.get(i)));
+                            points[i] = new PlotPoint(((PlotData.RelationalData<?>) parent).getX(ids.get(i)), ((PlotData.RelationalData<?>) parent).getY(ids.get(i)));
                             minX = Math.min(minX, points[i].getMidX());
                             minY = Math.min(minY, points[i].getMidY());
                             maxX = Math.max(maxX, points[i].getMidX());
@@ -155,30 +155,30 @@ public abstract class PlotShape extends Node2D<Runnable> {
         IntArrayList ids;
         private Segment[] segs;
 
-        public PlotPolyLine(PlotData.XYData<?> parent, IntArrayList ids, Runnable data) {
+        public PlotPolyLine(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
             this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, data);
 
         }
 
-        public PlotPolyLine(PlotData.XYData<?> parent, IntArrayList ids) {
+        public PlotPolyLine(PlotData.RelationalData<?> parent, IntArrayList ids) {
             this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, EMPTY_RUNNABLE);
 
         }
 
-        public PlotPolyLine(PlotData.XYData<?> parent, int i, IntArrayList ids) {
+        public PlotPolyLine(PlotData.RelationalData<?> parent, int i, IntArrayList ids) {
             this(parent, i, ids, EMPTY_RUNNABLE);
 
         }
 
-        public PlotPolyLine(PlotData.XYData<?> parent, int i, IntArrayList ids, Runnable data) {
+        public PlotPolyLine(PlotData.RelationalData<?> parent, int i, IntArrayList ids, Runnable data) {
             super(parent, i, data);
             this.ids = ids;
         }
 
         @Override
         public Color getColor() {
-            if (((PlotData.XYData<?>) parent).lineColor != null) {
-                return ((PlotData.XYData<?>) parent).lineColor;
+            if (((PlotData.RelationalData<?>) parent).lineColor != null) {
+                return ((PlotData.RelationalData<?>) parent).lineColor;
             }
             return parent.getColor(i);
         }
@@ -194,7 +194,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
                 } else {
                     segs = new Segment[ids.size() - 1];
                     for (int i = 1, h = 0; i < ids.size(); h = i++) {
-                        segs[h] = new Segment(((PlotData.XYData<?>) parent).getX(ids.get(h)), ((PlotData.XYData<?>) parent).getY(ids.get(h)), ((PlotData.XYData<?>) parent).getX(ids.get(i)), ((PlotData.XYData<?>) parent).getY(ids.get(i)));
+                        segs[h] = new Segment(((PlotData.RelationalData<?>) parent).getX(ids.get(h)), ((PlotData.RelationalData<?>) parent).getY(ids.get(h)), ((PlotData.RelationalData<?>) parent).getX(ids.get(i)), ((PlotData.RelationalData<?>) parent).getY(ids.get(i)));
                         segs[h].line = this;
                         minX = Math.min(minX, segs[h].getMinX());
                         minY = Math.min(minY, segs[h].getMinY());
@@ -298,19 +298,8 @@ public abstract class PlotShape extends Node2D<Runnable> {
     }
 
     protected static final class PlotMarker extends PlotShape {
-        private final double size;
+        final double size;
         double xMin, xMax, yMin, yMax;
-
-        @Override
-        public boolean intersects(double minX, double minY, double maxX, double maxY) {
-            if (minX == maxX && minY == maxY) {
-                double w = size * .5 / parent.layout.getXAxis().scale;
-                double h = size * .5 / parent.layout.getYAxis().scale;
-                return RectangularNode.intersects(minX, minY, maxX, maxY, this.xMin - w, this.yMin - h, this.xMax + w, this.yMax + h);
-            }
-
-            return super.intersects(minX, minY, maxX, maxY);
-        }
 
         public PlotMarker(PlotData<?> parent, int i, double x, double y, double size, Runnable data) {
             super(parent, i, data);
@@ -348,7 +337,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
 
         @Override
         public String toString() {
-            return String.format("PlotMarker {%s, %s}", ((PlotData.XYData<?>) parent).getX(i), ((PlotData.XYData<?>) parent).getY(i));
+            return String.format("PlotMarker {%s, %s}", ((PlotData.RelationalData<?>) parent).getX(i), ((PlotData.RelationalData<?>) parent).getY(i));
         }
     }
 }

@@ -9,7 +9,7 @@ import net.mahdilamb.dataviz.PlotTrace;
 
 import java.util.function.DoubleUnaryOperator;
 
-public final class Line extends PlotData.XYData<Line> {
+public final class Line extends PlotData.RelationalData<Line> {
 
     public Line(double[] x, double[] y) {
         super(x, y);
@@ -36,8 +36,7 @@ public final class Line extends PlotData.XYData<Line> {
     protected void init(PlotLayout plotLayout) {
 
         putLines(plotLayout, this, createLines(plotLayout));
-        updateXYBounds(plotLayout, xMin, xMax, yMin, yMax,false);
-        plotLayout.getXAxis().setRange(xMin, xMax);
+        updateXYBounds(plotLayout, xMin, xMax, yMin, yMax,false,true);
     }
 
     public Line setColors(String series) throws DataFrameOnlyOperationException {

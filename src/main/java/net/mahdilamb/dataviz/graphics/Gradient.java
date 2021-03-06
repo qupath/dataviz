@@ -27,10 +27,10 @@ public class Gradient {
         RADIAL
     }
 
-    protected final NavigableMap<Float, Color> colorMap;
+    private final NavigableMap<Float, Color> colorMap;
     protected double startX, startY, endX, endY;
 
-    protected final GradientType type;
+    private final GradientType type;
 
     /**
      * Create a gradient from a colormap

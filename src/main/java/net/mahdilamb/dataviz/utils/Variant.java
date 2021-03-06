@@ -5,125 +5,167 @@ import java.util.function.Consumer;
 /**
  * An object that is one of two types.
  * <p>
- * To create a new variant, use one of the two factory methods ({@link #ofLeft(Object)} or {@link #ofRight(Object)})
+ * To create a new variant, use one of the two factory methods ({@link #ofA(Object)} or {@link #ofB(Object)}).
+ * <p>
+ * Alternatively, use the {@link #of} methods, which are recommended for use with the{@code var} keyword in Java10 and
+ * up.
+ * <p>
+ * Setters are not thread-safe so in multi-threaded applications should be synchronized externally. The value can
+ * be {@code null}.
  *
- * @param <LEFT>  the type of the left hand variant
- * @param <RIGHT> the type of the right hand variant
+ * @param <A> the type of the A hand variant
+ * @param <B> the type of the B hand variant
  */
-public final class Variant<LEFT, RIGHT> {
-    private Object value;
-    private boolean isLeft;
+public final class Variant<A, B> {
 
     /**
-     * Create a variant of the left type
+     * Create a variant of the A type
      *
-     * @param value   the value
-     * @param <LEFT>  the type of the left value
-     * @param <RIGHT> the type of the right value
+     * @param value the value
+     * @param <A>   the type of the A value
+     * @param <B>   the type of the B value
      * @return a variant of the value
      */
-    public static <LEFT, RIGHT> Variant<LEFT, RIGHT> ofLeft(LEFT value) {
+    public static <A, B> Variant<A, B> ofA(A value) {
         return new Variant<>(value, true);
     }
 
     /**
-     * Create a variant of the right type
+     * Create a variant of the B type
      *
-     * @param value   the value
-     * @param <LEFT>  the type of the left value
-     * @param <RIGHT> the type of the right value
+     * @param value the value
+     * @param <A>   the type of the A value
+     * @param <B>   the type of the B value
      * @return a variant of the value
      */
-    public static <LEFT, RIGHT> Variant<LEFT, RIGHT> ofRight(RIGHT value) {
+    public static <A, B> Variant<A, B> ofB(B value) {
         return new Variant<>(value, false);
     }
 
     /**
-     * @return whether the variant is of the left type
+     * Create a variant initialized to the A type (useful for Java 10{@literal +} and up as it is works
+     * with {@code var})
+     *
+     * @param value  the value
+     * @param bClass the class of the B type
+     * @param <A>    the type of the A value
+     * @param <B>    the type of the B value
+     * @return a variant of the value
      */
-    public boolean isLeft() {
-        return isLeft;
+    public static <A, B> Variant<A, B> of(A value, Class<? extends B> bClass) {
+        return new Variant<>(value, true);
     }
 
     /**
-     * @return whether the variant is of the right type
+     * Create a variant initialized to the B type (useful for Java 10{@literal +} and up as it is works
+     * with {@code var})
+     *
+     * @param aClass the class of the A type
+     * @param value  the value
+     * @param <A>    the type of the A value
+     * @param <B>    the type of the B value
+     * @return a variant of the value
      */
-    public boolean isRight() {
-        return !isLeft;
+    public static <A, B> Variant<A, B> of(Class<? extends A> aClass, B value) {
+        return new Variant<>(value, false);
+    }
+
+    private Object value;
+    private boolean isA;
+
+    private Variant(final Object value, boolean isA) {
+        this.value = value;
+        this.isA = isA;
     }
 
     /**
-     * Set the value to the left type
+     * @return whether the variant is of the A type
+     */
+    public boolean isA() {
+        return isA;
+    }
+
+    /**
+     * @return whether the variant is of the B type
+     */
+    public boolean isB() {
+        return !isA;
+    }
+
+    /**
+     * Set the value to the A type
      *
      * @param value the value
      */
-    public void setToLeft(final LEFT value) {
+    public void setToA(final A value) {
         this.value = value;
-        isLeft = true;
+        isA = true;
     }
 
     /**
-     * Set the value to the right type
+     * Set the value to the B type
      *
      * @param value the value
      */
-    public void setToRight(final RIGHT value) {
+    public void setToB(final B value) {
         this.value = value;
-        isLeft = false;
+        isA = false;
     }
 
     /**
-     * @return the value as the left type
-     * @throws ClassCastException if the value is actually the right type
+     * @return the value of the variant
      */
-    @SuppressWarnings("unchecked")
-    public LEFT asLeft() throws ClassCastException {
-        if (!isLeft) {
-            throw new ClassCastException("The variant " + value + " is currently of the right type ");
-        }
-        return (LEFT) value;
+    public Object get() {
+        return value;
     }
 
     /**
-     * @return the value as the right type
-     * @throws ClassCastException if the value is actually the left type
+     * @return the value as the A type
+     * @throws ClassCastException if the value is actually the B type
      */
     @SuppressWarnings("unchecked")
-    public RIGHT asRight() throws ClassCastException {
-        if (isLeft) {
-            throw new ClassCastException("The variant " + value + " is currently of the left type ");
+    public A asA() throws ClassCastException {
+        if (!isA) {
+            throw new ClassCastException("The variant \"" + value + "\" is currently of the B type.");
         }
-        return (RIGHT) value;
+        return (A) value;
+    }
+
+    /**
+     * @return the value as the B type
+     * @throws ClassCastException if the value is actually the A type
+     */
+    @SuppressWarnings("unchecked")
+    public B asB() throws ClassCastException {
+        if (isA) {
+            throw new ClassCastException("The variant \"" + value + "\" is currently of the A type.");
+        }
+        return (B) value;
     }
 
     /**
      * Apply a condition depending on the type of the variant
      *
-     * @param ifLeft  the function to do if left
-     * @param ifRight the function to do if right
+     * @param ifA the function to do if A
+     * @param ifB the function to do if B
      */
     @SuppressWarnings("unchecked")
-    public void accept(final Consumer<LEFT> ifLeft, final Consumer<RIGHT> ifRight) {
-        if (this.isLeft) {
-            ifLeft.accept((LEFT) value);
+    public void accept(final Consumer<A> ifA, final Consumer<B> ifB) {
+        if (this.isA) {
+            ifA.accept((A) value);
         } else {
-            ifRight.accept((RIGHT) value);
+            ifB.accept((B) value);
         }
-    }
-
-    private Variant(final Object value, boolean isLeft) {
-        this.value = value;
-        this.isLeft = isLeft;
     }
 
     @Override
     public int hashCode() {
-        return value.hashCode();
+        return value == null ? 0 : value.hashCode();
     }
 
     @Override
     public String toString() {
-        return String.format("Variant {%s}", value.toString());
+        return String.format("Variant {%s}", value);
     }
 
 }

@@ -50,7 +50,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
      *
      * @param <O> the concrete type of the XY data
      */
-    public abstract static class XYData<O extends XYData<O>> extends PlotData<O> {
+    public abstract static class RelationalData<O extends RelationalData<O>> extends PlotData<O> {
 
         protected final DoubleArrayList x, y;
         protected double xMin, xMax, yMin, yMax;
@@ -69,7 +69,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         protected ScatterMode markerMode = ScatterMode.MARKER_ONLY;
 
 
-        protected XYData(double[] x, double[] y) {
+        protected RelationalData(double[] x, double[] y) {
             this.x = new DoubleArrayList(x);
             this.y = new DoubleArrayList(y);
             if (this.x.size() != this.y.size()) {
@@ -79,15 +79,15 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             setUnlabelledHover();
         }
 
-        protected XYData(double[] x, DoubleUnaryOperator y) {
+        protected RelationalData(double[] x, DoubleUnaryOperator y) {
             this(x, ArrayUtils.map(x, y));
         }
 
-        protected XYData(double[] y) {
+        protected RelationalData(double[] y) {
             this(ArrayUtils.range(y.length), y);
         }
 
-        protected XYData(String[] x, double[] y) {
+        protected RelationalData(String[] x, double[] y) {
             final GroupBy<String> xAxis = new GroupBy<>(x);
             this.x = new DoubleArrayList(xAxis.toMeltedArray(new double[x.length]));
             this.y = new DoubleArrayList(y);
@@ -103,7 +103,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             setStringYHover();
         }
 
-        protected XYData(final DataFrame dataFrame, final String x, final String y) {
+        protected RelationalData(final DataFrame dataFrame, final String x, final String y) {
             //todo if x is string series
             double[] valX = toArray(dataFrame, x);
             double[] valY = toArray(dataFrame, y);
@@ -393,7 +393,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
      */
     public static abstract class CategoricalData<O extends CategoricalData<O>> extends PlotData<O> {
 
-        List<String> categories;
+        IntArrayList categories;
         DoubleArrayList values;
         double valueMin, valueMax;
         String categoryLabel, valueLabel;
@@ -405,8 +405,9 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         protected CategoricalData(final DataFrame dataFrame, final String category, final String values) {
             this.dataFrame = dataFrame;
-            final GroupBy<String> group = new GroupBy<>(dataFrame.getStringSeries(category));
-            init(group.getGroups(new String[group.numGroups()]), dataFrame.getDoubleSeries(values).toArray(new double[dataFrame.size(Axis.INDEX)]));
+            GroupBy<String> xyGrouping = new GroupBy<>(dataFrame.getStringSeries(category));
+            init(xyGrouping.getGroups(new String[xyGrouping.numGroups()]), dataFrame.getDoubleSeries(values).toArray(new double[dataFrame.size(Axis.INDEX)]));
+            categories = new IntArrayList(xyGrouping.toMeltedArray(new int[dataFrame.size(Axis.INDEX)]));
             categoryLabel = category;
             valueLabel = values;
         }
@@ -415,7 +416,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         void init(String[] categories, double[] values) {
             valueMin = StatUtils.min(values);
             valueMax = StatUtils.max(values);
-            this.categories = Arrays.asList(categories);
+            this.categoryLabels = categories;
             this.values = new DoubleArrayList(values);
             final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
             formatters.put("x", this::getCategory);
@@ -425,7 +426,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
 
         String getCategory(int i) {
-            return categories.get(i);
+            return categoryLabels[categories.get(i)];
         }
 
         double getValue(int i) {
@@ -444,19 +445,14 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         @Override
         protected void init(PlotLayout plotLayout) {
-            updateXYBounds(plotLayout, 0, categories.size(), 0, valueMax, false);
-            plotLayout.getXAxis().majorTickSpacing =1;
-            plotLayout.getXAxis().minorTickSpacing =.2;
+            updateXYBounds(plotLayout, 0, categories.size(), 0, valueMax, false,true);
+            plotLayout.getXAxis().majorTickSpacing = 1;
+            plotLayout.getXAxis().minorTickSpacing = .2;
             putRectangles(layout, this, createRectangles(layout));
 
         }
 
         public String[] getCategoryLabels() {
-            if (categoryLabels == null) {
-                //TODO, deal with group
-                final GroupBy<String> categories = new GroupBy<>(this.categories);
-                categoryLabels = categories.getGroups(new String[categories.numGroups()]);
-            }
             return categoryLabels;
         }
 
@@ -473,13 +469,25 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
 
         protected final RTree<Runnable> createRectangles(PlotLayout layout) {
-            final RTree<Runnable> rectangles = new RTree<>();
-            final PlotShape.PlotRectangle[] r = new PlotShape.PlotRectangle[size()];
-            for (int i = 0; i < size(); ++i) {
-                r[i] = new PlotShape.PlotRectangle(this, i, i + .1, 0, .8, values.get(i));
+            if (colors != null) {
+                System.out.println(categories);
+                final RTree<Runnable> rectangles = new RTree<>();
+                final PlotShape.PlotRectangle[] r = new PlotShape.PlotRectangle[size()];
+                for (int i = 0; i < size(); ++i) {
+                    r[i] = new PlotShape.PlotRectangle(this, i, i + .1, 0, .8, values.get(i));
+                }
+                rectangles.putAll(r);
+                return rectangles;
+            } else {
+                final RTree<Runnable> rectangles = new RTree<>();
+                final PlotShape.PlotRectangle[] r = new PlotShape.PlotRectangle[size()];
+                for (int i = 0; i < size(); ++i) {
+                    r[i] = new PlotShape.PlotRectangle(this, i, i + .1, 0, .8, values.get(i));
+                }
+                rectangles.putAll(r);
+                return rectangles;
             }
-            rectangles.putAll(r);
-            return rectangles;
+
         }
 
 
@@ -904,13 +912,13 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
      * @param yMin       the y min of the data
      * @param yMax       the y max of the data
      */
-    protected static void updateXYBounds(final PlotLayout plotLayout, double xMin, double xMax, double yMin, double yMax, boolean useNice) {
+    protected static void updateXYBounds(final PlotLayout plotLayout, double xMin, double xMax, double yMin, double yMax, boolean xUseNice, boolean yUseNice) {
         plotLayout.getXAxis().dataLower = Math.min(plotLayout.getXAxis().dataLower, xMin);
         plotLayout.getYAxis().dataLower = Math.min(plotLayout.getYAxis().dataLower, yMin);
         plotLayout.getXAxis().dataUpper = Math.max(plotLayout.getXAxis().dataUpper, xMax);
         plotLayout.getYAxis().dataUpper = Math.max(plotLayout.getYAxis().dataUpper, yMax);
-        plotLayout.getXAxis().reset(useNice);
-        plotLayout.getYAxis().reset(useNice);
+        plotLayout.getXAxis().reset(xUseNice);
+        plotLayout.getYAxis().reset(yUseNice);
 
 
     }

@@ -91,7 +91,7 @@ public class ImageExporter extends ChartExporter {
         private final Ellipse2D ellipse = new Ellipse2D.Double();
         private final Line2D line = new Line2D.Double();
         private final boolean fillWhite;
-        private final Variant<net.mahdilamb.colormap.Color, Gradient> currentFill = Variant.ofLeft(net.mahdilamb.colormap.Color.BLACK);
+        private final Variant<net.mahdilamb.colormap.Color, Gradient> currentFill = Variant.ofA(net.mahdilamb.colormap.Color.BLACK);
         private Stroke currentStroke = Stroke.SOLID;
         private net.mahdilamb.colormap.Color currentStrokeColor = net.mahdilamb.colormap.Color.BLACK;
         boolean usingFill = true;
@@ -129,11 +129,11 @@ public class ImageExporter extends ChartExporter {
 
         private void switchToFilled() {
             if (!usingFill) {
-                if (currentFill.isLeft()) {
-                    g.setColor(convert(currentFill.asLeft()));
+                if (currentFill.isA()) {
+                    g.setColor(convert(currentFill.asA()));
                     g.setPaint(g.getColor());
                 } else {
-                    g.setPaint(convert(currentFill.asRight()));
+                    g.setPaint(convert(currentFill.asB()));
                 }
                 usingFill = true;
             }
@@ -200,7 +200,7 @@ public class ImageExporter extends ChartExporter {
 
         @Override
         public void setFill(net.mahdilamb.colormap.Color color) {
-            this.currentFill.setToLeft(color);
+            this.currentFill.setToA(color);
 
             g.setColor(convert(color));
             g.setPaint(g.getColor());
@@ -210,7 +210,7 @@ public class ImageExporter extends ChartExporter {
 
         @Override
         public void setFill(Gradient gradient) {
-            currentFill.setToRight(gradient);
+            currentFill.setToB(gradient);
             g.setPaint(convert(gradient));
             usingFill = true;
         }

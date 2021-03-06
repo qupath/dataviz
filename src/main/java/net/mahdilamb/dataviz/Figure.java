@@ -62,30 +62,30 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
             }
         }
         if (trace.facets != null) {
-            layout = new PlotLayout.RectangularFacetGrid(this, trace);
+            layout = new PlotLayout.FacetGrid(this, trace);
         } else {
             //If not, create a new plot
-            if (trace instanceof PlotData.XYData) {
-                final PlotLayout.Rectangular plot = new PlotLayout.Rectangular();
+            if (trace instanceof PlotData.RelationalData) {
+                final PlotLayout.XYLayout plot = new PlotLayout.XYLayout();
                 plot.figure = this;
                 if (trace.title != null) {
                     plot.title = trace.title;
                 }
                 title.setText(plot.title);
-                plot.x.title.setText(((PlotData.XYData<?>) trace).xLab);
-                if (((PlotData.XYData<?>) trace).xLabels != null) {
+                plot.x.title.setText(((PlotData.RelationalData<?>) trace).xLab);
+                if (((PlotData.RelationalData<?>) trace).xLabels != null) {
                     plot.x.showZeroLine = false;
                 }
-                plot.x.labels = ((PlotData.XYData<?>) trace).xLabels;
+                plot.x.labels = ((PlotData.RelationalData<?>) trace).xLabels;
                 plot.x.figure = this;
-                plot.y.title.setText(((PlotData.XYData<?>) trace).yLab);
+                plot.y.title.setText(((PlotData.RelationalData<?>) trace).yLab);
                 plot.y.figure = this;
                 if (!plot.add(trace)) {
                     throw new RuntimeException("Rectangular plot seems to be unable to add this XY trace");
                 }
                 layout = plot;
             } else if (trace instanceof PlotData.CategoricalData) {
-                final PlotLayout.Rectangular plot = new PlotLayout.Rectangular();
+                final PlotLayout.XYLayout plot = new PlotLayout.XYLayout();
                 plot.figure = this;
                 if (trace.title != null) {
                     plot.title = trace.title;

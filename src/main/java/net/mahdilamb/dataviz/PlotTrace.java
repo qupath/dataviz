@@ -7,7 +7,6 @@ import net.mahdilamb.dataframe.utils.GroupBy;
 import net.mahdilamb.dataframe.utils.UnsortedDoubleSet;
 import net.mahdilamb.dataviz.graphics.ChartCanvas;
 import net.mahdilamb.dataviz.graphics.Orientation;
-import net.mahdilamb.dataviz.plots.Line;
 import net.mahdilamb.dataviz.plots.Scatter;
 import net.mahdilamb.dataviz.plots.ScatterMode;
 import net.mahdilamb.dataviz.utils.Interpolations;
@@ -97,7 +96,7 @@ public abstract class PlotTrace extends Component {
         }
 
         @Override
-        Legend.LegendItem getLegendItem(int i) {
+        Legend.LegendItem<?> getLegendItem(int i) {
             if (legendItems == null) {
                 legendItems = new Legend.LegendItem[categories.length];
                 for (int j = 0; j < categories.length; ++j) {
@@ -260,11 +259,11 @@ public abstract class PlotTrace extends Component {
         }
 
         @Override
-        Legend.LegendItem getLegendItem(int i) {
+        Legend.LegendItem<?> getLegendItem(int i) {
             if (legendItems == null) {
                 legendItems = new Legend.LegendItem[points().length];
                 for (int j = 0; j < legendItems.length; ++j) {
-                    legendItems[j] = new Legend.LegendItem(String.valueOf(Numbers.approximateDouble(points()[j])), new Legend.XYDataGlyph(ScatterMode.MARKER_ONLY));
+                    legendItems[j] = new Legend.LegendItem<>(String.valueOf(Numbers.approximateDouble(points()[j])), new Legend.RelationalDataGlyph(ScatterMode.MARKER_ONLY));
                 }
                 if (attribute == PlotData.Attribute.SIZE) {
                     for (int j = 0; j < legendItems.length; ++j) {
@@ -366,7 +365,7 @@ public abstract class PlotTrace extends Component {
     static final class UncategorizedTrace extends PlotTrace {
         final Figure figure;
         PlotData<?>[] data;
-        Legend.LegendItem[] legendItems;
+        Legend.LegendItem<?>[] legendItems;
         boolean[] isVisible;
 
         UncategorizedTrace(Figure figure, PlotData<?>[] data) {
@@ -416,7 +415,7 @@ public abstract class PlotTrace extends Component {
         }
 
         @Override
-        Legend.LegendItem getLegendItem(int i) {
+        Legend.LegendItem<?> getLegendItem(int i) {
             if (legendItems == null) {
                 legendItems = new Legend.LegendItem[data.length];
                 for (int j = 0; j < numLegendItems(); ++j) {
@@ -435,7 +434,7 @@ public abstract class PlotTrace extends Component {
             glyphWidth = -1,
             spacing = 5,
             textWidth = -1;
-    protected Legend.LegendItem[] legendItems;
+    protected Legend.LegendItem<?>[] legendItems;
     boolean showInLegend = true;
 
     protected String name;
@@ -488,7 +487,7 @@ public abstract class PlotTrace extends Component {
 
     abstract int numLegendItems();
 
-    abstract Legend.LegendItem getLegendItem(int i);
+    abstract Legend.LegendItem<?> getLegendItem(int i);
 
     @Override
     protected final void layoutComponent(Renderer<?> source, double minX, double minY, double maxX, double maxY) {
@@ -573,39 +572,22 @@ public abstract class PlotTrace extends Component {
 
     }
 
-    protected static Legend.LegendItem createLegendItem(final PlotData<?> data, final Categorical trace, int j) {
-        if (data instanceof PlotData.XYData) {
-            Legend.LegendItem out = new Legend.LegendItem(trace.categories[j], new Legend.XYDataGlyph(((PlotData.XYData<?>) data).markerMode));
-            ((Legend.XYDataGlyph) out.glyph).stroke = ((PlotData.XYData<?>) data).getLineStroke();
-            final Color baseColor = data.getColormap().get(((float) j % data.getColormap().size()) / (data.getColormap().size() - 1));
-            out.glyph.color = new Color(baseColor.red(), baseColor.green(), baseColor.blue(), trace.attribute == PlotData.Attribute.COLOR ? .8 : 1);
-            return out;
+    protected static Legend.LegendItem<?> createLegendItem(final PlotData<?> data, final Categorical trace, int j) {
+        final Color baseColor = data.getColormap().get(((float) j % data.getColormap().size()) / (data.getColormap().size() - 1));
+        if (data instanceof PlotData.RelationalData) {
+            return new Legend.LegendItem<>(trace.categories[j], new Legend.RelationalDataGlyph((PlotData.RelationalData<?>) data, baseColor));
         } else {
-            final Legend.LegendItem out = new Legend.LegendItem(trace.categories[j], new Legend.XYDataGlyph(ScatterMode.MARKER_ONLY));
             //TODO update color
-            out.glyph.color = data.getColormap().get(((float) j % data.getColormap().size()) / (data.getColormap().size() - 1));
-            return out;
+            return new Legend.LegendItem<>(trace.categories[j], new Legend.CategoricalDataGlyph(baseColor));
         }
     }
 
-    protected static Legend.LegendItem createLegendItem(final UncategorizedTrace trace, int j) {
+    protected static Legend.LegendItem<?> createLegendItem(final UncategorizedTrace trace, int j) {
         final PlotData<?> data = trace.data[j];
-        Legend.LegendItem out;
-        if (data instanceof PlotData.XYData) {
-            out = new Legend.LegendItem(data.name, new Legend.XYDataGlyph(((PlotData.XYData<?>) data).markerMode));
-            ((Legend.XYDataGlyph) out.glyph).edgeStroke = data.getEdgeStroke();
-            ((Legend.XYDataGlyph) out.glyph).edgeColor = data.getEdgeColor();
-            ((Legend.XYDataGlyph) out.glyph).stroke = ((PlotData.XYData<?>) data).getLineStroke();
-            ((Legend.XYDataGlyph) out.glyph).hasEdge = data.showEdge();
-            out.glyph.color = ((PlotData.XYData<?>) data).fillColor == null ? data.getColor(-1) : ((PlotData.XYData<?>) data).fillColor;
-            ((Legend.XYDataGlyph) out.glyph).lineColor = ((PlotData.XYData<?>) data).lineColor == null?out.glyph.color:((PlotData.XYData<?>) data).lineColor;
-
+        if (data instanceof PlotData.RelationalData) {
+            return new Legend.LegendItem<>(data.name, new Legend.RelationalDataGlyph(((PlotData.RelationalData<?>) data)));
         } else {
-            out = new Legend.LegendItem(data.name, new Legend.XYDataGlyph(ScatterMode.MARKER_ONLY));
-            out.glyph.color = data.getColor(-1);
-
+            return new Legend.LegendItem<>(data.name, new Legend.CategoricalDataGlyph(data.getColor(-1)));
         }
-        return out;
-
     }
 }

@@ -22,7 +22,19 @@ public final class Legend extends KeyArea<Legend> {
         abstract void draw(final Renderer<?> source, final ChartCanvas<?> canvas, double x, double y);
     }
 
-    static final class XYDataGlyph extends Glyph {
+    static final class CategoricalDataGlyph extends Glyph {
+
+        CategoricalDataGlyph(final Color color){
+            this.color = color;
+        }
+        @Override
+        void draw(Renderer<?> source, ChartCanvas<?> canvas, double x, double y) {
+            canvas.setFill(color);
+            canvas.fillRect(x, y, sizeX, sizeY);
+        }
+    }
+
+    static final class RelationalDataGlyph extends Glyph {
 
         MarkerShape shape = MarkerShape.CIRCLE;
         static final Stroke DEFAULT_STROKE = new Stroke(2);
@@ -33,11 +45,35 @@ public final class Legend extends KeyArea<Legend> {
         Stroke edgeStroke;
         Color edgeColor;
 
-        XYDataGlyph(ScatterMode mode) {
+        RelationalDataGlyph(ScatterMode mode) {
             this.mode = mode;
             if (mode != ScatterMode.MARKER_ONLY) {
                 sizeX = 30;
             }
+        }
+
+        RelationalDataGlyph(PlotData.RelationalData<?> data) {
+            setFrom(data);
+            color = data.fillColor == null ? data.getColor(-1) : data.fillColor;
+            lineColor = data.lineColor == null ? color : data.lineColor;
+        }
+
+
+        RelationalDataGlyph(PlotData.RelationalData<?> data, final Color color) {
+            setFrom(data);
+            this.color = color;
+            this.lineColor = data.lineColor == null ? this.color : data.lineColor;
+        }
+
+        private void setFrom(final PlotData.RelationalData<?> data) {
+            this.mode = data.markerMode;
+            if (mode != ScatterMode.MARKER_ONLY) {
+                sizeX = 30;
+            }
+            edgeStroke = data.getEdgeStroke();
+            edgeColor = data.getEdgeColor();
+            stroke = data.getLineStroke();
+            hasEdge = data.showEdge();
         }
 
         @Override
@@ -70,11 +106,11 @@ public final class Legend extends KeyArea<Legend> {
         }
     }
 
-    static final class LegendItem extends Component {
+    static final class LegendItem<G extends Glyph> extends Component {
         String label;
-        Glyph glyph;
+        G glyph;
 
-        LegendItem(final String label, final Glyph glyph) {
+        LegendItem(final String label, final G glyph) {
             this.label = label;
             this.glyph = glyph;
         }

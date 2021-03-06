@@ -22,7 +22,7 @@ import static net.mahdilamb.statistics.ArrayUtils.map;
 /**
  * Scatter series
  */
-public final class Scatter extends PlotData.XYData<Scatter> {
+public final class Scatter extends PlotData.RelationalData<Scatter> {
 
     /**
      * Default marker size
@@ -336,7 +336,7 @@ public final class Scatter extends PlotData.XYData<Scatter> {
     protected void init(PlotLayout plotLayout) {
         if (numXLabels(plotLayout.getXAxis()) != -1) {
             double yBuff = (yMax - yMin) * .01;
-            updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, true);
+            updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, true,true);
             double major = 1;
             double b = xMax * .05;
             plotLayout.getXAxis().setRange(-b, xMax + b);
@@ -344,11 +344,11 @@ public final class Scatter extends PlotData.XYData<Scatter> {
         } else {
             if (markerMode != ScatterMode.MARKER_ONLY) {
                 double yBuff = (yMax - yMin) * .01;
-                updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, false);
+                updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, false,false);
             } else {
                 double xBuff = (xMax - xMin) * .01;
                 double yBuff = (yMax - yMin) * .01;
-                updateXYBounds(plotLayout, xMin - xBuff, xMax + xBuff, yMin - yBuff, yMax + yBuff, true);
+                updateXYBounds(plotLayout, xMin - xBuff, xMax + xBuff, yMin - yBuff, yMax + yBuff, true,true);
             }
 
         }

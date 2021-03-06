@@ -32,7 +32,7 @@ public class SVGExporter extends ChartExporter {
         private final File output;
 
         boolean isClipped = false;
-        final Variant<Color, Gradient> fill = Variant.ofLeft(Color.BLACK);
+        final Variant<Color, Gradient> fill = Variant.ofA(Color.BLACK);
         Color strokeColor = Color.BLACK;
         Stroke stroke = Stroke.SOLID;
 
@@ -59,7 +59,7 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void reset() {
-            fill.setToLeft(Color.BLACK);
+            fill.setToA(Color.BLACK);
             strokeColor = Color.BLACK;
             stroke = Stroke.SOLID;
             isClipped = false;
@@ -232,12 +232,12 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void setFill(Color color) {
-            fill.setToLeft(color);
+            fill.setToA(color);
         }
 
         @Override
         public void setFill(Gradient gradient) {
-            fill.setToRight(gradient);
+            fill.setToB(gradient);
         }
 
         @Override

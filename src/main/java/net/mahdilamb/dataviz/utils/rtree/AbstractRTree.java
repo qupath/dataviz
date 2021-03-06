@@ -802,6 +802,25 @@ abstract class AbstractRTree<T> {
     }
 
     /**
+     * Traverse through the tree until all matching leaves are found
+     *
+     * @param out           the output collection
+     * @param nodePredicate the function to apply to internal nodes
+     * @param leafFunction  the function to apply to leaf nodes
+     * @return an iterable of the matching data (these will most likely be {@link LinkedList})
+     */
+    public Collection<? extends Node2D<T>> findAll(Collection<Node2D<T>> out, Predicate<Node2D<T>> nodePredicate, Predicate<Node2D<T>> leafFunction) {
+        traverse(nodePredicate, l -> {
+            if (leafFunction.test(l)) {
+                out.add(l);
+            }
+            //return false to continue traversal
+            return false;
+        });
+        return out;
+    }
+
+    /**
      * Traverse through the tree until all matching leaves are found. The iterable is sorted by the supplied comparator
      *
      * @param nodePredicate the function to apply to internal nodes

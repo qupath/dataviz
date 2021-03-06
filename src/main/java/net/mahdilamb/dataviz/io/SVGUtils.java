@@ -72,10 +72,10 @@ final class SVGUtils {
         if (fill == null) {
             return "fill:none; ";
         }
-        if (fill.isRight()) {
-            return String.format("fill:url('#%s'); ", defs.addGradient(fill.asRight()));
+        if (fill.isB()) {
+            return String.format("fill:url('#%s'); ", defs.addGradient(fill.asB()));
         } else {
-            return String.format("fill:%s; ", convertToString(fill.asLeft()));
+            return String.format("fill:%s; ", convertToString(fill.asA()));
         }
     }
 

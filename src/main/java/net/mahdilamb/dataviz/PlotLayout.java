@@ -7,6 +7,7 @@ import net.mahdilamb.dataviz.graphics.*;
 import net.mahdilamb.dataviz.graphics.shapes.Marker;
 import net.mahdilamb.dataviz.utils.rtree.Node2D;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
+import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
 
 import java.util.*;
 
@@ -24,16 +25,16 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
     Color background = Color.lightgray;
     Style selectedStyle = SelectedStyle.DEFAULT_SELECTED_STYLE;
     Style unselectedStyle = UnselectedStyle.DEFAULT_UNSELECTED_STYLE;
+    Renderer.Tooltip tooltip = new Renderer.Tooltip();
 
-
-    protected static class Rectangular extends PlotLayout {
+    protected static class XYLayout extends PlotLayout {
         final Axis x, y;
 
-        public Rectangular() {
+        public XYLayout() {
             this(new Axis.XAxis(), new Axis.YAxis());
         }
 
-        public Rectangular(Axis x, Axis y) {
+        public XYLayout(Axis x, Axis y) {
             this.x = x;
             this.y = y;
 
@@ -83,9 +84,9 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         maxX = x.upper + bx,
                         maxY = y.upper + by;
 
-                if (trace instanceof PlotData.XYData) {
-                    if (((PlotData.XYData<?>) trace).fillMode != FillMode.NONE) {
-                        canvas.setFill(((PlotData.XYData<?>) trace).fillColor);
+                if (trace instanceof PlotData.RelationalData) {
+                    if (((PlotData.RelationalData<?>) trace).fillMode != FillMode.NONE) {
+                        canvas.setFill(((PlotData.RelationalData<?>) trace).fillColor);
                         @SuppressWarnings("unchecked") final Set<PlotShape.PlotPolygon> foundPolygons = (Set<PlotShape.PlotPolygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
                         for (final PlotShape.PlotPolygon n : foundPolygons) {
                             drawPolygon(canvas, n);
@@ -108,8 +109,8 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                             final Color color = p.getColor() == null ? p.parent.getColor(-1) : p.getColor();
                             boolean selected = trace.selected.get(p.i);
                             canvas.setFill(new Color(color.red(), color.green(), color.blue(), selected ? .8 : 0.2));
-                            Marker.MARKER.x = ((PlotData.XYData<?>) p.parent).getX(p.i);
-                            Marker.MARKER.y = ((PlotData.XYData<?>) p.parent).getY(p.i);
+                            Marker.MARKER.x = ((PlotData.RelationalData<?>) p.parent).getX(p.i);
+                            Marker.MARKER.y = ((PlotData.RelationalData<?>) p.parent).getY(p.i);
                             Marker.MARKER.shape = p.getShape();
                             Marker.MARKER.size = p.getSize();
                             transformMarker(Marker.MARKER);
@@ -135,8 +136,8 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                             continue;
                         }
                         canvas.setFill(n.getColor() == null ? (n).parent.getColor(-1) : n.getColor());
-                        Marker.MARKER.x = ((PlotData.XYData<?>) (n).parent).getX(n.i);
-                        Marker.MARKER.y = ((PlotData.XYData<?>) (n).parent).getY(n.i);
+                        Marker.MARKER.x = ((PlotData.RelationalData<?>) (n).parent).getX(n.i);
+                        Marker.MARKER.y = ((PlotData.RelationalData<?>) (n).parent).getY(n.i);
                         Marker.MARKER.shape = n.getShape();
                         Marker.MARKER.size = n.getSize();
                         transformMarker(Marker.MARKER);
@@ -211,23 +212,51 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
             return super.apply(theme);
         }
 
+        boolean intersectMarker(PlotShape.PlotMarker marker, double x, double y) {
+            double w = marker.size * .5 / getXAxis().scale;
+            double h = marker.size * .5 / getYAxis().scale;
+            return RectangularNode.intersects(x, y, x, y, marker.getMinX() - w, marker.getMinY() - h, marker.getMinX() + w, marker.getMinY() + h);
+        }
+
+        /**
+         * Add padding to the intersection search of internal nodes in marker Rtree
+         *
+         * @param node the node
+         * @param x    the x of the point
+         * @param y    the y of the point
+         * @param w    the width padding
+         * @param h    the height padding
+         * @return whether the extended node intersects the point
+         */
+        private boolean pointIntersectsPaddedNode(Node2D<?> node, double x, double y, double w, double h) {
+            return RectangularNode.intersects(x, y, x, y, node.getMinX() - w, node.getMinY() - h, node.getMaxX() + w, node.getMaxY() + h);
+        }
+        private boolean markerContainsPoint(PlotShape.PlotMarker marker, double x, double y){
+            double w = marker.size * .5 / getXAxis().scale;
+            double h = marker.size * .5 / getYAxis().scale;
+            return RectangularNode.intersects(x, y, x, y, marker.xMin - w, marker.yMin - h, marker.xMax + w, marker.yMax + h);
+        }
         @Override
         public Renderer.Tooltip getHoverText(double x, double y) {
             double xMin = this.x.getValueFromPosition(x);
             double yMin = this.y.getValueFromPosition(y);
             final SortedSet<Node2D<Runnable>> found = new TreeSet<>(PlotShape.ORDER_COMPARATOR);
+
             for (final PlotData<?> trace : data) {
-                markers.getOrDefault(trace, RTree.emptyTree()).search(found, xMin, yMin, xMin, yMin);
+                PlotTrace.Numeric size = (PlotTrace.Numeric) trace.getAttribute(PlotData.Attribute.SIZE);
+                double b = size == null ? trace.getSize(-1) : size.scaleMax;
+                double w = b / getXAxis().scale,
+                        h = b / getYAxis().scale;
+                markers.getOrDefault(trace, RTree.emptyTree()).findAll(found,
+                        node -> pointIntersectsPaddedNode(node, xMin, yMin, w, h),
+                        node -> markerContainsPoint((PlotShape.PlotMarker) node,xMin, yMin)
+                );
+                if (!found.isEmpty()) {
+                    return tooltip.set(this.x.getPositionFromValue(found.last().getMinX()), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
+                }
                 rectangles.getOrDefault(trace, RTree.emptyTree()).search(found, xMin, yMin, xMin, yMin);
                 if (!found.isEmpty()) {
-                    final String[] text = new String[found.size()];
-                    final Color[] colors = new Color[found.size()];
-                    int i = 0;
-                    for (Node2D<Runnable> marker : found) {
-                        colors[i] = ((PlotShape) marker).getColor();
-                        text[i++] = ((PlotShape) marker).getHoverText();
-                    }
-                    return new Renderer.Tooltip(colors, text);
+                    return tooltip.set(this.x.getPositionFromValue(found.last().getMinX()), this.y.getPositionFromValue(found.last().getMaxY()), ((PlotShape) found.last()).getColor(), ((PlotShape) found.last()).getHoverText());
                 }
             }
 
@@ -235,30 +264,30 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         }
 
         @Override
-        boolean canAdd(PlotData<?> trace) {
-            if (trace instanceof PlotData.XYData) {
-                return Objects.equals(x.getTitle(), ((PlotData.XYData<?>) trace).getXLabel()) && Objects.equals(y.getTitle(), ((PlotData.XYData<?>) trace).getYLabel()) && Objects.equals(trace.title, title) && Arrays.equals(((PlotData.XYData<?>) trace).xLabels, x.labels);
-            } else if (trace instanceof PlotData.CategoricalData) {
-                return Objects.equals(x.getTitle(), ((PlotData.CategoricalData<?>) trace).categoryLabel) && Objects.equals(y.getTitle(), ((PlotData.CategoricalData<?>) trace).valueLabel) && Objects.equals(trace.title, title);//&& Arrays.equals(((PlotData.CategoricalData<?>) trace).xLabels, x.labels);
+        boolean canAdd(PlotData<?> data) {
+            if (data instanceof PlotData.RelationalData) {
+                return Objects.equals(x.getTitle(), ((PlotData.RelationalData<?>) data).getXLabel()) && Objects.equals(y.getTitle(), ((PlotData.RelationalData<?>) data).getYLabel()) && Objects.equals(data.title, title) && Arrays.equals(((PlotData.RelationalData<?>) data).xLabels, x.labels);
+            } else if (data instanceof PlotData.CategoricalData) {
+                return Objects.equals(x.getTitle(), ((PlotData.CategoricalData<?>) data).categoryLabel) && Objects.equals(y.getTitle(), ((PlotData.CategoricalData<?>) data).valueLabel) && Objects.equals(data.title, title);//&& Arrays.equals(((PlotData.CategoricalData<?>) trace).xLabels, x.labels);
 
             }
             return false;
         }
     }
 
-    static final class RectangularFacetGrid extends Rectangular {
+    static final class FacetGrid extends XYLayout {
 
-        public RectangularFacetGrid(Figure figure, PlotData<?> trace) {
+        public FacetGrid(Figure figure, PlotData<?> trace) {
             trace.figure = figure;
             this.figure = figure;
             this.data.add(trace);
-            trace.facets.plots = new Rectangular[trace.facets.cols == null ? 1 : trace.facets.cols.numGroups()][trace.facets.rows == null ? 1 : trace.facets.rows.numGroups()];
+            trace.facets.plots = new XYLayout[trace.facets.cols == null ? 1 : trace.facets.cols.numGroups()][trace.facets.rows == null ? 1 : trace.facets.rows.numGroups()];
             trace.facets.key = new HashMap<>(trace.facets.plots.length * trace.facets.plots[0].length);
             if (trace.facets.cols != null && trace.facets.rows != null) {
                 for (final GroupBy.Group<?> col : trace.facets.cols) {
-                    trace.facets.plots[col.getID()] = new Rectangular[trace.facets.rows.numGroups()];
+                    trace.facets.plots[col.getID()] = new XYLayout[trace.facets.rows.numGroups()];
                     for (final GroupBy.Group<?> row : trace.facets.rows) {
-                        final Rectangular plot = new Rectangular(x, y);
+                        final XYLayout plot = new XYLayout(x, y);
                         trace.facets.plots[col.getID()][row.getID()] = plot;
                         plot.title = String.format("%s%s%s", String.format(trace.facets.formatTitle, trace.facets.colName, col.get()), trace.facets.divider, String.format(trace.facets.formatTitle, trace.facets.rowName, row.get()));
                         plot.data.add(trace);
@@ -273,7 +302,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
 
             } else if (trace.facets.cols != null) {
                 for (final GroupBy.Group<?> group : trace.facets.cols) {
-                    trace.facets.plots[group.getID()] = new Rectangular[]{new Rectangular(x, y)};
+                    trace.facets.plots[group.getID()] = new XYLayout[]{new XYLayout(x, y)};
                     trace.facets.plots[group.getID()][0].title = String.format(trace.facets.formatTitle, trace.facets.colName, group.get());
                     trace.facets.plots[group.getID()][0].data.add(trace);
                     trace.facets.plots[group.getID()][0].figure = figure;
@@ -281,10 +310,10 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                     trace.init(trace.facets.plots[group.getID()][0]);
                 }
             }
-            x.title.setText(((PlotData.XYData<?>) trace).xLab);
-            x.labels = ((PlotData.XYData<?>) trace).xLabels;
+            x.title.setText(((PlotData.RelationalData<?>) trace).xLab);
+            x.labels = ((PlotData.RelationalData<?>) trace).xLabels;
             x.figure = figure;
-            y.title.setText(((PlotData.XYData<?>) trace).yLab);
+            y.title.setText(((PlotData.RelationalData<?>) trace).yLab);
             y.figure = figure;
         }
 
@@ -298,7 +327,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         }
 
         @Override
-        boolean canAdd(PlotData<?> trace) {
+        boolean canAdd(PlotData<?> data) {
             return false;
         }
 
@@ -328,10 +357,10 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
             trace.layout = this;
             trace.figure = figure;
             trace.title = null;
-            if (trace instanceof PlotData.XYData) {
-                ((PlotData.XYData<?>) trace).xLab = null;
-                ((PlotData.XYData<?>) trace).yLab = null;
-                ((PlotData.XYData<?>) trace).xLabels = null;
+            if (trace instanceof PlotData.RelationalData) {
+                ((PlotData.RelationalData<?>) trace).xLab = null;
+                ((PlotData.RelationalData<?>) trace).yLab = null;
+                ((PlotData.RelationalData<?>) trace).xLabels = null;
             } else if (trace instanceof PlotData.CategoricalData) {
                 ((PlotData.CategoricalData<?>) trace).categoryLabel = null;
                 ((PlotData.CategoricalData<?>) trace).valueLabel = null;
@@ -422,7 +451,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
     }
 
     final void drawRectangle(ChartCanvas<?> canvas, PlotShape.PlotRectangle n) {
-        canvas.fillRect(transformX(n.getMinX()), transformY(n.getMaxY()), ((Rectangular) n.parent.layout).x.scale * n.w, ((Rectangular) n.parent.layout).y.scale * n.h);
+        canvas.fillRect(transformX(n.getMinX()), transformY(n.getMaxY()), ((XYLayout) n.parent.layout).x.scale * n.w, ((XYLayout) n.parent.layout).y.scale * n.h);
 
     }
 

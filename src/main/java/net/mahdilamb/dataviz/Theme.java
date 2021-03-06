@@ -2,6 +2,7 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormaps;
+import net.mahdilamb.dataviz.graphics.HAlign;
 import net.mahdilamb.dataviz.graphics.Side;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.graphics.VAlign;
@@ -21,6 +22,7 @@ public final class Theme {
             fig -> {
                 fig.qualitativeColormap = Colormaps.get("Plotly");
                 fig.sequentialColormap = Colormaps.get("plasma");
+                //fig.title.setAlignment(HAlign.LEFT);
             },
             layout -> {
                 layout.background = new Color(229, 236, 246);

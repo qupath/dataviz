@@ -21,11 +21,11 @@ public abstract class Axis extends Component implements Themeable<Axis> {
         DECIMAL_FORMAT.setMaximumFractionDigits(6);
     }
 
-    abstract void layout(final Renderer<?> source, PlotLayout.Rectangular rectangular, double minX, double minY, double maxX, double maxY);
+    abstract void layout(final Renderer<?> source, PlotLayout.XYLayout rectangular, double minX, double minY, double maxX, double maxY);
 
     static final class XAxis extends Axis {
         @Override
-        public void layout(final Renderer<?> source, PlotLayout.Rectangular rectangular, double minX, double minY, double maxX, double maxY) {
+        public void layout(final Renderer<?> source, PlotLayout.XYLayout rectangular, double minX, double minY, double maxX, double maxY) {
             sizeY = 0;
             if (title.isVisible()) {
                 sizeY += source.getTextLineHeight(title) + titlePadding;
@@ -166,7 +166,7 @@ public abstract class Axis extends Component implements Themeable<Axis> {
 
     static final class YAxis extends Axis {
         @Override
-        public void layout(final Renderer<?> source, PlotLayout.Rectangular rectangular, double minX, double minY, double maxX, double maxY) {
+        public void layout(final Renderer<?> source, PlotLayout.XYLayout rectangular, double minX, double minY, double maxX, double maxY) {
             this.posX = minX;
             this.posY = minY;
             sizeX = 0;

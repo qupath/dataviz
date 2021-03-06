@@ -11,6 +11,7 @@ import net.mahdilamb.dataviz.utils.StringUtils;
 import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.BiConsumer;
 
 public abstract class Renderer<IMG> {
@@ -277,30 +278,69 @@ public abstract class Renderer<IMG> {
     }
 
     protected static final class Tooltip {
-        final String[] text;
-        final Color[] background;
+        double x, y;
+        String text;
+        Color background;
+        boolean hasChanges = true;
 
-        Tooltip(final Color[] background, String[] text) {
-            this.text = text;
+        Tooltip() {
+
+        }
+
+        Tooltip set(final Color background, String text) {
+            hasChanges |= !Objects.equals(background, this.background) || !Objects.equals(text, this.text);
             this.background = background;
+            this.text = text;
+            return this;
         }
 
-        public int numLines() {
-            return text.length;
-
+        Tooltip set(double x, double y) {
+            hasChanges |= this.x != x || this.y != y;
+            this.x = x;
+            this.y = y;
+            return this;
         }
 
-        public String getLine(int i) {
-            return text[i];
+        Tooltip set(double x, double y, final Color background, String text) {
+            hasChanges |= !Objects.equals(background, this.background) || !Objects.equals(text, this.text) || this.x != x || this.y != y;
+            this.x = x;
+            this.y = y;
+            this.background = background;
+            this.text = text;
+            return this;
         }
 
-        public Color getBackground(int i) {
-            return background[i];
+        public String getLine() {
+            return text;
         }
 
-        public Color getForeground(int i) {
-            return getBackground(i).calculateLuminance() > 0.1791 ? Color.BLACK : Color.WHITE;
+        public Color getBackground() {
+            return background;
         }
 
+        public Color getForeground() {
+            return background.calculateLuminance() > 0.1791 ? Color.BLACK : Color.WHITE;
+        }
+
+        public double getX() {
+            return x;
+        }
+
+        public double getY() {
+            return y;
+        }
+
+        public boolean hasChanges() {
+            return hasChanges;
+        }
+
+
+        public void drawn() {
+            hasChanges = false;
+        }
+    }
+
+    protected static void markHoverTextOld(final Renderer<?> renderer) {
+        renderer.figure.layout.tooltip.hasChanges = true;
     }
 }
