@@ -1,1 +1,3 @@
 rootProject.name = 'dataviz'
+include ":dataframe"
+project(":dataframe").projectDir = new File("../dataframe/")

@@ -272,6 +272,7 @@ abstract class AbstractRTree<T> {
             } else {
                 if (nodePredicate.test(node)) {
                     nodesToSearch.addAll(node.children);
+
                 }
             }
 

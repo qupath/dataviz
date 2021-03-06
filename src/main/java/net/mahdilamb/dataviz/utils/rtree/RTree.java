@@ -121,7 +121,7 @@ public class RTree<T> extends AbstractRTree<T> {
      * @param maxY the maximum y component of the data
      * @return the leaf nodes in the given range
      */
-    public Set<? extends Node2D<T>> search(final Set<Node2D<T>> out, double minX, double minY, double maxX, double maxY) {
+    public Set<? extends Node2D<T>> search(final Set< Node2D<T>> out, double minX, double minY, double maxX, double maxY) {
         return super.searchRecursive(out, minX, minY, maxX, maxY);
     }
 

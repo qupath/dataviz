@@ -4,6 +4,7 @@ import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.dataviz.graphics.Side;
 import net.mahdilamb.dataviz.graphics.Stroke;
+import net.mahdilamb.dataviz.graphics.VAlign;
 
 import java.lang.reflect.Field;
 import java.util.function.Consumer;
@@ -30,6 +31,7 @@ public final class Theme {
                 axis.zeroGridStroke = new Stroke(2);
             },
             legend -> {
+                legend.vAlign = VAlign.TOP;
             },
             colorScale -> {
 

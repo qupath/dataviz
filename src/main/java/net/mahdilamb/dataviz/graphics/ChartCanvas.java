@@ -104,20 +104,11 @@ public interface ChartCanvas<IMAGE> {
     void strokeLine(double x0, double y0, double x1, double y1);
 
     /**
-     * Set the fill
-     *
-     * @param fill the fill to set
-     */
-    void setFill(Paint fill);
-
-    /**
      * Set the fill to a single color
      *
      * @param color the color to set the fill
      */
-    default void setFill(Color color) {
-        setFill(new Paint(color));
-    }
+    void setFill(Color color);
 
     /**
      * Set the fill to a single color
@@ -131,6 +122,13 @@ public interface ChartCanvas<IMAGE> {
         }
         setFill(color);
     }
+
+    /**
+     * Set the fill to a gradient
+     *
+     * @param gradient the gradient to set the fill
+     */
+    void setFill(Gradient gradient);
 
     /**
      * Set the stroke

@@ -19,12 +19,11 @@ import net.mahdilamb.dataviz.plots.DataFrameOnlyOperationException;
 import net.mahdilamb.dataviz.plots.Scatter;
 import net.mahdilamb.dataviz.plots.ScatterMode;
 import net.mahdilamb.dataviz.utils.StringUtils;
-import net.mahdilamb.dataviz.utils.rtree.Node2D;
-import net.mahdilamb.dataviz.utils.rtree.PointNode;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
-import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
 import net.mahdilamb.statistics.ArrayUtils;
 import net.mahdilamb.statistics.StatUtils;
+import net.mahdilamb.utils.tuples.GenericTuple;
+import net.mahdilamb.utils.tuples.Tuple;
 
 import java.util.*;
 import java.util.function.Consumer;
@@ -32,7 +31,6 @@ import java.util.function.DoubleUnaryOperator;
 import java.util.function.IntFunction;
 import java.util.function.Supplier;
 
-import static net.mahdilamb.dataviz.utils.Functions.EMPTY_RUNNABLE;
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
 public abstract class PlotData<O extends PlotData<O>> implements FigureComponent<O> {
@@ -46,320 +44,19 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         GROUP
     }
 
-    interface PlotShape {
-        Comparator<Node2D<Runnable>> ORDER_COMPARATOR = new Comparator<Node2D<Runnable>>() {
-            @Override
-            public int compare(Node2D<Runnable> o1, Node2D<Runnable> o2) {
-                return Integer.compare(((PlotData.PlotShape) o1).i(), ((PlotData.PlotShape) o2).i());
-            }
-        };
 
-        int i();
-
-        PlotData<?> getSource();
-
-        default Color getColor() {
-            return getSource().getColor(i());
-        }
-
-        default double getSize() {
-            return getSource().getSize(i());
-        }
-
-        default MarkerShape getShape() {
-            return getSource().getShape(i());
-        }
-
-        default String getHoverText() {
-            return getSource().getHoverText(i());
-        }
-
-        default boolean isVisible() {
-            return getSource().isVisible(i());
-        }
-
-    }
-
-    protected static final class PlotMarker extends PointNode<Runnable> implements PlotShape {
-
-        public int i;
-        public PlotData<?> parent;
-
-        public PlotMarker(double x, double y, Runnable data) {
-            super(x, y, data);
-        }
-
-        public PlotMarker(double x, double y) {
-            this(x, y, EMPTY_RUNNABLE);
-        }
-
-        @Override
-        public int i() {
-            return i;
-        }
-
-        @Override
-        public PlotData<?> getSource() {
-            return parent;
-        }
-
-        @Override
-        public boolean intersects(double minX, double minY, double maxX, double maxY) {
-            if (minX == maxX && maxY == minY) {
-                double a = getSize() * .5 / ((PlotLayout.Rectangular) parent.layout).x.scale;
-                double b = getSize() * .5 / ((PlotLayout.Rectangular) parent.layout).y.scale;
-                return RectangularNode.intersects(minX, minY, maxX, maxY, getMidX() - a, getMidY() - b, getMidX() + a, getMidY() + b);
-            }
-            return super.intersects(minX, minY, maxX, maxY);
-        }
-
-        @Override
-        public String toString() {
-            return String.format("PlotMarker {%s, %s}", ((XYData<?>) parent).getX(i), ((XYData<?>) parent).getY(i));
-        }
-    }
-
-    protected static final class PlotPolyLine extends Node2D<Runnable> implements PlotShape {
-
-        protected static final class Segment extends RectangularNode<Runnable> {
-            PlotPolyLine line;
-            double startX, startY, endX, endY;
-
-            private Segment(double startX, double startY, double endX, double endY) {
-                super(Math.min(startX, endX), Math.min(startY, endY), Math.max(startX, endX), Math.max(startY, endY));
-                this.startX = startX;
-                this.startY = startY;
-                this.endX = endX;
-                this.endY = endY;
-            }
-        }
-
-        int i;
-        public final XYData<?> parent;
-
-        double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
-        IntArrayList ids;
-        private Segment[] segs;
-
-        public PlotPolyLine(XYData<?> parent, IntArrayList ids, Runnable data) {
-            this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, data);
-
-        }
-
-        public PlotPolyLine(XYData<?> parent, IntArrayList ids) {
-            this(parent, ids.size() == 0 ? -1 : ids.get(0), ids, EMPTY_RUNNABLE);
-
-        }
-
-        public PlotPolyLine(XYData<?> parent, int i, IntArrayList ids) {
-            this(parent, i, ids, EMPTY_RUNNABLE);
-
-        }
-
-        public PlotPolyLine(XYData<?> parent, int i, IntArrayList ids, Runnable data) {
-            super(data);
-            this.i = i;
-            this.parent = parent;
-            this.ids = ids;
-        }
-
-        @Override
-        public int i() {
-            return i;
-        }
-
-        @Override
-        public PlotData<?> getSource() {
-            return parent;
-        }
-
-        Segment[] getSegments() {
-            if (segs == null) {
-                minX = Double.POSITIVE_INFINITY;
-                minY = Double.POSITIVE_INFINITY;
-                maxX = Double.NEGATIVE_INFINITY;
-                maxY = Double.NEGATIVE_INFINITY;
-                if (ids.size() < 2) {
-                    segs = new Segment[0];
-                } else {
-                    segs = new Segment[ids.size() - 1];
-                    for (int i = 1, h = 0; i < ids.size(); h = i++) {
-                        segs[h] = new Segment(parent.getX(ids.get(h)), parent.getY(ids.get(h)), parent.getX(ids.get(i)), parent.getY(ids.get(i)));
-                        segs[h].line = this;
-                        minX = Math.min(minX, segs[h].getMinX());
-                        minY = Math.min(minY, segs[h].getMinY());
-                        maxX = Math.max(maxX, segs[h].getMaxX());
-                        maxY = Math.max(maxY, segs[h].getMaxY());
-                    }
-                }
-            }
-            return segs;
-        }
-
-        public double getStartX() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[0].startX;
-        }
-
-        public double getStartY() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[0].startY;
-        }
-
-        public double getEndX() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[getSegments().length - 1].endX;
-        }
-
-        public double getEndY() {
-            if (getSegments().length == 0) {
-                return Double.NaN;
-            }
-            return getSegments()[getSegments().length - 1].endY;
-        }
-
-        @Override
-        public double getMinX() {
-            getSegments();
-            return minX;
-        }
-
-        @Override
-        public double getMinY() {
-            getSegments();
-            return minY;
-        }
-
-        @Override
-        public double getMaxX() {
-            getSegments();
-            return maxX;
-        }
-
-        @Override
-        public double getMaxY() {
-            getSegments();
-            return maxY;
-        }
-    }
-
-    protected static final class PlotPolygon extends Node2D<Runnable> implements PlotShape {
-        protected static final class PlotPoint extends PointNode<Runnable> {
-
-            public PlotPoint(double x, double y, Runnable data) {
-                super(x, y, data);
-            }
-
-            public PlotPoint(double x, double y) {
-                super(x, y, EMPTY_RUNNABLE);
-            }
-
-            @Override
-            public String toString() {
-                return String.format("Point {x: %s, y: %s}", getMidX(), getMidY());
-            }
-        }
-
-        public int i;
-        public XYData<?> parent;
-
-        double minX = Double.POSITIVE_INFINITY, minY = Double.POSITIVE_INFINITY, maxX = Double.NEGATIVE_INFINITY, maxY = Double.NEGATIVE_INFINITY;
-        IntArrayList ids;
-        PlotPoint[] points;
-
-        protected PlotPolygon(XYData<?> parent, IntArrayList ids, Runnable data) {
-            super(data);
-            this.parent = parent;
-            this.ids = ids;
-            this.i = ids.size() == 0 ? -1 : ids.get(0);
-        }
-
-        protected PlotPolygon(XYData<?> parent, IntArrayList ids) {
-            this(parent, ids, EMPTY_RUNNABLE);
-        }
-
-        protected PlotPoint[] getPoints() {
-            if (points == null) {
-                minX = Double.POSITIVE_INFINITY;
-                minY = Double.POSITIVE_INFINITY;
-                maxX = Double.NEGATIVE_INFINITY;
-                maxY = Double.NEGATIVE_INFINITY;
-
-                switch (parent.fillMode) {
-                    case NONE:
-                        points = new PlotPoint[0];
-                        break;
-                    case TO_SELF:
-                        points = new PlotPoint[ids.size() + 1];
-                        for (int i : ids) {
-                            points[i] = new PlotPoint(parent.getX(ids.get(i)), parent.getY(ids.get(i)));
-                            minX = Math.min(minX, points[i].getMidX());
-                            minY = Math.min(minY, points[i].getMidY());
-                            maxX = Math.max(maxX, points[i].getMidX());
-                            maxY = Math.max(maxY, points[i].getMidY());
-                        }
-                        points[ids.size()] = points[0];
-                        break;
-                    default:
-                        throw new UnsupportedOperationException();
-                }
-            }
-            return points;
-        }
-
-        @Override
-        public double getMinX() {
-            getPoints();
-            return minX;
-        }
-
-        @Override
-        public double getMinY() {
-            getPoints();
-            return minY;
-        }
-
-        @Override
-        public double getMaxX() {
-            getPoints();
-            return maxX;
-        }
-
-        @Override
-        public double getMaxY() {
-            getPoints();
-            return maxY;
-        }
-
-        @Override
-        public int i() {
-            return i;
-        }
-
-        @Override
-        public PlotData<?> getSource() {
-            return parent;
-        }
-
-        @Override
-        public String toString() {
-            return String.format("Polygon {min=%s,%s, min=%s,%s, n=%s}", getMinX(), getMinY(), getMaxX(), getMaxY(), ids.size() + 1);
-        }
-    }
-
+    /**
+     * Data structure for relational data
+     *
+     * @param <O> the concrete type of the XY data
+     */
     public abstract static class XYData<O extends XYData<O>> extends PlotData<O> {
 
         protected final DoubleArrayList x, y;
         protected double xMin, xMax, yMin, yMax;
 
         protected Stroke lineStroke;
-        protected Color lineColor = Color.white;
+        protected Color lineColor;
         protected double lineWidth = 2;
         protected double[] lineDashes;
 
@@ -372,24 +69,14 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         protected ScatterMode markerMode = ScatterMode.MARKER_ONLY;
 
 
-        @SuppressWarnings("unchecked")
         protected XYData(double[] x, double[] y) {
             this.x = new DoubleArrayList(x);
             this.y = new DoubleArrayList(y);
             if (this.x.size() != this.y.size()) {
                 throw new IllegalArgumentException("X and Y must be the same size");
             }
-            xMin = StatUtils.min(x);
-            xMax = StatUtils.max(x);
-            yMin = StatUtils.min(y);
-            yMax = StatUtils.max(y);
-            final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
-            formatters.put("x", this.x::get);
-            formatters.put("y", this.y::get);
-            hoverFormatter = new HoverText<>((O) this, formatters);
-            hoverFormatter.add("%s=%{x:s}", this::getXLabel);
-            hoverFormatter.add("%s=%{y:s}", this::getYLabel);
-
+            setRange(x, y);
+            setUnlabelledHover();
         }
 
         protected XYData(double[] x, DoubleUnaryOperator y) {
@@ -400,32 +87,68 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             this(ArrayUtils.range(y.length), y);
         }
 
-        @SuppressWarnings("unchecked")
         protected XYData(String[] x, double[] y) {
-            this.x = new DoubleArrayList(ArrayUtils.range(x.length));
+            final GroupBy<String> xAxis = new GroupBy<>(x);
+            this.x = new DoubleArrayList(xAxis.toMeltedArray(new double[x.length]));
             this.y = new DoubleArrayList(y);
             if (this.x.size() != this.y.size()) {
                 throw new IllegalArgumentException("X and Y must be the same size");
             }
-            this.xLabels = x;//TODO groupby and x should be indices
+
+            this.xLabels = xAxis.getGroups(new String[xAxis.numGroups()]);
             xMin = 0;
-            xMax = this.x.size() - 1;
+            xMax = xLabels.length - 1;
             yMin = StatUtils.min(y);
             yMax = StatUtils.max(y);
-            final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
-            formatters.put("x", this::getXLabel);
-            formatters.put("y", this.y::get);
-            hoverFormatter = new HoverText<>((O) this, formatters);
-            hoverFormatter.add("%s=%{x:s}", this::getXLabel);
-            hoverFormatter.add("%s=%{y:s}", this::getYLabel);
+            setStringYHover();
         }
 
         protected XYData(final DataFrame dataFrame, final String x, final String y) {
             //todo if x is string series
-            this(toArray(dataFrame, x), toArray(dataFrame, y));
+            double[] valX = toArray(dataFrame, x);
+            double[] valY = toArray(dataFrame, y);
+            this.x = new DoubleArrayList(valX);
+            this.y = new DoubleArrayList(valY);
+            setRange(valX, valY);
+            setLabelledHover();
             this.dataFrame = dataFrame;
             this.xLab = x;
             this.yLab = y;
+        }
+
+        void setRange(double[] x, double[] y) {
+            xMin = StatUtils.min(x);
+            xMax = StatUtils.max(x);
+            yMin = StatUtils.min(y);
+            yMax = StatUtils.max(y);
+        }
+
+        @SuppressWarnings("unchecked")
+        void setUnlabelledHover() {
+            final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
+            formatters.put("x", this.x::get);
+            formatters.put("y", this.y::get);
+            hoverFormatter = new HoverText<>((O) this, formatters);
+            hoverFormatter.add("(%{x:s}, %{y:s})");
+        }
+
+        @SuppressWarnings("unchecked")
+        void setStringYHover() {
+            final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
+            formatters.put("x", this::getXLabel);
+            formatters.put("y", this.y::get);
+            hoverFormatter = new HoverText<>((O) this, formatters);
+            hoverFormatter.add("(%{x:s}, %{y:s})");
+        }
+
+        @SuppressWarnings("unchecked")
+        void setLabelledHover() {
+            final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
+            formatters.put("x", this.x::get);
+            formatters.put("y", this.y::get);
+            hoverFormatter = new HoverText<>((O) this, formatters);
+            hoverFormatter.add("%s=%{x:s}", this::getXLabel);
+            hoverFormatter.add("%s=%{y:s}", this::getYLabel);
         }
 
         protected double getX(int i) {
@@ -516,17 +239,28 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         @SuppressWarnings("unchecked")
         public O setLineWidth(double width) {
             this.lineWidth = width;
+            lineStroke = null;
             return (O) this;
         }
 
         @SuppressWarnings("unchecked")
         public O setLineColor(Color color) {
+            if (this.fillColor == null) {
+                fillColor = color;
+            }
             this.lineColor = color;
             return (O) this;
         }
 
         public O setLineColor(String color) {
             return setLineColor(StringUtils.convertToColor(color));
+        }
+
+        Stroke getLineStroke() {
+            if (lineStroke == null) {
+                lineStroke = new Stroke(lineWidth, lineDashes);
+            }
+            return lineStroke;
         }
 
         @SuppressWarnings("unchecked")
@@ -539,25 +273,21 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             return setFillColor(StringUtils.convertToColor(color));
         }
 
-        protected RTree<Runnable> createMarkers(PlotLayout plotLayout) {
+        protected final RTree<Runnable> createMarkers(PlotLayout plotLayout) {
             RTree<Runnable> markers = new RTree<>();
-            final PlotMarker[] m;
+            final PlotShape.PlotMarker[] m;
             if (facets != null) {
                 final IntArrayList ids = facets.key.get(plotLayout);
-                m = new PlotMarker[ids.size()];
+                m = new PlotShape.PlotMarker[ids.size()];
                 int j = 0;
                 for (int i : ids) {
-                    PlotMarker marker = new PlotMarker(x.get(i), y.get(i));
-                    marker.i = i;
-                    marker.parent = this;
+                    PlotShape.PlotMarker marker = new PlotShape.PlotMarker(this, i, x.get(i), y.get(i), getSize(i));
                     m[j++] = marker;
                 }
             } else {
-                m = new PlotMarker[size()];
+                m = new PlotShape.PlotMarker[size()];
                 for (int i = 0; i < size(); ++i) {
-                    PlotMarker marker = new PlotMarker(x.get(i), y.get(i));
-                    marker.i = i;
-                    marker.parent = this;
+                    PlotShape.PlotMarker marker = new PlotShape.PlotMarker(this, i, x.get(i), y.get(i), getSize(i));
                     m[i] = marker;
                 }
             }
@@ -566,38 +296,64 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             return markers;
         }
 
-        protected RTree<Runnable> createLines(PlotLayout plotLayout) {
-            RTree<Runnable> lines = new RTree<>();
-            if (colors != null && colors.getClass() == PlotTrace.Categorical.class) {
-                final PlotPolyLine[] l = new PlotPolyLine[((PlotTrace.Categorical) colors).categories.length];
-                for (int i = 0; i < ((PlotTrace.Categorical) colors).categories.length; ++i) {
-                    l[i] = new PlotPolyLine(this, -1, new IntArrayList());
+        protected final RTree<Runnable> createLines(PlotLayout plotLayout) {
+            if (group == null || colors == null) {
+                RTree<Runnable> lines = new RTree<>();
+                if (colors != null && colors.getClass() == PlotTrace.Categorical.class) {
+                    final PlotShape.PlotPolyLine[] l = new PlotShape.PlotPolyLine[((PlotTrace.Categorical) colors).categories.length];
+                    for (int i = 0; i < ((PlotTrace.Categorical) colors).categories.length; ++i) {
+                        l[i] = new PlotShape.PlotPolyLine(this, -1, new IntArrayList());
+                    }
+                    for (int i = 0; i < ((PlotTrace.Categorical) colors).indices.length; ++i) {
+                        l[((PlotTrace.Categorical) colors).indices[i]].ids.add(i);
+                        if (l[((PlotTrace.Categorical) colors).indices[i]].i == -1) {
+                            l[((PlotTrace.Categorical) colors).indices[i]].i = i;
+                        }
+                    }
+                    lines.putAll(l);
+                } else {
+                    final PlotShape.PlotPolyLine line = new PlotShape.PlotPolyLine(this, 0, new IntArrayList(ArrayUtils.intRange(x.size())));
+                    lines.put(line);
                 }
-                for (int i = 0; i < ((PlotTrace.Categorical) colors).indices.length; ++i) {
-                    l[((PlotTrace.Categorical) colors).indices[i]].ids.add(i);
-                    if (l[((PlotTrace.Categorical) colors).indices[i]].i == -1) {
-                        l[((PlotTrace.Categorical) colors).indices[i]].i = i;
+                return lines;
+            } else {
+                //Create possible combinations
+                @SuppressWarnings("unchecked") final GenericTuple<String>[][] keyCombinations = new GenericTuple[getCategories(group).length][getCategories((PlotTrace.Categorical) colors).length];
+                for (int i = 0; i < getCategories(group).length; ++i) {
+                    for (int j = 0; j < getCategories((PlotTrace.Categorical) colors).length; ++j) {
+                        keyCombinations[i][j] = Tuple.of(getCategories((PlotTrace.Categorical) colors)[j], getCategories(group)[i]);
                     }
                 }
-                lines.putAll(l);
-            } else {
-                final PlotPolyLine line = new PlotPolyLine(this, 0, new IntArrayList(ArrayUtils.intRange(x.size())));
-                lines.put(line);
+                //Create group by
+                @SuppressWarnings("unchecked") final GenericTuple<String>[] keys = new GenericTuple[size()];
+                for (int i = 0; i < size(); ++i) {
+                    keys[i] = keyCombinations[getRaw(group, i)][getRaw(((PlotTrace.Categorical) colors), i)];
+                }
+                final GroupBy<GenericTuple<String>> lines = new GroupBy<>(keys);
+                //create lines
+                PlotShape.PlotPolyLine[] pLines = new PlotShape.PlotPolyLine[lines.numGroups()];
+                int i = 0;
+                for (final GroupBy.Group<GenericTuple<String>> group : lines) {
+                    pLines[i++] = new PlotShape.PlotPolyLine(this, group.getIndices().get(0), group.getIndices());
+                }
+                RTree<Runnable> l = new RTree<>();
+                l.putAll(pLines);
+                return l;
             }
-            return lines;
+
         }
 
-        protected RTree<Runnable> createPolygons(PlotLayout plotLayout) {
+        protected final RTree<Runnable> createPolygons(PlotLayout plotLayout) {
             RTree<Runnable> polygons = new RTree<>();
             if (numAttributes() == 0) {
-                final PlotPolygon polygon = new PlotPolygon(this, new IntArrayList(ArrayUtils.intRange(x.size())));
+                final PlotShape.PlotPolygon polygon = new PlotShape.PlotPolygon(this, new IntArrayList(ArrayUtils.intRange(x.size())));
                 polygon.i = 0;
                 polygons.put(polygon);
             } else {
                 if (colors != null && colors.getClass() == PlotTrace.Categorical.class) {
-                    final PlotPolygon[] p = new PlotPolygon[((PlotTrace.Categorical) colors).categories.length];
+                    final PlotShape.PlotPolygon[] p = new PlotShape.PlotPolygon[((PlotTrace.Categorical) colors).categories.length];
                     for (int i = 0; i < ((PlotTrace.Categorical) colors).categories.length; ++i) {
-                        p[i] = new PlotPolygon(this, new IntArrayList());
+                        p[i] = new PlotShape.PlotPolygon(this, new IntArrayList());
                     }
                     for (int i = 0; i < ((PlotTrace.Categorical) colors).indices.length; ++i) {
                         p[((PlotTrace.Categorical) colors).indices[i]].ids.add(i);
@@ -628,6 +384,105 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             }
             return dataFrame.getDoubleSeries(seriesName).toArray(new double[dataFrame.size(Axis.INDEX)]);
         }
+    }
+
+    /**
+     * Data structure for categorical data
+     *
+     * @param <O> the concrete type of the XY daata
+     */
+    public static abstract class CategoricalData<O extends CategoricalData<O>> extends PlotData<O> {
+
+        List<String> categories;
+        DoubleArrayList values;
+        double valueMin, valueMax;
+        String categoryLabel, valueLabel;
+        protected String[] categoryLabels;
+
+        protected CategoricalData(final String[] categories, final double[] values) {
+            init(categories, values);
+        }
+
+        protected CategoricalData(final DataFrame dataFrame, final String category, final String values) {
+            this.dataFrame = dataFrame;
+            final GroupBy<String> group = new GroupBy<>(dataFrame.getStringSeries(category));
+            init(group.getGroups(new String[group.numGroups()]), dataFrame.getDoubleSeries(values).toArray(new double[dataFrame.size(Axis.INDEX)]));
+            categoryLabel = category;
+            valueLabel = values;
+        }
+
+        @SuppressWarnings("unchecked")
+        void init(String[] categories, double[] values) {
+            valueMin = StatUtils.min(values);
+            valueMax = StatUtils.max(values);
+            this.categories = Arrays.asList(categories);
+            this.values = new DoubleArrayList(values);
+            final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
+            formatters.put("x", this::getCategory);
+            formatters.put("y", this::getValue);
+            hoverFormatter = new HoverText<>((O) this, formatters);
+            hoverFormatter.add("(%{x:s}, %{y:s})");
+        }
+
+        String getCategory(int i) {
+            return categories.get(i);
+        }
+
+        double getValue(int i) {
+            return values.get(i);
+        }
+
+        @Override
+        protected int size() {
+            return categories.size();
+        }
+
+        @Override
+        protected void clear() {
+
+        }
+
+        @Override
+        protected void init(PlotLayout plotLayout) {
+            updateXYBounds(plotLayout, 0, categories.size(), 0, valueMax, false);
+            plotLayout.getXAxis().majorTickSpacing =1;
+            plotLayout.getXAxis().minorTickSpacing =.2;
+            putRectangles(layout, this, createRectangles(layout));
+
+        }
+
+        public String[] getCategoryLabels() {
+            if (categoryLabels == null) {
+                //TODO, deal with group
+                final GroupBy<String> categories = new GroupBy<>(this.categories);
+                categoryLabels = categories.getGroups(new String[categories.numGroups()]);
+            }
+            return categoryLabels;
+        }
+
+        @SuppressWarnings("unchecked")
+        public O setColors(String series) throws DataFrameOnlyOperationException {
+            final Series<?> s = getSeries(series);
+            if (s.getType() == DataType.DOUBLE) {
+                throw new UnsupportedOperationException("Series must not be double");
+            }
+            clear();
+            colors = addAttribute(new PlotTrace.Categorical(this, Attribute.COLOR, s));
+            addToHoverText(colors, "%s=%{color:s}", () -> colors.getName(), "color", ((PlotTrace.Categorical) colors)::get);
+            return (O) this;
+        }
+
+        protected final RTree<Runnable> createRectangles(PlotLayout layout) {
+            final RTree<Runnable> rectangles = new RTree<>();
+            final PlotShape.PlotRectangle[] r = new PlotShape.PlotRectangle[size()];
+            for (int i = 0; i < size(); ++i) {
+                r[i] = new PlotShape.PlotRectangle(this, i, i + .1, 0, .8, values.get(i));
+            }
+            rectangles.putAll(r);
+            return rectangles;
+        }
+
+
     }
 
     protected Figure figure;
@@ -1036,6 +891,10 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         plotLayout.putPolygons(data, polygons);
     }
 
+    protected static void putRectangles(PlotLayout plotLayout, PlotData<?> data, RTree<Runnable> rectangles) {
+        plotLayout.putRectangles(data, rectangles);
+    }
+
     /**
      * Update the bounds of an xy layout
      *
@@ -1045,13 +904,15 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
      * @param yMin       the y min of the data
      * @param yMax       the y max of the data
      */
-    protected static void updateXYBounds(final PlotLayout plotLayout, double xMin, double xMax, double yMin, double yMax) {
+    protected static void updateXYBounds(final PlotLayout plotLayout, double xMin, double xMax, double yMin, double yMax, boolean useNice) {
         plotLayout.getXAxis().dataLower = Math.min(plotLayout.getXAxis().dataLower, xMin);
         plotLayout.getYAxis().dataLower = Math.min(plotLayout.getYAxis().dataLower, yMin);
         plotLayout.getXAxis().dataUpper = Math.max(plotLayout.getXAxis().dataUpper, xMax);
         plotLayout.getYAxis().dataUpper = Math.max(plotLayout.getYAxis().dataUpper, yMax);
-        plotLayout.getXAxis().reset(true);
-        plotLayout.getYAxis().reset(true);
+        plotLayout.getXAxis().reset(useNice);
+        plotLayout.getYAxis().reset(useNice);
+
+
     }
 
     /**
@@ -1082,5 +943,19 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
     protected static Color getBackgroundColor(final PlotLayout layout) {
         return layout.background;
+    }
+
+    protected static int numXLabels(net.mahdilamb.dataviz.Axis axis) {
+        return axis.labels == null ? -1 : axis.labels.length;
+    }
+
+    protected static void setTicks(final net.mahdilamb.dataviz.Axis axis, double major, double minor) {
+        axis.majorTickSpacing = major;
+        axis.minorTickSpacing = minor;
+    }
+
+    protected static void setTicks(final net.mahdilamb.dataviz.Axis axis, double major) {
+        axis.majorTickSpacing = major;
+        axis.minorTickSpacing = major * .2;
     }
 }

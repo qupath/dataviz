@@ -1,10 +1,11 @@
 package net.mahdilamb.dataviz.io;
 
+import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataviz.ChartExporter;
 import net.mahdilamb.dataviz.Renderer;
 import net.mahdilamb.dataviz.graphics.*;
 import net.mahdilamb.dataviz.utils.Numbers;
-import net.mahdilamb.colormap.Color;
+import net.mahdilamb.dataviz.utils.Variant;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -31,7 +32,7 @@ public class SVGExporter extends ChartExporter {
         private final File output;
 
         boolean isClipped = false;
-        Paint fill = Paint.BLACK_FILL;
+        final Variant<Color, Gradient> fill = Variant.ofLeft(Color.BLACK);
         Color strokeColor = Color.BLACK;
         Stroke stroke = Stroke.SOLID;
 
@@ -58,7 +59,7 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void reset() {
-            fill = Paint.BLACK_FILL;
+            fill.setToLeft(Color.BLACK);
             strokeColor = Color.BLACK;
             stroke = Stroke.SOLID;
             isClipped = false;
@@ -230,8 +231,13 @@ public class SVGExporter extends ChartExporter {
         }
 
         @Override
-        public void setFill(Paint fill) {
-            this.fill = fill;
+        public void setFill(Color color) {
+            fill.setToLeft(color);
+        }
+
+        @Override
+        public void setFill(Gradient gradient) {
+            fill.setToRight(gradient);
         }
 
         @Override
@@ -363,7 +369,7 @@ public class SVGExporter extends ChartExporter {
          * @param gradient the gradient to add
          * @return the id of the gradient
          */
-        final String addGradient(final Paint.Gradient gradient) {
+        final String addGradient(final Gradient gradient) {
             return add(gradient, () -> {
                 final StringBuilder stops = new StringBuilder();
                 for (final Map.Entry<Float, Color> entry : gradient.getColorMap().entrySet()) {
@@ -374,7 +380,7 @@ public class SVGExporter extends ChartExporter {
                             entry.getValue().alpha() == 1 ? EMPTY_STRING : String.format(" stop-opacity=\"%s\"", convertToString(entry.getValue().alpha()))
                     ));
                 }
-                if (gradient.getType() == Paint.GradientType.LINEAR) {
+                if (gradient.getType() == Gradient.GradientType.LINEAR) {
                     return add(
                             "linear-gradient-",
                             "linearGradient",

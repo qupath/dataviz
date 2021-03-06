@@ -2,10 +2,7 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
-import net.mahdilamb.dataviz.graphics.ChartCanvas;
-import net.mahdilamb.dataviz.graphics.Orientation;
-import net.mahdilamb.dataviz.graphics.Paint;
-import net.mahdilamb.dataviz.graphics.Stroke;
+import net.mahdilamb.dataviz.graphics.*;
 import net.mahdilamb.dataviz.utils.Numbers;
 
 import static net.mahdilamb.dataviz.Axis.niceNum;
@@ -14,10 +11,10 @@ import static net.mahdilamb.dataviz.Axis.niceNum;
  * The color scales area of a figure
  */
 public final class ColorScales extends KeyArea<ColorScales> {
-    private static final class ModifiableGradient extends Paint.Gradient {
+    private static final class ModifiableGradient extends Gradient {
 
         ModifiableGradient(Colormap colorMap, double startX, double startY, double endX, double endY) {
-            super(Paint.GradientType.LINEAR, colorMap, startX, startY, endX, endY);
+            super(GradientType.LINEAR, colorMap, startX, startY, endX, endY);
         }
 
         final void update(ColorScales scales, ColorBar colorBar) {
@@ -29,20 +26,10 @@ public final class ColorScales extends KeyArea<ColorScales> {
         }
     }
 
-    private static final class ModifiablePaint extends Paint {
-        final ModifiableGradient gradient;
-
-        ModifiablePaint(ModifiableGradient gradient) {
-            super(gradient);
-            this.gradient = gradient;
-        }
-
-    }
-
     static final class ColorBar extends Component {
         static final int MAX_TICKS = 8;
         private final PlotTrace.Numeric trace;
-        ModifiablePaint gradient;
+        ModifiableGradient gradient;
         double[] values;
         String[] labels;
         double labelWidth, barWidth, barHeight;
@@ -136,9 +123,9 @@ public final class ColorScales extends KeyArea<ColorScales> {
 
         }
 
-        private ModifiablePaint getGradient() {
+        private ModifiableGradient getGradient() {
             if (gradient == null) {
-                gradient = new ModifiablePaint(new ModifiableGradient(trace.data.getColormap(), sizeX + posX, sizeY + posY, posX, posY));
+                gradient = new ModifiableGradient(trace.data.getColormap(), sizeX + posX, sizeY + posY, posX, posY);
             }
             return gradient;
         }
@@ -182,7 +169,7 @@ public final class ColorScales extends KeyArea<ColorScales> {
                         continue;
                     }
                     ((PlotTrace.Numeric) trace.colors).getColorBar().posX = x;
-                    ((PlotTrace.Numeric) trace.colors).getColorBar().getGradient().gradient.update(this, ((PlotTrace.Numeric) trace.colors).getColorBar());
+                    ((PlotTrace.Numeric) trace.colors).getColorBar().getGradient().update(this, ((PlotTrace.Numeric) trace.colors).getColorBar());
                     x -= ((PlotTrace.Numeric) trace.colors).getColorBar().sizeX;
 
                 }

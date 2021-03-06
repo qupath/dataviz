@@ -359,7 +359,7 @@ public abstract class Axis extends Component implements Themeable<Axis> {
             zeroLineColor = Color.white,
             axisColor = Color.black;
     Font labelFont = Font.DEFAULT_FONT;
-    Paint labelColor = Paint.BLACK_FILL;
+    Color labelColor = Color.BLACK;
     double labelPadding = 2;
     double labelRotation = 0;
     Boundary labelPosition;
@@ -487,6 +487,12 @@ public abstract class Axis extends Component implements Themeable<Axis> {
      * @return the label at the value
      */
     protected String getLabel(double val) {
+        if (labels != null) {
+           if (val >= labels.length || val < 0){
+               return EMPTY_STRING;
+           }
+           return labels[(int) val];
+        }
         return DECIMAL_FORMAT.format(val);
     }
 
@@ -523,12 +529,15 @@ public abstract class Axis extends Component implements Themeable<Axis> {
             minorTickSpacing = majorTickSpacing * .2;
             this.lower = Math.floor(lower / majorTickSpacing) * majorTickSpacing;
             this.upper = Math.ceil(upper / majorTickSpacing) * majorTickSpacing;
-            if (!fullRange) {
-                lower = 0;
-            }
         } else {
             lower = dataLower;
             upper = dataUpper;
+            final double range = upper - lower;
+            majorTickSpacing = niceNum(range / (MAX_TICKS - 1), true);
+            minorTickSpacing = majorTickSpacing * .2;
+        }
+        if (!fullRange) {
+            lower = 0;
         }
         updateScale();
     }

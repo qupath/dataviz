@@ -20,6 +20,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
     protected Map<PlotData<?>, RTree<Runnable>> polygons = Collections.emptyMap();
     protected Map<PlotData<?>, RTree<Runnable>> lines = Collections.emptyMap();
     protected Map<PlotData<?>, RTree<Runnable>> markers = Collections.emptyMap();
+    protected Map<PlotData<?>, RTree<Runnable>> rectangles = Collections.emptyMap();
     Color background = Color.lightgray;
     Style selectedStyle = SelectedStyle.DEFAULT_SELECTED_STYLE;
     Style unselectedStyle = UnselectedStyle.DEFAULT_UNSELECTED_STYLE;
@@ -81,26 +82,34 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         minY = y.lower - by,
                         maxX = x.upper + bx,
                         maxY = y.upper + by;
+
                 if (trace instanceof PlotData.XYData) {
-                    canvas.setStroke(((PlotData.XYData<?>) trace).lineStroke, ((PlotData.XYData<?>) trace).lineColor);
+                    if (((PlotData.XYData<?>) trace).fillMode != FillMode.NONE) {
+                        canvas.setFill(((PlotData.XYData<?>) trace).fillColor);
+                        @SuppressWarnings("unchecked") final Set<PlotShape.PlotPolygon> foundPolygons = (Set<PlotShape.PlotPolygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
+                        for (final PlotShape.PlotPolygon n : foundPolygons) {
+                            drawPolygon(canvas, n);
+                        }
+                    }
+                    //canvas.setStroke(((PlotData.XYData<?>) trace).getLineStroke(), ((PlotData.XYData<?>) trace).lineColor);
                 }
-                @SuppressWarnings("unchecked") final Collection<PlotData.PlotPolyLine> foundLines = (Collection<PlotData.PlotPolyLine>) lines.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY);
-                for (final PlotData.PlotPolyLine n : foundLines) {
+                @SuppressWarnings("unchecked") final Collection<PlotShape.PlotPolyLine> foundLines = (Collection<PlotShape.PlotPolyLine>) lines.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY);
+                for (final PlotShape.PlotPolyLine n : foundLines) {
                     canvas.setStroke(n.getColor());
                     drawLine(canvas, n);
                 }
                 if (trace.anySelected) {
                     for (final Node2D<Runnable> n : markers.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY)) {
-                        final PlotData.PlotShape p = (PlotData.PlotShape) n;
+                        final PlotShape p = (PlotShape) n;
                         if (!p.isVisible()) {
                             continue;
                         }
-                        if (p instanceof PlotData.PlotMarker) {
-                            final Color color = p.getColor() == null ? p.getSource().getColor(-1) : p.getColor();
-                            boolean selected = trace.selected.get(p.i());
+                        if (p instanceof PlotShape.PlotMarker) {
+                            final Color color = p.getColor() == null ? p.parent.getColor(-1) : p.getColor();
+                            boolean selected = trace.selected.get(p.i);
                             canvas.setFill(new Color(color.red(), color.green(), color.blue(), selected ? .8 : 0.2));
-                            Marker.MARKER.x = ((PlotData.XYData<?>) p.getSource()).getX(p.i());
-                            Marker.MARKER.y = ((PlotData.XYData<?>) p.getSource()).getY(p.i());
+                            Marker.MARKER.x = ((PlotData.XYData<?>) p.parent).getX(p.i);
+                            Marker.MARKER.y = ((PlotData.XYData<?>) p.parent).getY(p.i);
                             Marker.MARKER.shape = p.getShape();
                             Marker.MARKER.size = p.getSize();
                             transformMarker(Marker.MARKER);
@@ -112,14 +121,22 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         }
                     }
                 } else {
-                    @SuppressWarnings("unchecked") final Set<PlotData.PlotMarker> foundMarkers = ((Set<PlotData.PlotMarker>) markers.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotData.PlotMarker.ORDER_COMPARATOR), minX, minY, maxX, maxY));
-                    for (final PlotData.PlotMarker n : foundMarkers) {
+                    @SuppressWarnings("unchecked") final Collection<PlotShape.PlotRectangle> foundRectangles = (Collection<PlotShape.PlotRectangle>) rectangles.getOrDefault(trace, RTree.emptyTree()).search(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY);
+                    for (final PlotShape.PlotRectangle rectangle : foundRectangles) {
+                        if (!rectangle.isVisible()) {
+                            continue;
+                        }
+                        canvas.setFill(rectangle.getColor());
+                        drawRectangle(canvas, rectangle);
+                    }
+                    @SuppressWarnings("unchecked") final Set<PlotShape.PlotMarker> foundMarkers = ((Set<PlotShape.PlotMarker>) markers.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.PlotMarker.ORDER_COMPARATOR), minX, minY, maxX, maxY));
+                    for (final PlotShape.PlotMarker n : foundMarkers) {
                         if (!n.isVisible()) {
                             continue;
                         }
-                        canvas.setFill(n.getColor() == null ? (n).getSource().getColor(-1) : n.getColor());
-                        Marker.MARKER.x = ((PlotData.XYData<?>) (n).getSource()).getX(((PlotData.PlotShape) n).i());
-                        Marker.MARKER.y = ((PlotData.XYData<?>) (n).getSource()).getY(((PlotData.PlotShape) n).i());
+                        canvas.setFill(n.getColor() == null ? (n).parent.getColor(-1) : n.getColor());
+                        Marker.MARKER.x = ((PlotData.XYData<?>) (n).parent).getX(n.i);
+                        Marker.MARKER.y = ((PlotData.XYData<?>) (n).parent).getY(n.i);
                         Marker.MARKER.shape = n.getShape();
                         Marker.MARKER.size = n.getSize();
                         transformMarker(Marker.MARKER);
@@ -198,16 +215,17 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         public Renderer.Tooltip getHoverText(double x, double y) {
             double xMin = this.x.getValueFromPosition(x);
             double yMin = this.y.getValueFromPosition(y);
-            final SortedSet<Node2D<Runnable>> found = new TreeSet<>(PlotData.PlotMarker.ORDER_COMPARATOR);
+            final SortedSet<Node2D<Runnable>> found = new TreeSet<>(PlotShape.ORDER_COMPARATOR);
             for (final PlotData<?> trace : data) {
                 markers.getOrDefault(trace, RTree.emptyTree()).search(found, xMin, yMin, xMin, yMin);
+                rectangles.getOrDefault(trace, RTree.emptyTree()).search(found, xMin, yMin, xMin, yMin);
                 if (!found.isEmpty()) {
                     final String[] text = new String[found.size()];
                     final Color[] colors = new Color[found.size()];
                     int i = 0;
                     for (Node2D<Runnable> marker : found) {
-                        colors[i] = ((PlotData.PlotMarker) marker).getColor();
-                        text[i++] = trace.getHoverText(((PlotData.PlotMarker) marker).i);
+                        colors[i] = ((PlotShape) marker).getColor();
+                        text[i++] = ((PlotShape) marker).getHoverText();
                     }
                     return new Renderer.Tooltip(colors, text);
                 }
@@ -220,6 +238,9 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         boolean canAdd(PlotData<?> trace) {
             if (trace instanceof PlotData.XYData) {
                 return Objects.equals(x.getTitle(), ((PlotData.XYData<?>) trace).getXLabel()) && Objects.equals(y.getTitle(), ((PlotData.XYData<?>) trace).getYLabel()) && Objects.equals(trace.title, title) && Arrays.equals(((PlotData.XYData<?>) trace).xLabels, x.labels);
+            } else if (trace instanceof PlotData.CategoricalData) {
+                return Objects.equals(x.getTitle(), ((PlotData.CategoricalData<?>) trace).categoryLabel) && Objects.equals(y.getTitle(), ((PlotData.CategoricalData<?>) trace).valueLabel) && Objects.equals(trace.title, title);//&& Arrays.equals(((PlotData.CategoricalData<?>) trace).xLabels, x.labels);
+
             }
             return false;
         }
@@ -311,6 +332,9 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                 ((PlotData.XYData<?>) trace).xLab = null;
                 ((PlotData.XYData<?>) trace).yLab = null;
                 ((PlotData.XYData<?>) trace).xLabels = null;
+            } else if (trace instanceof PlotData.CategoricalData) {
+                ((PlotData.CategoricalData<?>) trace).categoryLabel = null;
+                ((PlotData.CategoricalData<?>) trace).valueLabel = null;
             }
             trace.init(this);
             return true;
@@ -355,6 +379,13 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         this.lines.put(trace, polygons);
     }
 
+    void putRectangles(PlotData<?> trace, RTree<Runnable> rectangles) {
+        if (((Map<?, ?>) this.rectangles) == Collections.emptyMap()) {
+            this.rectangles = new LinkedHashMap<>();
+        }
+        this.rectangles.put(trace, rectangles);
+    }
+
     void clear(PlotData<?> trace) {
         if (((Map<?, ?>) this.polygons) != Collections.emptyMap()) {
             this.polygons.remove(trace);
@@ -365,9 +396,12 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         if (((Map<?, ?>) this.markers) != Collections.emptyMap()) {
             this.markers.remove(trace);
         }
+        if (((Map<?, ?>) this.rectangles) != Collections.emptyMap()) {
+            this.rectangles.remove(trace);
+        }
     }
 
-    void transformMarker(Marker marker) {
+    final void transformMarker(Marker marker) {
         marker.x = transformX(marker.x);
         marker.y = transformY(marker.y);
 
@@ -381,12 +415,35 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         return getYAxis().posY + (((getYAxis().upper - y) / getYAxis().range) * getYAxis().sizeY);
     }
 
-    void drawLine(ChartCanvas<?> canvas, PlotData.PlotPolyLine n) {
-        for (final PlotData.PlotPolyLine.Segment s : n.getSegments()) {
+    final void drawLine(ChartCanvas<?> canvas, PlotShape.PlotPolyLine n) {
+        for (final PlotShape.PlotPolyLine.Segment s : n.getSegments()) {
             canvas.strokeLine(transformX(s.startX), transformY(s.startY), transformX(s.endX), transformY(s.endY));
         }
     }
 
+    final void drawRectangle(ChartCanvas<?> canvas, PlotShape.PlotRectangle n) {
+        canvas.fillRect(transformX(n.getMinX()), transformY(n.getMaxY()), ((Rectangular) n.parent.layout).x.scale * n.w, ((Rectangular) n.parent.layout).y.scale * n.h);
+
+    }
+
+    final void drawPolygon(ChartCanvas<?> canvas, PlotShape.PlotPolygon n) {
+        canvas.beginPath();
+        canvas.moveTo(transformX(n.getPoints()[0].getMidX()), transformY(n.getPoints()[0].getMidY()));
+        for (int i = 1; i < n.getPoints().length; ++i) {
+            canvas.lineTo(transformX(n.getPoints()[i].getMidX()), transformY(n.getPoints()[i].getMidY()));
+        }
+        canvas.closePath();
+        canvas.fill();
+
+    }
+
+    /**
+     * Set the range of the x axis
+     *
+     * @param min the new min value of the x axis
+     * @param max the new max value of the x axis
+     * @return this layout
+     */
     public PlotLayout setXRange(double min, double max) {
         if (getXAxis() == null) {
             System.err.println("No x axis");
@@ -396,6 +453,13 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         return this;
     }
 
+    /**
+     * Set the range of the y axis
+     *
+     * @param min the new min value of the y axis
+     * @param max the new max value of the y axis
+     * @return this layout
+     */
     public PlotLayout setYRange(double min, double max) {
         if (getYAxis() == null) {
             System.err.println("No y axis");
@@ -405,6 +469,15 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         return this;
     }
 
+    /**
+     * Set the range of the x and y axis
+     *
+     * @param minX the new min value of the x axis
+     * @param maxX the new max value of the x axis
+     * @param minY the new min value of the y axis
+     * @param maxY the new max value of the y axis
+     * @return this layout
+     */
     public abstract PlotLayout setRange(double minX, double maxX, double minY, double maxY);
 
     @Override
@@ -413,6 +486,13 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         return this;
     }
 
+    /**
+     * Get a tooltip from the position
+     *
+     * @param x the x position of the cursor
+     * @param y the y position of the cursor
+     * @return a tooltip for the current position
+     */
     abstract Renderer.Tooltip getHoverText(double x, double y);
 
 }

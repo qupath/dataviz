@@ -73,7 +73,7 @@ public final class Numbers {
      * to the original value is greater than the minDifference, then it returns the shortened double, otherwise returns the source value
      */
     public static double approximateDouble(double v, int minDifference) {
-        if (!Double.isFinite(v)) {
+        if (!Double.isFinite(v) || v == 0) {
             return v;
         }
         int startLength = Ryu.lengthOfDouble(v);

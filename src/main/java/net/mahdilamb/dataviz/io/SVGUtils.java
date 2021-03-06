@@ -3,8 +3,9 @@ package net.mahdilamb.dataviz.io;
 
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataviz.graphics.Font;
-import net.mahdilamb.dataviz.graphics.Paint;
+import net.mahdilamb.dataviz.graphics.Gradient;
 import net.mahdilamb.dataviz.graphics.Stroke;
+import net.mahdilamb.dataviz.utils.Variant;
 
 import java.text.DecimalFormat;
 import java.util.Base64;
@@ -67,14 +68,14 @@ final class SVGUtils {
      * @param fill fill to convert
      * @return SVG representation of the fill
      */
-    static String convertToString(final SVGExporter.SVGDefinitions defs, final Paint fill) {
-        if (Paint.isNull(fill)) {
+    static String convertToString(final SVGExporter.SVGDefinitions defs, final Variant<Color, Gradient> fill) {
+        if (fill == null) {
             return "fill:none; ";
         }
-        if (fill.isGradient()) {
-            return String.format("fill:url('#%s'); ", defs.addGradient(fill.getGradient()));
+        if (fill.isRight()) {
+            return String.format("fill:url('#%s'); ", defs.addGradient(fill.asRight()));
         } else {
-            return String.format("fill:%s; ", convertToString(fill.getColor()));
+            return String.format("fill:%s; ", convertToString(fill.asLeft()));
         }
     }
 
@@ -136,7 +137,7 @@ final class SVGUtils {
      * @param stroke stroke
      * @return style string representing the style
      */
-    static String convertToString(final SVGExporter.SVGDefinitions defs, final Paint fill, final Stroke stroke, final Color strokeColor) {
+    static String convertToString(final SVGExporter.SVGDefinitions defs, final Variant<Color, Gradient> fill, final Stroke stroke, final Color strokeColor) {
         return String.format("style=\"%s%s\" %s", convertToString(defs, fill), strokeColor == null ? EMPTY_STRING : String.format("stroke:%s", convertToString(strokeColor)), convertToString(stroke));
     }
 
@@ -196,7 +197,7 @@ final class SVGUtils {
      * @param fill   the fill of the rectangle
      * @return the SVG element of the rectangle
      */
-    static String rectangleToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
+    static String rectangleToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Variant<Color, Gradient> fill, final Color strokeColor) {
         return String.format(
                 "%s<rect x=\"%s\" y=\"%s\" width=\"%s\" height=\"%s\" %s/>%n",
                 indent.toString(),
@@ -221,7 +222,7 @@ final class SVGUtils {
      * @param fill   the fill of the ellipse
      * @return the SVG element of the ellipse
      */
-    static String ellipseToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
+    static String ellipseToString(double x, double y, double width, double height, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Variant<Color, Gradient> fill, final Color strokeColor) {
         final double rx = width * .5;
         final double ry = height * .5;
         return String.format(
@@ -251,7 +252,7 @@ final class SVGUtils {
      * @return the SVG element of the rounded rectangle
      */
     static String roundedRectangleToString(double x, double y, double width, double height,
-                                           double arcWidth, double arcHeight, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
+                                           double arcWidth, double arcHeight, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Variant<Color, Gradient> fill, final Color strokeColor) {
         return String.format(
                 "%s<rect x=\"%s\" y=\"%s\" rx=\"%s\" ry=\"%s\" width=\"%s\" height=\"%s\" %s/>%n",
                 indent.toString(),
@@ -301,7 +302,7 @@ final class SVGUtils {
      * @param fill   the fill of the rounded rectangle
      * @return an SVG element representation of a circle
      */
-    static String circleToString(double x, double y, double r, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
+    static String circleToString(double x, double y, double r, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Variant<Color, Gradient> fill, final Color strokeColor) {
         return String.format(
                 "%s<circle cx=\"%s\" cy=\"%s\" r=\"%s\" %s/>%n",
                 indent.toString(),
@@ -312,7 +313,7 @@ final class SVGUtils {
         );
     }
 
-    static String pathToString(String pathD, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Paint fill, final Color strokeColor) {
+    static String pathToString(String pathD, final SVGExporter.SVGDefinitions defs, final StringBuilder indent, final Stroke stroke, final Variant<Color, Gradient> fill, final Color strokeColor) {
         return String.format(
                 "%s<path d=\"%s\" %s/>%n",
                 indent.toString(),
@@ -320,7 +321,7 @@ final class SVGUtils {
                 convertToString(defs, fill, stroke, strokeColor));
     }
 
-    static String polygonToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Paint fill, final Color strokeColor) {
+    static String polygonToString(double[] xPoints, double[] yPoints, int numPoints, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Variant<Color, Gradient> fill, final Color strokeColor) {
         final StringBuilder points = new StringBuilder(indent.toString()).append("<polygon points=\"");
         for (int i = 0; i < numPoints; ++i) {
             points.append(String.format("%s,%s ", convertToString(xPoints[i]), convertToString(yPoints[i])));
@@ -336,7 +337,7 @@ final class SVGUtils {
         return points.append("\" ").append(convertToString(defs, null, stroke, strokeColor)).append("/>\n").toString();
     }
 
-    static String textToString(final String text, double x, double y, net.mahdilamb.dataviz.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Paint fill, final Color strokeColor) {
+    static String textToString(final String text, double x, double y, net.mahdilamb.dataviz.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Variant<Color, Gradient> fill, final Color strokeColor) {
         return String.format(
                 "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s>%s</text>%n",
                 indent.toString(),
@@ -352,7 +353,7 @@ final class SVGUtils {
 
     }
 
-    static String rotatedTextToString(final String text, double x, double y, double rotationDegrees, double pivotX, double pivotY, net.mahdilamb.dataviz.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Paint fill, final Color strokeColor) {
+    static String rotatedTextToString(final String text, double x, double y, double rotationDegrees, double pivotX, double pivotY, net.mahdilamb.dataviz.graphics.Font font, SVGExporter.SVGDefinitions defs, StringBuilder indent, Stroke stroke, Variant<Color, Gradient> fill, final Color strokeColor) {
         return String.format(
                 "%s<text x=\"%s\" y=\"%s\" %sfont-size=\"%s\" %s%s%s transform=\"rotate(%s,%s,%s)\">%s</text>%n",
                 indent.toString(),
@@ -416,7 +417,7 @@ final class SVGUtils {
                 int f = b.indexOf("fill:none", d);
                 if (f != -1 && f < eEnd) {
                     if (f > dEnd) {
-                        remove.add( () -> b.delete(dEnd + 1, eEnd+1)
+                        remove.add(() -> b.delete(dEnd + 1, eEnd + 1)
 
                         );
                         return eEnd;

@@ -3,10 +3,10 @@ package net.mahdilamb.dataviz.io;
 import net.mahdilamb.dataviz.ChartExporter;
 import net.mahdilamb.dataviz.Renderer;
 import net.mahdilamb.dataviz.graphics.Font;
-import net.mahdilamb.dataviz.graphics.Paint;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.graphics.*;
 import net.mahdilamb.dataviz.swing.SwingUtils;
+import net.mahdilamb.dataviz.utils.Variant;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -91,7 +91,7 @@ public class ImageExporter extends ChartExporter {
         private final Ellipse2D ellipse = new Ellipse2D.Double();
         private final Line2D line = new Line2D.Double();
         private final boolean fillWhite;
-        private Paint currentFill = Paint.BLACK_FILL;
+        private final Variant<net.mahdilamb.colormap.Color, Gradient> currentFill = Variant.ofLeft(net.mahdilamb.colormap.Color.BLACK);
         private Stroke currentStroke = Stroke.SOLID;
         private net.mahdilamb.colormap.Color currentStrokeColor = net.mahdilamb.colormap.Color.BLACK;
         boolean usingFill = true;
@@ -129,11 +129,11 @@ public class ImageExporter extends ChartExporter {
 
         private void switchToFilled() {
             if (!usingFill) {
-                if (currentFill.isGradient()) {
-                    g.setPaint(convert(currentFill.getGradient()));
-                } else {
-                    g.setColor(convert(currentFill.getColor()));
+                if (currentFill.isLeft()) {
+                    g.setColor(convert(currentFill.asLeft()));
                     g.setPaint(g.getColor());
+                } else {
+                    g.setPaint(convert(currentFill.asRight()));
                 }
                 usingFill = true;
             }
@@ -199,16 +199,22 @@ public class ImageExporter extends ChartExporter {
         }
 
         @Override
-        public void setFill(Paint fill) {
-            this.currentFill = fill;
-            if (currentFill.isGradient()) {
-                g.setPaint(convert(currentFill.getGradient()));
-            } else {
-                g.setColor(convert(currentFill.getColor()));
-                g.setPaint(g.getColor());
-            }
+        public void setFill(net.mahdilamb.colormap.Color color) {
+            this.currentFill.setToLeft(color);
+
+            g.setColor(convert(color));
+            g.setPaint(g.getColor());
+
             usingFill = true;
         }
+
+        @Override
+        public void setFill(Gradient gradient) {
+            currentFill.setToRight(gradient);
+            g.setPaint(convert(gradient));
+            usingFill = true;
+        }
+
 
         @Override
         public void setStroke(Stroke stroke) {

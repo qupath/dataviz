@@ -73,12 +73,32 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
                 }
                 title.setText(plot.title);
                 plot.x.title.setText(((PlotData.XYData<?>) trace).xLab);
+                if (((PlotData.XYData<?>) trace).xLabels != null) {
+                    plot.x.showZeroLine = false;
+                }
                 plot.x.labels = ((PlotData.XYData<?>) trace).xLabels;
                 plot.x.figure = this;
                 plot.y.title.setText(((PlotData.XYData<?>) trace).yLab);
                 plot.y.figure = this;
                 if (!plot.add(trace)) {
                     throw new RuntimeException("Rectangular plot seems to be unable to add this XY trace");
+                }
+                layout = plot;
+            } else if (trace instanceof PlotData.CategoricalData) {
+                final PlotLayout.Rectangular plot = new PlotLayout.Rectangular();
+                plot.figure = this;
+                if (trace.title != null) {
+                    plot.title = trace.title;
+                }
+                title.setText(plot.title);
+                plot.x.title.setText(((PlotData.CategoricalData<?>) trace).categoryLabel);
+                plot.x.showZeroLine = false;
+                plot.x.labels = ((PlotData.CategoricalData<?>) trace).getCategoryLabels();
+                plot.x.figure = this;
+                plot.y.title.setText(((PlotData.CategoricalData<?>) trace).valueLabel);
+                plot.y.figure = this;
+                if (!plot.add(trace)) {
+                    throw new RuntimeException("Rectangular plot seems to be unable to add this Categorical trace");
                 }
                 layout = plot;
             } else {

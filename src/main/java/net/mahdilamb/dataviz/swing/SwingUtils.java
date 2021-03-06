@@ -1,6 +1,6 @@
 package net.mahdilamb.dataviz.swing;
 
-import net.mahdilamb.dataviz.graphics.Paint;
+import net.mahdilamb.dataviz.graphics.Gradient;
 import net.mahdilamb.dataviz.utils.Numbers;
 
 import javax.imageio.ImageIO;
@@ -41,6 +41,10 @@ public final class SwingUtils {
      * @return the AWT color
      */
     public static java.awt.Color convert(final net.mahdilamb.colormap.Color color) {
+        if (color == null){
+            System.err.println("Color is null");
+            return null;
+        }
         final Color cached = colorsToAWT.get(color);
         if (cached != null) {
             return cached;
@@ -66,7 +70,7 @@ public final class SwingUtils {
      * @param gradient the source gradient
      * @return AWT gradient
      */
-    public static MultipleGradientPaint convert(final Paint.Gradient gradient) {
+    public static MultipleGradientPaint convert(final Gradient gradient) {
         final Point2D start = new Point2D.Double(gradient.getStartX(), gradient.getStartY());
         final float[] dist = new float[gradient.getColorMap().size()];
         final java.awt.Color[] colors = new java.awt.Color[dist.length];
@@ -76,7 +80,7 @@ public final class SwingUtils {
             colors[i] = convert(entry.getValue());
             ++i;
         }
-        if (gradient.getType() == Paint.GradientType.LINEAR) {
+        if (gradient.getType() == Gradient.GradientType.LINEAR) {
             final Point2D end = new Point2D.Double(gradient.getEndX(), gradient.getEndY());
             return new LinearGradientPaint(start, end, dist, colors);
         } else {

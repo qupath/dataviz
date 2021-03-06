@@ -170,12 +170,12 @@ public abstract class Selection {
                 t.selected = (t.selected == null) ? new BooleanArrayList(t.size()) : t.selected;
                 t.selected.fill(false, t.size());
                 t.anySelected = false;
-                @SuppressWarnings("unchecked") final List<PlotData.PlotMarker> n = (((List<PlotData.PlotMarker>) layout.markers.getOrDefault(t, RTree.emptyTree()).search(minX, minY, maxX, maxY)));
-                for (final PlotData.PlotMarker m : n) {
+                @SuppressWarnings("unchecked") final List<PlotShape.PlotMarker> n = (((List<PlotShape.PlotMarker>) layout.markers.getOrDefault(t, RTree.emptyTree()).search(minX, minY, maxX, maxY)));
+                for (final PlotShape.PlotMarker m : n) {
                     int windingNumber = windingNumber(x, y, m.getMidX(), m.getMidY(), isClosed);
                     if (useNonZero ? (windingNumber != 0) : ((windingNumber & 1) == 1)) {
                         t.anySelected = true;
-                        t.selected.set(m.i(), true);
+                        t.selected.set(m.i, true);
                     }
                 }
             }

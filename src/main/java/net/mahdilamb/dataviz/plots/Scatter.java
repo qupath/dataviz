@@ -91,6 +91,11 @@ public final class Scatter extends PlotData.XYData<Scatter> {
         super(x, y);
     }
 
+    /**
+     * Create a scatter series from y values
+     *
+     * @param y the y values
+     */
     public Scatter(double[] y) {
         super(y);
     }
@@ -107,9 +112,10 @@ public final class Scatter extends PlotData.XYData<Scatter> {
         setMarkerMode(ScatterMode.MARKER_AND_LINE);
     }
 
-    public Scatter setColors(final String seriesName) {
+    public Scatter setColors(final String seriesName) throws DataFrameOnlyOperationException {
         opacity = 0.8;
         showEdge = true;
+
         return PlotData.ifSeriesCategorical(
                 dataFrame,
                 seriesName,
@@ -290,7 +296,7 @@ public final class Scatter extends PlotData.XYData<Scatter> {
     }
 
     public Scatter setLineStyle(String lineStyle) {
-        return setLineStyle(StringUtils.convertToStroke(lineStyle));
+        return setLineStyle(StringUtils.convertToStroke(lineStyle).getDashes());
     }
 
     @Override
@@ -328,57 +334,32 @@ public final class Scatter extends PlotData.XYData<Scatter> {
 
     @Override
     protected void init(PlotLayout plotLayout) {
-        if (lineStroke == null) {
-            lineStroke = new Stroke(lineWidth, lineDashes);
-            lineDashes = null;
+        if (numXLabels(plotLayout.getXAxis()) != -1) {
+            double yBuff = (yMax - yMin) * .01;
+            updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, true);
+            double major = 1;
+            double b = xMax * .05;
+            plotLayout.getXAxis().setRange(-b, xMax + b);
+            setTicks(plotLayout.getXAxis(), major);
+        } else {
+            if (markerMode != ScatterMode.MARKER_ONLY) {
+                double yBuff = (yMax - yMin) * .01;
+                updateXYBounds(plotLayout, xMin, xMax, yMin - yBuff, yMax + yBuff, false);
+            } else {
+                double xBuff = (xMax - xMin) * .01;
+                double yBuff = (yMax - yMin) * .01;
+                updateXYBounds(plotLayout, xMin - xBuff, xMax + xBuff, yMin - yBuff, yMax + yBuff, true);
+            }
+
         }
-
-        double xBuff = (xMax - xMin) * .01;
-        double yBuff = (yMax - yMin) * .01;
-        updateXYBounds(plotLayout, xMin - xBuff, xMax + xBuff, yMin - yBuff, yMax + yBuff);
-
         if (fillMode != FillMode.NONE) {
             putPolygons(plotLayout, this, createPolygons(plotLayout));
-            /*for (final Node2D<Runnable> p : createPolygons().search(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)) {
-                PlotPolygon polygon = (PlotPolygon) p;
-                int i = polygon.i();
-                if (!(isVisible(i))) {
-                    continue;
-                }
-                System.out.printf("%s color=%s stroke=%s%s%n",
-                        polygon,
-                        fillColor.toHex(),
-                        lineStroke,
-                        lineColor == null ? EMPTY_STRING : String.format(" strokeColor=%s", lineColor.toHex())
-                );
-            }*/
         }
         if (markerMode != ScatterMode.LINE_ONLY) {
             putMarkers(plotLayout, this, createMarkers(plotLayout));
-            /*for (final Node2D<Runnable> m : createMarkers().search(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)) {
-                PlotMarker marker = (PlotMarker) m;
-                int i = marker.i();
-                if (!(isVisible(i))) {
-                    continue;
-                }
-                System.out.printf("x=%s y=%s color=%s size=%s%s hover=%s%n", x.get(i), y.get(i), colorSetter.apply(i).toHex(), sizeSetter.applyAsDouble(i), showEdge ? " edge=" + (edgeWidth) : EMPTY_STRING, getHoverText(i));
-            }*/
         }
         if (markerMode != ScatterMode.MARKER_ONLY) {
             putLines(plotLayout, this, createLines(plotLayout));
-           /* for (final Node2D<Runnable> l : createLines().search(Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY)) {
-                PlotPolyLine line = (PlotPolyLine) l;
-                System.out.printf("start=%s,%s end=%s,%s stroke=%s%s%s%s%n",
-                        line.getStartX(),
-                        line.getStartY(),
-                        line.getEndX(),
-                        line.getEndY(),
-                        lineStroke,
-                        lineColor == null ? EMPTY_STRING : String.format(" strokeColor=%s", lineColor),
-                        colors == null ? EMPTY_STRING : (String.format(" color=%s (%s)", ((Trace.Categorical) colors).get(line.i()), colors.get(qualitativeColormap, line.i()).toHex())),
-                        group == null ? EMPTY_STRING : (String.format(" group=%s", group.get(line.i())))
-                );
-            }*/
         }
     }
 

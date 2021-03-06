@@ -51,4 +51,16 @@ interface FigureComponent<O> {
     default void show(Function<Figure, ? extends Renderer<?>> creator) {
         getFigure().show(creator);
     }
+
+    @SuppressWarnings("unchecked")
+    default O setTitle(final String title) {
+        getFigure().setTitle(title);
+        return (O) this;
+    }
+
+    @SuppressWarnings("unchecked")
+    default O apply(final Theme theme) {
+        getFigure().apply(theme);
+        return (O) this;
+    }
 }

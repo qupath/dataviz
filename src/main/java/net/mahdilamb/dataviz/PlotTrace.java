@@ -71,6 +71,21 @@ public abstract class PlotTrace extends Component {
             return indices[i];
         }
 
+        /**
+         * Get the index of the category
+         *
+         * @param category the category the index of
+         * @return the index of the category, or -1 if not present
+         */
+        public int indexOf(String category) {
+            for (int i = 0; i < categories.length; ++i) {
+                if (category.equals(categories[i])) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
         @Override
         Color get(Colormap colormap, int i) {
             return colormap.get(((float) getRaw(i) % colormap.size()) / (colormap.size() - 1));
@@ -559,15 +574,16 @@ public abstract class PlotTrace extends Component {
     }
 
     protected static Legend.LegendItem createLegendItem(final PlotData<?> data, final Categorical trace, int j) {
-        if (data instanceof Line) {
-            Legend.LegendItem out = new Legend.LegendItem(trace.categories[j], new Legend.XYDataGlyph(ScatterMode.LINE_ONLY));
-            ((Legend.XYDataGlyph) out.glyph).stroke = ((Line) data).lineStroke;
+        if (data instanceof PlotData.XYData) {
+            Legend.LegendItem out = new Legend.LegendItem(trace.categories[j], new Legend.XYDataGlyph(((PlotData.XYData<?>) data).markerMode));
+            ((Legend.XYDataGlyph) out.glyph).stroke = ((PlotData.XYData<?>) data).getLineStroke();
             final Color baseColor = data.getColormap().get(((float) j % data.getColormap().size()) / (data.getColormap().size() - 1));
             out.glyph.color = new Color(baseColor.red(), baseColor.green(), baseColor.blue(), trace.attribute == PlotData.Attribute.COLOR ? .8 : 1);
             return out;
         } else {
             final Legend.LegendItem out = new Legend.LegendItem(trace.categories[j], new Legend.XYDataGlyph(ScatterMode.MARKER_ONLY));
             //TODO update color
+            out.glyph.color = data.getColormap().get(((float) j % data.getColormap().size()) / (data.getColormap().size() - 1));
             return out;
         }
     }
@@ -579,10 +595,16 @@ public abstract class PlotTrace extends Component {
             out = new Legend.LegendItem(data.name, new Legend.XYDataGlyph(((PlotData.XYData<?>) data).markerMode));
             ((Legend.XYDataGlyph) out.glyph).edgeStroke = data.getEdgeStroke();
             ((Legend.XYDataGlyph) out.glyph).edgeColor = data.getEdgeColor();
+            ((Legend.XYDataGlyph) out.glyph).stroke = ((PlotData.XYData<?>) data).getLineStroke();
+            ((Legend.XYDataGlyph) out.glyph).hasEdge = data.showEdge();
+            out.glyph.color = ((PlotData.XYData<?>) data).fillColor == null ? data.getColor(-1) : ((PlotData.XYData<?>) data).fillColor;
+            ((Legend.XYDataGlyph) out.glyph).lineColor = ((PlotData.XYData<?>) data).lineColor == null?out.glyph.color:((PlotData.XYData<?>) data).lineColor;
+
         } else {
             out = new Legend.LegendItem(data.name, new Legend.XYDataGlyph(ScatterMode.MARKER_ONLY));
+            out.glyph.color = data.getColor(-1);
+
         }
-        out.glyph.color = data.getColor(-1);
         return out;
 
     }

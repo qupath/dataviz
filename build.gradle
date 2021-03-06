@@ -34,7 +34,8 @@ dependencies {
     testCompile("junit:junit:4.13")
     compile 'net.mahdilamb:utils-tuples:0.3.1'
     compile 'net.mahdilamb:colormap:0.9.49-SNAPSHOT'
-    compile 'net.mahdilamb:dataframe:0.1.0-SNAPSHOT'
+   // compile 'net.mahdilamb:dataframe:0.1.0-SNAPSHOT'
+    compile project(":dataframe")
 }
 
 test {

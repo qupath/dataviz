@@ -23,10 +23,13 @@ public final class Legend extends KeyArea<Legend> {
     }
 
     static final class XYDataGlyph extends Glyph {
+
         MarkerShape shape = MarkerShape.CIRCLE;
         static final Stroke DEFAULT_STROKE = new Stroke(2);
         Stroke stroke = DEFAULT_STROKE;
+        Color lineColor;
         ScatterMode mode;
+        boolean hasEdge;
         Stroke edgeStroke;
         Color edgeColor;
 
@@ -42,7 +45,7 @@ public final class Legend extends KeyArea<Legend> {
             double markerSize = sizeX;
             double markerY = 0;
             if (mode != ScatterMode.MARKER_ONLY) {
-                canvas.setStroke(stroke, color);
+                canvas.setStroke(stroke, lineColor);
                 markerY = stroke.getWidth() * .5;
                 double yPos = y + 0.5 * sizeY + markerY;
                 canvas.strokeLine(x, yPos, x + sizeX, yPos);
@@ -54,8 +57,9 @@ public final class Legend extends KeyArea<Legend> {
                 Marker.MARKER.x = x + 0.5 * sizeX;
                 Marker.MARKER.y = y + 0.5 * markerSize + markerY;
                 canvas.setFill(color);
+
                 Marker.MARKER.fill(canvas);
-                if (edgeStroke != null) {
+                if (hasEdge && edgeStroke != null) {
                     if (edgeColor != null) {
                         canvas.setStroke(edgeColor);
                     }
