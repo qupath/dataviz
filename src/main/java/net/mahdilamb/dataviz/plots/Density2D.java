@@ -28,7 +28,7 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
     protected void init(double[] x, double[] y) {
         super.init(x, y);
         putFormatter("density", i -> getRaw(colors.asB(), i));
-        hoverFormatter.add("(%{density:s})");
+        hoverFormatter.add("(%{density:.7f})");
     }
 
     @Override

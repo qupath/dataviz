@@ -2,7 +2,6 @@ package net.mahdilamb.dataviz;
 
 import java.io.File;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Provide easy access to figure methods from components of the figure
@@ -48,7 +47,7 @@ interface FigureComponent<O> {
      *
      * @param creator the renderer
      */
-    default void show(Function<Figure, ? extends Renderer<?>> creator) {
+    default void show(Consumer<Figure> creator) {
         getFigure().show(creator);
     }
 

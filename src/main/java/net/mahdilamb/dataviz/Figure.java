@@ -11,7 +11,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Consumer;
-import java.util.function.Function;
 
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
@@ -207,8 +206,8 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
      * @param creator the function that renders a figure
      */
     @Override
-    public void show(Function<Figure, ? extends Renderer<?>> creator) {
-        creator.apply(Figure.this);
+    public void show(Consumer<Figure> creator) {
+        creator.accept(Figure.this);
     }
 
     /**
