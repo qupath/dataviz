@@ -134,7 +134,6 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                             continue;
                         }
                         canvas.setFill(rectangle.getColor());
-
                         drawRectangle(canvas, rectangle);
                     }
                     @SuppressWarnings("unchecked") final Set<PlotShape.Marker> foundMarkers = ((Set<PlotShape.Marker>) markers.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.Marker.ORDER_COMPARATOR), minX, minY, maxX, maxY));
@@ -143,8 +142,8 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                             continue;
                         }
                         canvas.setFill(n.getColor() == null ? (n).parent.getColor(-1) : n.getColor());
-                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.x = ((PlotData.RelationalData<?>) (n).parent).getX(n.i);
-                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.y = ((PlotData.RelationalData<?>) (n).parent).getY(n.i);
+                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.x = ((PlotData.RelationalData<?>) n.parent).getX(n.i);
+                        net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.y = ((PlotData.RelationalData<?>) n.parent).getY(n.i);
                         net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.shape = n.getShape();
                         net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER.size = n.getSize();
                         transformMarker(net.mahdilamb.dataviz.graphics.shapes.Marker.MARKER);
@@ -522,7 +521,6 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                 y = transformY(n.getMaxY()),
                 w = ((XYLayout) n.parent.layout).x.scale * n.w,
                 h = ((XYLayout) n.parent.layout).y.scale * n.h;
-
 
         canvas.fillRect(x, y, w, h);
 

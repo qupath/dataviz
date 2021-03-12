@@ -1266,11 +1266,12 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             return rectangles;
         }
 
-        protected static RTree<Runnable> createRectangles(DistributionData2D<?> density2D, double[][] densities, double xMin, double yMin, double w, double h) {
+        protected static RTree<Runnable> createRectangles(DistributionData2D<?> density2D, double[] densities, int width, double xMin, double yMin, double w, double h) {
             final RTree<Runnable> rectangles = new RTree<>();
-            PlotShape.Rectangle[] rs = new PlotShape.Rectangle[densities.length * densities[0].length];
-            for (int y = 0, i = 0; y < densities.length; ++y) {
-                for (int x = 0; x < densities[0].length; ++x) {
+            int height = densities.length/ width;
+            PlotShape.Rectangle[] rs = new PlotShape.Rectangle[densities.length ];
+            for (int y = 0, i = 0; y < height; ++y) {
+                for (int x = 0; x < width; ++x) {
                     rs[i] = new PlotShape.Rectangle(density2D, i, xMin + x * w, yMin + y * h, w, h);
                     ++i;
                 }

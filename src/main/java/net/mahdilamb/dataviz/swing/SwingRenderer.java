@@ -64,7 +64,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             if (hoverText != null) {
                 if (hoverText.hasChanges()){
                     g.drawImage(getCurrentState(), 0, 0, null);
-
                     double y = hoverText.getY() - g.getFontMetrics().getHeight() * .5;
                     double x = hoverText.getX();
                     final String line = hoverText.getText();
@@ -321,7 +320,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
 
         @Override
         public void setStroke(net.mahdilamb.dataviz.graphics.Stroke stroke) {
-
             queue.add(g -> {
                 this.currentStroke = stroke;
                 g.setStroke(convert(currentStroke));
@@ -364,6 +362,8 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             queue.clear();
             queue.add(g -> {
                 g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                g.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_PURE);
                 if (renderer.figure.getBackgroundColor() != null) {
                     g.setColor(convert(renderer.figure.getBackgroundColor()));
                 } else {

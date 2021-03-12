@@ -9,6 +9,9 @@ import net.mahdilamb.dataviz.PlotTrace;
 import net.mahdilamb.stats.ArrayUtils;
 import net.mahdilamb.stats.StatUtils;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 import java.util.function.DoubleUnaryOperator;
 import java.util.function.IntToDoubleFunction;
 
@@ -17,7 +20,6 @@ import static net.mahdilamb.dataviz.utils.Interpolations.lerp;
 public final class Density2D extends PlotData.DistributionData2D<Density2D> {
     int xBins = 50;
     int yBins = 50;
-    double[][] densities;
     DoubleUnaryOperator kernel = KDE::gaussian;
 
     public Density2D(DataFrame dataFrame, String x, String y) {
@@ -41,7 +43,6 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
                 true
         );
 
-        densities = new double[yBins][xBins];
         double xSD = StatUtils.standardDeviation(x::get, x.size());
         double ySD = StatUtils.standardDeviation(y::get, y.size());
         double xMin = this.xMin - xSD;
@@ -53,28 +54,37 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
         double cellWidth = (xMax - xMin) / xBins;
         double cellHeight = (yMax - yMin) / yBins;
         double yCen = yMin + cellHeight * .5;
-        double minDensity = Double.POSITIVE_INFINITY;
-        double maxDensity = Double.NEGATIVE_INFINITY;
-        double[] kdes = new double[yBins * xBins];
-        //TODO remove densities
+
+        final double[] kdes = new double[yBins * xBins];
+        final ExecutorService pool = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
         int j = 0;
         for (int y = 0; y < yBins; ++y) {
             double xCen = xMin + cellWidth * .5;
             for (int x = 0; x < xBins; ++x) {
                 double finalXCen = xCen;
                 double finalYCen = yCen;
-                double kde = StatUtils.mean(i -> kernel.applyAsDouble(euclideanDistance(this.x.get(i), this.y.get(i), finalXCen, finalYCen) / h), this.x.size()) / h2;
-                kdes[j++] = kde;
-                densities[y][x] = kde;
-                maxDensity = Math.max(maxDensity, kde);
-                minDensity = Math.min(minDensity, kde);
+                final int l = j;
+                pool.submit(
+                        () -> kdes[l] = StatUtils.mean(i -> kernel.applyAsDouble(euclideanDistance(Density2D.this.x.get(i), Density2D.this.y.get(i), finalXCen, finalYCen) / h), Density2D.this.x.size()) / h2
+                );
+                ++j;
                 xCen += cellWidth;
             }
             yCen += cellHeight;
         }
-        setColors(new PlotTrace.Numeric(this, Attribute.COLOR, "Density", kdes, 0, maxDensity));
-        putRectangles(layout, this, createRectangles(this, densities, xMin, yMin, cellWidth, cellHeight));
-        updateXYBounds(plotLayout, this.xMin, this.xMax, this.yMin, this.yMax, false, false);
+        pool.shutdown();
+        try {
+            if (pool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)) {
+                setColors(new PlotTrace.Numeric(this, Attribute.COLOR, "Density", kdes, 0, StatUtils.max(kdes)));
+                putRectangles(layout, this, createRectangles(this, kdes, xBins, xMin, yMin, cellWidth, cellHeight));
+                updateXYBounds(plotLayout, this.xMin, this.xMax, this.yMin, this.yMax, false, false);
+            } else {
+                System.err.println("2D KDE took longer than the maximum available time");
+            }
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static double euclideanDistance(double v1x, double v1y, double v2x, double v2y) {

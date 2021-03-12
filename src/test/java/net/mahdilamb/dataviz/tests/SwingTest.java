@@ -380,7 +380,6 @@ public class SwingTest {
                         new Scatter(df, x, y)
                                 .setSize(4)
                 )
-
                 .show()
         ;
     }
