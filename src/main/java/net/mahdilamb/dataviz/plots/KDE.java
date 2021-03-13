@@ -3,6 +3,7 @@ package net.mahdilamb.dataviz.plots;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
+import net.mahdilamb.dataviz.utils.Kernels;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 import net.mahdilamb.stats.BinWidthEstimator;
 import net.mahdilamb.stats.StatUtils;
@@ -16,7 +17,7 @@ import static net.mahdilamb.stats.ArrayUtils.linearlySpaced;
  */
 public final class KDE extends PlotData.DistributionData<KDE> {
     double[] binEdges;
-    DoubleUnaryOperator kernel = KDE::gaussian;
+    DoubleUnaryOperator kernel = Kernels::gaussian;
 
     /**
      * Create a histogram series from a dataframe
@@ -117,41 +118,5 @@ public final class KDE extends PlotData.DistributionData<KDE> {
         return this;
     }*/
 
-    private static final double GAUSS_DENOM = Math.sqrt(2 * Math.PI);
 
-    /**
-     * Gaussian kernel
-     *
-     * @param x the input value
-     * @return the value with a gaussian kernel applied
-     */
-    protected static double gaussian(double x) {
-        return Math.exp(-(x * x) * .5) / GAUSS_DENOM;
-    }
-
-    /**
-     * Box/tophat kernel
-     *
-     * @param x the value at x
-     * @return the value with the box kernel applied
-     */
-    protected static double box(double x) {
-        return Math.abs(x) <= 1 ? .5 : 0;
-    }
-
-    protected static double triangular(double x) {
-        return Math.abs(x) <= 1 ? (1 - Math.abs(x)) : 0;
-    }
-
-    protected static double exponential(double x) {
-        return 0.5 * Math.exp(-Math.abs(x));
-    }
-
-    protected static double trigonometric(double x) {
-        return Math.abs(x) <= .5 ? (1 + Math.cos(2 * Math.PI * x)) : 0;
-    }
-
-    protected static double epanechnikov(double x) {
-        return Math.abs(x) <= 1 ? (.75 * (1 - (x * x))) : 0;
-    }
 }

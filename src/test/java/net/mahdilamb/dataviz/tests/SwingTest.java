@@ -5,6 +5,7 @@ import net.mahdilamb.dataviz.Figure;
 import net.mahdilamb.dataviz.Theme;
 import net.mahdilamb.dataviz.graphics.FillMode;
 import net.mahdilamb.dataviz.plots.*;
+import net.mahdilamb.dataviz.utils.Kernels;
 import net.mahdilamb.stats.ArrayUtils;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -405,6 +406,7 @@ public class SwingTest {
 
     public static void main(String[] args) {
         density2d();
+
 
     }
 }

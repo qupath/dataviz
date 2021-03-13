@@ -18,4 +18,18 @@ public final class Functions {
         }
     };
 
+    /**
+     * Functional interface for a method that accepts 4 doubles and returns a double
+     */
+    @FunctionalInterface
+    public interface DoubleQuaternaryFunction {
+        /**
+         * @param a the first param
+         * @param b second param
+         * @param c third param
+         * @param d last param
+         * @return the result of applying the four parameters
+         */
+        double apply(double a, double b, double c, double d);
+    }
 }

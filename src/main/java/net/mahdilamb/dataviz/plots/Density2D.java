@@ -6,6 +6,9 @@ import net.mahdilamb.dataframe.utils.IntroSort;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
 import net.mahdilamb.dataviz.PlotTrace;
+import net.mahdilamb.dataviz.utils.DistanceMetrics;
+import net.mahdilamb.dataviz.utils.Functions;
+import net.mahdilamb.dataviz.utils.Kernels;
 import net.mahdilamb.stats.ArrayUtils;
 import net.mahdilamb.stats.StatUtils;
 
@@ -20,7 +23,8 @@ import static net.mahdilamb.dataviz.utils.Interpolations.lerp;
 public final class Density2D extends PlotData.DistributionData2D<Density2D> {
     int xBins = 50;
     int yBins = 50;
-    DoubleUnaryOperator kernel = KDE::gaussian;
+    DoubleUnaryOperator kernel = Kernels::gaussian;
+    Functions.DoubleQuaternaryFunction distanceMetric = DistanceMetrics::euclidean;
 
     public Density2D(DataFrame dataFrame, String x, String y) {
         super(dataFrame, x, y);
@@ -65,7 +69,7 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
                 double finalYCen = yCen;
                 final int l = j;
                 pool.submit(
-                        () -> kdes[l] = StatUtils.mean(i -> kernel.applyAsDouble(euclideanDistance(Density2D.this.x.get(i), Density2D.this.y.get(i), finalXCen, finalYCen) / h), Density2D.this.x.size()) / h2
+                        () -> kdes[l] = StatUtils.mean(i -> kernel.applyAsDouble(distanceMetric.apply(Density2D.this.x.get(i), Density2D.this.y.get(i), finalXCen, finalYCen) / h), Density2D.this.x.size()) / h2
                 );
                 ++j;
                 xCen += cellWidth;
@@ -84,11 +88,37 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 
-    private static double euclideanDistance(double v1x, double v1y, double v2x, double v2y) {
-        return Math.sqrt((v1x - v2x) * (v1x - v2x) + (v1y - v2y) * (v1y - v2y));
+    /**
+     * Set the distance metric to be used for computing the density
+     *
+     * @param distanceMetric the name of the distance metric (e.g. "euclid", "manhattan", "chebyshev", "cosine",
+     *                       "braycurtis"). The default is euclidean
+     * @return this 2d density plot
+     */
+    public Density2D setDistanceMetric(final String distanceMetric) {
+        this.distanceMetric = DistanceMetrics.getDistanceMetric(distanceMetric);
+        clear();
+        return this;
+    }
+
+    /**
+     * Set the kernel for calculating the 2D distance
+     *
+     * @param kernel the name of the kernel (e.g. "gaussian", "tophat", "trigonometric", "epanechnikov", "triangular",
+     *               "exponential"). The default is gaussian
+     * @return this 2d density plot
+     */
+    public Density2D setKernel(final String kernel) {
+        this.kernel = Kernels.getKernel(kernel);
+        clear();
+        return this;
+    }
+
+    @Override
+    protected int size() {
+        return xBins * yBins;
     }
 
     private static double quantile(DoubleArrayList values, int[] order, double quantile) {
@@ -111,10 +141,5 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
     static double bandwidthNRD(DoubleArrayList values, int[] order) {
         double h = (quantile(values, order, .75) - quantile(values, order, .25)) / 1.34;
         return Math.pow(4 * 1.06 * Math.min(Math.sqrt(StatUtils.variance(values::get, values.size())), h) * values.size(), -.2);
-    }
-
-    @Override
-    protected int size() {
-        return xBins * yBins;
     }
 }

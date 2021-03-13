@@ -6,6 +6,7 @@ import net.mahdilamb.dataframe.utils.IntroSort;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
 import net.mahdilamb.dataviz.PlotTrace;
+import net.mahdilamb.dataviz.utils.Kernels;
 import net.mahdilamb.stats.ArrayUtils;
 import net.mahdilamb.stats.StatUtils;
 
@@ -19,7 +20,7 @@ final class Contour extends PlotData.DistributionData2D<Contour> {
     int xBins = 500;
     int yBins = 500;
     double[][] densities;
-    DoubleUnaryOperator kernel = KDE::gaussian;
+    DoubleUnaryOperator kernel = Kernels::gaussian;
 
     public Contour(DataFrame dataFrame, String x, String y) {
         super(dataFrame, x, y);
