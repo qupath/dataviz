@@ -1,11 +1,10 @@
 package net.mahdilamb.dataviz.plots;
 
 import net.mahdilamb.dataframe.DataFrame;
-import net.mahdilamb.dataframe.utils.DoubleArrayList;
-import net.mahdilamb.dataframe.utils.IntroSort;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
 import net.mahdilamb.dataviz.PlotTrace;
+import net.mahdilamb.dataviz.utils.BandwidthEstimators;
 import net.mahdilamb.dataviz.utils.DistanceMetrics;
 import net.mahdilamb.dataviz.utils.Functions;
 import net.mahdilamb.dataviz.utils.Kernels;
@@ -16,15 +15,13 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.DoubleUnaryOperator;
-import java.util.function.IntToDoubleFunction;
-
-import static net.mahdilamb.dataviz.utils.Interpolations.lerp;
 
 public final class Density2D extends PlotData.DistributionData2D<Density2D> {
-    int xBins = 50;
-    int yBins = 50;
+    int xBins = 20;
+    int yBins = 20;
     DoubleUnaryOperator kernel = Kernels::gaussian;
     Functions.DoubleQuaternaryFunction distanceMetric = DistanceMetrics::euclidean;
+    double bandwidth = Double.NaN;
 
     public Density2D(DataFrame dataFrame, String x, String y) {
         super(dataFrame, x, y);
@@ -40,21 +37,19 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
     @Override
     protected void init(PlotLayout plotLayout) {
         int[] xOrder = ArrayUtils.intRange(x.size());
-        IntroSort.argSort(
-                xOrder,
-                x.size(),
-                (IntToDoubleFunction) i -> x.get(i),
-                true
-        );
 
         double xSD = StatUtils.standardDeviation(x::get, x.size());
         double ySD = StatUtils.standardDeviation(y::get, y.size());
-        double xMin = this.xMin - xSD;
-        double xMax = this.xMax + xSD;
-        double yMin = this.yMin - ySD;
-        double yMax = this.yMax + ySD;
-        double h = bandwidthNRD(x, xOrder);
-        double h2 = h * h;
+        double xMin = this.xMin;
+        double xMax = this.xMax;
+        double yMin = this.yMin;
+        double yMax = this.yMax;
+        if (Double.isNaN(bandwidth)) {
+            bandwidth = BandwidthEstimators.silvermansRule(x, xOrder) / 4;
+        }
+        // xBins = (int) (xMax -xMin)*10;
+        //  yBins = (int) (yMax -yMin)*10;
+        double h2 = bandwidth * bandwidth;
         double cellWidth = (xMax - xMin) / xBins;
         double cellHeight = (yMax - yMin) / yBins;
         double yCen = yMin + cellHeight * .5;
@@ -69,7 +64,7 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
                 double finalYCen = yCen;
                 final int l = j;
                 pool.submit(
-                        () -> kdes[l] = StatUtils.mean(i -> kernel.applyAsDouble(distanceMetric.apply(Density2D.this.x.get(i), Density2D.this.y.get(i), finalXCen, finalYCen) / h), Density2D.this.x.size()) / h2
+                        () -> kdes[l] = StatUtils.mean(i -> kernel.applyAsDouble(distanceMetric.apply(Density2D.this.x.get(i), Density2D.this.y.get(i), finalXCen, finalYCen) / bandwidth), Density2D.this.x.size()) / h2
                 );
                 ++j;
                 xCen += cellWidth;
@@ -116,30 +111,21 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
         return this;
     }
 
+    public Density2D setXBins(int bins) {
+        this.xBins = bins;
+        clear();
+        return this;
+    }
+
+    public Density2D setYBins(int bins) {
+        this.yBins = bins;
+        clear();
+        return this;
+    }
+
     @Override
     protected int size() {
         return xBins * yBins;
     }
 
-    private static double quantile(DoubleArrayList values, int[] order, double quantile) {
-        double pos = quantile * values.size();
-        int p = (int) pos;
-        if (pos != p) {
-            return lerp(values.get(order[p]), values.get(order[p + 1]), pos - p);
-        } else {
-            return values.get(order[p]);
-        }
-    }
-
-    /**
-     * Adapted from https://stat.ethz.ch/R-manual/R-devel/library/MASS/html/bandwidth.nrd.html
-     *
-     * @param values the values to get the bandwidth of
-     * @param order  the sort order of the values
-     * @return the default bandwidth
-     */
-    static double bandwidthNRD(DoubleArrayList values, int[] order) {
-        double h = (quantile(values, order, .75) - quantile(values, order, .25)) / 1.34;
-        return Math.pow(4 * 1.06 * Math.min(Math.sqrt(StatUtils.variance(values::get, values.size())), h) * values.size(), -.2);
-    }
 }

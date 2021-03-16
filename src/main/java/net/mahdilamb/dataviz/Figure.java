@@ -155,7 +155,7 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
      * @return this figure
      */
     @SafeVarargs
-    public final <T extends PlotData<T>> Figure addTraces(T... traces) {
+    public final <T extends PlotData<?>> Figure addTraces(T... traces) {
         for (final PlotData<?> t : traces) {
             addTrace(t);
         }

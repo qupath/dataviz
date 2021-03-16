@@ -3,21 +3,23 @@ package net.mahdilamb.dataviz.plots;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
+import net.mahdilamb.dataviz.utils.BandwidthEstimators;
 import net.mahdilamb.dataviz.utils.Kernels;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
-import net.mahdilamb.stats.BinWidthEstimator;
 import net.mahdilamb.stats.StatUtils;
 
 import java.util.function.DoubleUnaryOperator;
 
+import static net.mahdilamb.stats.ArrayUtils.intRange;
 import static net.mahdilamb.stats.ArrayUtils.linearlySpaced;
 
 /**
  * KDE plot
  */
 public final class KDE extends PlotData.DistributionData<KDE> {
-    double[] binEdges;
     DoubleUnaryOperator kernel = Kernels::gaussian;
+    double bandwidth = Double.NaN;
+    int[] order;
 
     /**
      * Create a histogram series from a dataframe
@@ -51,28 +53,22 @@ public final class KDE extends PlotData.DistributionData<KDE> {
 
     @Override
     protected void init(PlotLayout plotLayout) {
-        net.mahdilamb.stats.Histogram histogram;
-        if (binEdges == null) {
-            histogram = StatUtils.histogram(BinWidthEstimator.NUMPY_AUTO, values);
-        } else {
-            histogram = StatUtils.histogram(binEdges, values);
-        }
 
-        double stDev = StatUtils.NaNStandardDeviation(values);
+        double stDev = StatUtils.NaNStandardDeviation(values::get, values.size());
         double max = getMax() + stDev;
         double min = getMin() - stDev;
         final double[] xs = linearlySpaced(min, max, 1000);
         final double[] ys = new double[xs.length];
-        double n = StatUtils.NaNCount(values);
-        double bandwidth = 1.05 * stDev * Math.pow(n, (-.2));
-
-        for (int i = 0; i < xs.length; ++i) {
-            ys[i] = kde(xs[i], values, bandwidth, kernel);
+        double n = StatUtils.NaNCount(values::get, values.size());
+        if (Double.isNaN(bandwidth)) {
+            bandwidth = BandwidthEstimators.scottsRule(values, getOrder());
         }
-        final double binWidth = (histogram.getBinEdges()[histogram.getCount().length] - histogram.getBinEdges()[0]) / histogram.getCount().length;
+        for (int i = 0; i < xs.length; ++i) {
+            ys[i] = kde(xs[i], values.toArray(), bandwidth, kernel);
+        }
         final double denom;
         if (plotLayout.getYAxis().getTitle() != DENSITY_LABEL) {
-            denom = 1. / binWidth / n;
+            denom = 1. / bandwidth / n;
             for (int i = 0; i < xs.length; ++i) {
                 ys[i] /= denom;
             }
@@ -90,33 +86,37 @@ public final class KDE extends PlotData.DistributionData<KDE> {
                 true
         );
     }
-    /*
-    public KDE setKernel(final String name) {
-        switch (name.toLowerCase()) {
-            case "gauss":
-            case "gaussian":
-            case "normal":
-                kernel = KDE::gaussian;
-                break;
-            case "tophat":
-            case "box":
-                kernel = KDE::box;
-                break;
-            case "cos":
-            case "cosine":
-                kernel = KDE::trigonometric;
-                break;
-            case "epanechnikov":
-                kernel = KDE::epanechnikov;
-                break;
-            case "triangular":
-                kernel = KDE::triangular;
-                break;
-            default:
-                throw new UnsupportedOperationException("Could not find a kernel called " + name);
+
+    private int[] getOrder() {
+        if (order == null) {
+            order = intRange(values.size());
         }
+        return order;
+    }
+
+    public KDE setKernel(final String name) {
+        this.kernel = Kernels.getKernel(name);
+        clear();
         return this;
-    }*/
+    }
+
+    /**
+     * Set the bandwidth using a nonparametric estimator (e.g. "scott" or "silverman")
+     *
+     * @param name the band width estimator
+     * @return this KDE plot
+     */
+    public KDE setBandwidth(final String name) {
+        bandwidth = BandwidthEstimators.getEstimator(name).apply(values, getOrder());
+        clear();
+        return this;
+    }
+
+    public KDE setBandwidth(double value) {
+        this.bandwidth = value;
+        clear();
+        return this;
+    }
 
 
 }

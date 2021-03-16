@@ -1,14 +1,17 @@
 package net.mahdilamb.dataviz.tests;
 
 import net.mahdilamb.dataframe.DataFrame;
+import net.mahdilamb.dataframe.DoubleSeries;
 import net.mahdilamb.dataviz.Figure;
 import net.mahdilamb.dataviz.Theme;
 import net.mahdilamb.dataviz.graphics.FillMode;
 import net.mahdilamb.dataviz.plots.*;
-import net.mahdilamb.dataviz.utils.Kernels;
 import net.mahdilamb.stats.ArrayUtils;
+import net.mahdilamb.stats.StatUtils;
 
+import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.IntToDoubleFunction;
 
 import static net.mahdilamb.dataviz.SeriesTests.loadDataFromResource;
 import static net.mahdilamb.dataviz.TrendlinesExperimental.linear;
@@ -346,8 +349,6 @@ public class SwingTest {
                 .getFigure()
                 .addTraces(
                         new KDE(iris, "petal_length")
-
-
                 )
                 .show();
     }
@@ -376,6 +377,8 @@ public class SwingTest {
         final String x = "total_bill";
         final String y = "tip";
         new Density2D(df, x, y)
+                .setXBins(50)
+                .setYBins(50)
                 .getFigure()
                 .addTrace(
                         new Scatter(df, x, y)
@@ -404,9 +407,75 @@ public class SwingTest {
                 .show();
     }
 
-    public static void main(String[] args) {
-        density2d();
+    static double scottFactor(double n) {
+        return Math.pow(n, -1. / 6);
+    }
 
+    static double silvermanFactor(double n) {
+        return Math.pow(n * 1.5, -1. / 6.);
+    }
+
+    static double determinant(double m00, double m01, double m10, double m11) {
+        return m00 * m11 - m01 * m10;
+    }
+
+    static double determinant(double[][] z) {
+        return determinant(z[0][0], z[0][1], z[1][0], z[1][1]);
+    }
+
+    static double[][] inverse(double[][] mat) {
+        double det = determinant(mat);
+        return new double[][]{
+                new double[]{mat[1][1] / det, -mat[0][1] / det},
+                new double[]{-mat[1][0] / det, mat[0][0] / det}
+        };
+    }
+
+    static double[][] covariance(IntToDoubleFunction x, IntToDoubleFunction y, int size) {
+        double xBar = StatUtils.mean(x, size);
+        double yBar = StatUtils.mean(y, size);
+        double xx = StatUtils.sum(i -> (x.applyAsDouble(i) - xBar) * (x.applyAsDouble(i) - xBar), size) / (size - 1);
+        double yy = StatUtils.sum(i -> (y.applyAsDouble(i) - yBar) * (y.applyAsDouble(i) - yBar), size) / (size - 1);
+        double xy = StatUtils.sum(i -> (x.applyAsDouble(i) - xBar) * (y.applyAsDouble(i) - yBar), size) / (size - 1);
+        return new double[][]{
+                new double[]{xx, xy},
+                new double[]{xy, yy}
+        };
+    }
+
+    public static void main(String[] args) {
+        //density2d();
+      /*  */DataFrame df = loadDataFromResource("tips.csv");
+        final DoubleSeries x = df.getDoubleSeries("total_bill");
+        final DoubleSeries y = df.getDoubleSeries("tip");
+        new Histogram2D(df, "total_bill", "tip")
+                .getFigure()
+                .addTrace(new Scatter(df, "total_bill", "tip"))
+                .show();
+        int n = x.size();
+        int xBins = 20;
+        int yBins = 20;
+
+        /*double factor = scottFactor(n);
+        double[][] dataCovariance = covariance(x::get, y::get, n);
+        double[][] dataInvCovariance = inverse(dataCovariance);
+        double[][] covariance = dataCovariance.clone();
+        for (int i = 0; i < covariance.length; ++i) {
+            for (int j = 0; j < covariance[i].length; ++j) {
+                covariance[i][j] *= factor * factor;
+            }
+        }
+        double[][] invCovariance = dataInvCovariance.clone();
+        for (int i = 0; i < invCovariance.length; ++i) {
+            for (int j = 0; j < invCovariance[i].length; ++j) {
+                invCovariance[i][j] /= factor * factor;
+            }
+        }
+        double normFactor = Math.sqrt(determinant(2 * Math.PI * covariance[0][0], 2 * Math.PI * covariance[0][1], 2 * Math.PI * covariance[1][0], 2 * Math.PI * covariance[1][1])) * n;
+
+
+
+        System.out.println(factor);*/
 
     }
 }

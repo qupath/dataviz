@@ -120,7 +120,6 @@ final class Markers {
                 canvas.lineTo(x + r, y + r);
                 canvas.moveTo(x + r, y - r);
                 canvas.lineTo(x - r, y + r);
-
                 canvas.stroke();
                 return;
             case HORIZONTAL_LINE:

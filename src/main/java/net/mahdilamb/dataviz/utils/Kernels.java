@@ -1,10 +1,14 @@
 package net.mahdilamb.dataviz.utils;
 
+import java.util.List;
 import java.util.function.DoubleUnaryOperator;
 
 public final class Kernels {
     private Kernels() {
     }
+
+    public static final List<String> AVAILABLE_KERNELS = List.of("gaussian", "tophat", "triangular", "exponential",
+            "trigonometric", "epanechnikov", "quartic", "triweight", "tricube", "cosine", "logistic", "sigmoid", "silverman");
 
     private static final double GAUSS_DENOM = Math.sqrt(2 * Math.PI);
 
@@ -148,6 +152,7 @@ public final class Kernels {
     }
 
     private static final double ROOT_2 = Math.sqrt(2.);
+
     /**
      * Apply the Silverman  kernel to a normalized value
      *
@@ -191,6 +196,7 @@ public final class Kernels {
             case "triweight":
                 return Kernels::triweight;
             case "tricube":
+            case "tricubic":
                 return Kernels::tricube;
             case "cosine":
             case "cos":

@@ -60,7 +60,6 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         protected double xMin, xMax, yMin, yMax;
 
         protected FillMode fillMode = FillMode.NONE;
-        protected Color fillColor;
 
         protected String xLab = EMPTY_STRING, yLab = EMPTY_STRING;
         protected String[] xLabels;
@@ -379,12 +378,13 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
 
         @Override
-        protected void clear() {
+        @SuppressWarnings("unchecked")
+        protected O clear() {
             if (layout != null) {
                 layout.clear(this);
                 init(layout);
             }
-
+            return (O )this;
         }
 
         protected static double[] toArray(final DataFrame dataFrame, final String seriesName) {
@@ -468,11 +468,6 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         @Override
         protected int size() {
             return categories.size();
-        }
-
-        @Override
-        protected void clear() {
-
         }
 
         @Override
@@ -611,6 +606,9 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     BooleanArrayList selected = null;
 
     Colormap colormap;
+
+    protected Color fillColor;
+
 
     protected Stroke lineStroke;
     protected Color lineColor;
@@ -971,7 +969,10 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     /**
      * Clear the currently associated shapes
      */
-    protected abstract void clear();
+    @SuppressWarnings("unchecked")
+    protected O clear(){
+        return (O) this;
+    }
 
     /**
      * Performed actions when the data is added to a layout
@@ -1046,7 +1047,8 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
 
     }
-    protected static  void updateXYBounds(PlotLayout plotLayout, RTree<Runnable> rectangles, boolean xUseNice, boolean yUseNice) {
+
+    protected static void updateXYBounds(PlotLayout plotLayout, RTree<Runnable> rectangles, boolean xUseNice, boolean yUseNice) {
         plotLayout.getXAxis().dataLower = Math.min(plotLayout.getXAxis().dataLower, rectangles.getMinX());
         plotLayout.getYAxis().dataLower = Math.min(plotLayout.getYAxis().dataLower, rectangles.getMinY());
         plotLayout.getXAxis().dataUpper = Math.max(plotLayout.getXAxis().dataUpper, rectangles.getMaxX());
@@ -1054,6 +1056,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         plotLayout.getXAxis().reset(xUseNice);
         plotLayout.getYAxis().reset(yUseNice);
     }
+
     /**
      * @param trace the trace
      * @return the categories from a trace
@@ -1099,7 +1102,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
     }
 
     public static abstract class DistributionData<O extends DistributionData<O>> extends PlotData<O> {
-        protected double[] values;
+        protected DoubleArrayList values;
         protected double valMin, valMax;
         protected String yLabel = COUNT_LABEL;
         String xLabel;
@@ -1117,14 +1120,14 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
 
         protected void init(double[] values) {
-            this.values = values;
+            this.values = new DoubleArrayList(values);
             valMin = StatUtils.NaNMin(values);
             valMax = StatUtils.NaNMax(values);
         }
 
         @Override
         protected int size() {
-            return values.length;
+            return values.size();
         }
 
         public double getMin() {
@@ -1136,8 +1139,9 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         }
 
         @Override
-        protected void clear() {
-
+        @SuppressWarnings("unchecked")
+        protected O clear() {
+return (O)this;
         }
 
 
@@ -1197,7 +1201,7 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
             //formatters.put("ybin", i->String.format("%s",getYEdges()[i%(getXEdges().length)]));
             //formatters.put("y", this.y::get);
-            formatters.put("count", i -> (int)this.getCounts()[i]);
+            formatters.put("count", i -> (int) this.getCounts()[i]);
             hoverFormatter = new HoverText<>((O) this, formatters);
 
             //hoverFormatter.add("(%{x:s}, %{y:s})");
@@ -1210,11 +1214,6 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
         @Override
         protected int size() {
             return getCounts().length;
-        }
-
-        @Override
-        protected void clear() {
-
         }
 
         protected double[] getXEdges() {
@@ -1235,17 +1234,19 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         double[] getCounts() {
             if (count == null) {
-                count = new double[getXEdges().length * getYEdges().length];
+                int xBins = getXEdges().length;
+                int yBins = getYEdges().length;
+                double xMin = xEdges[0],
+                        xMax = xEdges[xEdges.length - 1],
+                        yMin = yEdges[0],
+                        yMax = yEdges[yEdges.length - 1];
+                double dx = (xMax - xMin) / (xBins - 1),
+                        dy = (yMax - yMin) / (yBins - 1);
+                count = new double[xBins * yBins];
                 for (int i = 0; i < x.size(); ++i) {
-                    int xi = ArrayUtils.bisectRight(x.get(i), getXEdges())- 1;
-                    if (x.get(i) == getXEdges()[getXEdges().length - 1]) {
-                        --xi;
-                    }
-                    int yi = ArrayUtils.bisectRight(y.get(i), getYEdges())- 1;
-                    if (y.get(i) == getYEdges()[getYEdges().length - 1]) {
-                        --yi;
-                    }
-                    ++count[(xi ) * getXEdges().length + (yi )];
+                    int _x = (int) ((x.get(i) - xMin) / dx);
+                    int _y = (int) ((y.get(i) - yMin) / dy);
+                    ++count[_x * yBins + _y];
                 }
             }
             return count;
@@ -1268,8 +1269,8 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
 
         protected static RTree<Runnable> createRectangles(DistributionData2D<?> density2D, double[] densities, int width, double xMin, double yMin, double w, double h) {
             final RTree<Runnable> rectangles = new RTree<>();
-            int height = densities.length/ width;
-            PlotShape.Rectangle[] rs = new PlotShape.Rectangle[densities.length ];
+            int height = densities.length / width;
+            PlotShape.Rectangle[] rs = new PlotShape.Rectangle[densities.length];
             for (int y = 0, i = 0; y < height; ++y) {
                 for (int x = 0; x < width; ++x) {
                     rs[i] = new PlotShape.Rectangle(density2D, i, xMin + x * w, yMin + y * h, w, h);
@@ -1292,6 +1293,8 @@ public abstract class PlotData<O extends PlotData<O>> implements FigureComponent
             }
             return polygons;
         }
+
+
     }
 
     Stroke getLineStroke() {

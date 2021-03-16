@@ -1,9 +1,13 @@
 package net.mahdilamb.dataviz.utils;
 
+import java.util.List;
+
 /**
  * 2D distance spatial metrics
  */
 public final class DistanceMetrics {
+    public static final List<String> AVAILABLE_METRICS = List.of("euclidean", "manhattan", "chebyshev", "cosine", "canberra", "braycurtis");
+
     private DistanceMetrics() {
     }
 

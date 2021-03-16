@@ -11,11 +11,6 @@ public final class Table extends PlotData.TabularData<Table> {
     }
 
     @Override
-    protected void clear() {
-
-    }
-
-    @Override
     protected void init(PlotLayout plotLayout) {
 
     }

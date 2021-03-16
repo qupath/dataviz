@@ -52,10 +52,11 @@ public final class Histogram extends PlotData.DistributionData<Histogram> {
     @Override
     protected void init(PlotLayout plotLayout) {
         net.mahdilamb.stats.Histogram histogram;
+        //TODO new histogram method that is function
         if (binEdges == null) {
-            histogram = StatUtils.histogram(BinWidthEstimator.NUMPY_AUTO, values);
+            histogram = StatUtils.histogram(BinWidthEstimator.NUMPY_AUTO, values.toArray());
         } else {
-            histogram = StatUtils.histogram(binEdges, values);
+            histogram = StatUtils.histogram(binEdges, values.toArray());
         }
 
 

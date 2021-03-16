@@ -7,6 +7,7 @@ import net.mahdilamb.dataviz.utils.rtree.Node2D;
 import net.mahdilamb.dataviz.utils.rtree.PointNode;
 import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
 
+import java.util.Arrays;
 import java.util.Comparator;
 
 import static net.mahdilamb.dataviz.utils.Functions.EMPTY_RUNNABLE;
@@ -47,7 +48,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
         return parent.isVisible(i);
     }
 
-    protected static final class Polygon extends PlotShape {
+    protected static class Polygon extends PlotShape {
 
 
         protected static final class PlotPoint extends PointNode<Runnable> {
@@ -70,12 +71,12 @@ public abstract class PlotShape extends Node2D<Runnable> {
         IntArrayList ids;
         PlotPoint[] points;
 
-        protected Polygon(PlotData.RelationalData<?> parent, IntArrayList ids, Runnable data) {
+        protected Polygon(PlotData<?> parent, IntArrayList ids, Runnable data) {
             super(parent, ids.size() == 0 ? -1 : ids.get(0), data);
             this.ids = ids;
         }
 
-        public Polygon(PlotData.DistributionData2D<?> parent, int i, PlotPoint[] points) {
+        public Polygon(PlotData<?> parent, int i, PlotPoint[] points) {
             super(parent, i, EMPTY_RUNNABLE);
             this.points = points;
             for (PlotPoint p : points) {
@@ -86,7 +87,7 @@ public abstract class PlotShape extends Node2D<Runnable> {
             }
         }
 
-        protected Polygon(PlotData.RelationalData<?> parent, IntArrayList ids) {
+        protected Polygon(PlotData<?> parent, IntArrayList ids) {
             this(parent, ids, EMPTY_RUNNABLE);
         }
 
@@ -145,8 +146,33 @@ public abstract class PlotShape extends Node2D<Runnable> {
 
         @Override
         public String toString() {
-            return String.format("Polygon {min=%s,%s, min=%s,%s, n=%s}", getMinX(), getMinY(), getMaxX(), getMaxY(), ids == null?"null":ids.size() + 1);
+            return String.format("Polygon {min=%s,%s, min=%s,%s, n=%s}", getMinX(), getMinY(), getMaxX(), getMaxY(), ids == null ? "null" : ids.size() + 1);
         }
+    }
+
+    protected static final class RegularPolygon extends Polygon {
+
+        public RegularPolygon(PlotData<?> parent, int i, int numVertices, double x, double y, double radius, double startingAngle) {
+            super(parent, i, createVertices(numVertices, x, y, radius, startingAngle));
+            System.out.println(Arrays.toString(getPoints()));
+        }
+
+        static PlotPoint[] createVertices(int numVertices, double x, double y, double radius, double startingAngle) {
+            double rad = Math.PI / (numVertices * .5);
+            PlotPoint[] points = new PlotPoint[numVertices];
+            for (int i = 0; i < numVertices; i++) {
+                double angleRad = startingAngle + i * rad;
+                double ca = Math.cos(angleRad);
+                double sa = Math.sin(angleRad);
+                double relX = ca;
+                double relY = sa;
+                relX *= radius;
+                relY *= radius;
+                points[i] = new PlotPoint(x + relX, y + relY);
+            }
+            return points;
+        }
+
     }
 
     protected static final class PolyLine extends PlotShape {
