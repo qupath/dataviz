@@ -11,7 +11,7 @@ import net.mahdilamb.dataframe.utils.GroupBy;
 import net.mahdilamb.dataframe.utils.IntArrayList;
 import net.mahdilamb.dataviz.graphics.ChartCanvas;
 import net.mahdilamb.dataviz.graphics.FillMode;
-import net.mahdilamb.dataviz.graphics.MarkerShape;
+import net.mahdilamb.dataviz.graphics.shapes.MarkerShape;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.plots.DataFrameOnlyOperationException;
 import net.mahdilamb.dataviz.plots.Scatter;

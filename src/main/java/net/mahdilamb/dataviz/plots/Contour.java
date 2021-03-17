@@ -38,7 +38,6 @@ final class Contour extends PlotData.DistributionData2D<Contour> {
         int[] xOrder = ArrayUtils.intRange(x.size());
         IntroSort.argSort(
                 xOrder,
-                x.size(),
                 (IntToDoubleFunction) i -> x.get(i),
                 true
         );

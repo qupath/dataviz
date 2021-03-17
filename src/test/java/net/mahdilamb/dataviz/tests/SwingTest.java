@@ -7,6 +7,7 @@ import net.mahdilamb.dataviz.Theme;
 import net.mahdilamb.dataviz.graphics.FillMode;
 import net.mahdilamb.dataviz.plots.*;
 import net.mahdilamb.stats.ArrayUtils;
+import net.mahdilamb.stats.RankMethod;
 import net.mahdilamb.stats.StatUtils;
 
 import java.util.Arrays;
@@ -175,7 +176,7 @@ public class SwingTest {
                 .setColors(ArrayUtils.full(ThreadLocalRandom.current()::nextGaussian, N))
                 .setColormap("viridis")
                 .setSize(8)
-                .showEdges(true)
+                .showEdge(true)
                 .show();
     }
 
@@ -362,7 +363,7 @@ public class SwingTest {
                 .addTrace(
                         new Scatter(tips, "total_bill", "tip")
                                 .setSize(4)
-                                .showEdges(true)
+                                .showEdge(true)
                 )
                 .show();
     }
@@ -407,14 +408,6 @@ public class SwingTest {
                 .show();
     }
 
-    static double scottFactor(double n) {
-        return Math.pow(n, -1. / 6);
-    }
-
-    static double silvermanFactor(double n) {
-        return Math.pow(n * 1.5, -1. / 6.);
-    }
-
     static double determinant(double m00, double m01, double m10, double m11) {
         return m00 * m11 - m01 * m10;
     }
@@ -445,37 +438,16 @@ public class SwingTest {
 
     public static void main(String[] args) {
         //density2d();
-      /*  */DataFrame df = loadDataFromResource("tips.csv");
-        final DoubleSeries x = df.getDoubleSeries("total_bill");
-        final DoubleSeries y = df.getDoubleSeries("tip");
-        new Histogram2D(df, "total_bill", "tip")
+        DataFrame df = loadDataFromResource("tips.csv");
+        final Scatter s = new Scatter(df, "total_bill", "tip")
+                .setSize(4)
+                .showEdge(true);
+        new Density2D(df, "total_bill", "tip")
+                .setXBins(50)
+                .setYBins(50)
                 .getFigure()
-                .addTrace(new Scatter(df, "total_bill", "tip"))
+                .addTrace(s)
                 .show();
-        int n = x.size();
-        int xBins = 20;
-        int yBins = 20;
-
-        /*double factor = scottFactor(n);
-        double[][] dataCovariance = covariance(x::get, y::get, n);
-        double[][] dataInvCovariance = inverse(dataCovariance);
-        double[][] covariance = dataCovariance.clone();
-        for (int i = 0; i < covariance.length; ++i) {
-            for (int j = 0; j < covariance[i].length; ++j) {
-                covariance[i][j] *= factor * factor;
-            }
-        }
-        double[][] invCovariance = dataInvCovariance.clone();
-        for (int i = 0; i < invCovariance.length; ++i) {
-            for (int j = 0; j < invCovariance[i].length; ++j) {
-                invCovariance[i][j] /= factor * factor;
-            }
-        }
-        double normFactor = Math.sqrt(determinant(2 * Math.PI * covariance[0][0], 2 * Math.PI * covariance[0][1], 2 * Math.PI * covariance[1][0], 2 * Math.PI * covariance[1][1])) * n;
-
-
-
-        System.out.println(factor);*/
 
     }
 }

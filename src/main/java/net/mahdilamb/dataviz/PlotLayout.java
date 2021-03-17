@@ -85,7 +85,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         canvas.setFill(trace.fillColor);
                     }
                 }
-                @SuppressWarnings("unchecked") final Set<PlotShape.Polygon> foundPolygons = (Set<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(new TreeSet<>(PlotShape.ORDER_COMPARATOR), minX, minY, maxX, maxY);
+                @SuppressWarnings("unchecked") final List<PlotShape.Polygon> foundPolygons = (List<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search( minX, minY, maxX, maxY);
                 for (final PlotShape.Polygon n : foundPolygons) {
                     fillPolygon(canvas, n);
                 }

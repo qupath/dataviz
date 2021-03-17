@@ -62,7 +62,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             final Graphics2D g = (Graphics2D) getGraphics();
 
             if (hoverText != null) {
-                if (hoverText.hasChanges()){
+                if (hoverText.hasChanges()) {
                     g.drawImage(getCurrentState(), 0, 0, null);
                     double y = hoverText.getY() - g.getFontMetrics().getHeight() * .5;
                     double x = hoverText.getX();
@@ -81,7 +81,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
                     g.drawString(line, SwingUtils.convert(x), SwingUtils.convert(y + g.getFontMetrics().getAscent()));
                     markTooltipOld(panel.renderer);
                 }
-            }else {
+            } else {
                 g.drawImage(getCurrentState(), 0, 0, null);
                 resetTooltip(panel.renderer);
 
@@ -312,7 +312,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             queue.add(g -> {
                 this.currentFill.setToB(gradient);
                 g.setPaint(convert(gradient));
-
                 usingFill = true;
             });
         }
@@ -330,7 +329,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         @Override
         public void setStroke(net.mahdilamb.colormap.Color color) {
             if (color == null) {
-                System.out.println(color);
+                System.err.println(color);
             }
             queue.add(g -> {
                 this.currentStrokeColor = color;

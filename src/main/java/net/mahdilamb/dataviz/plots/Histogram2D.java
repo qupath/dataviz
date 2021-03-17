@@ -12,12 +12,12 @@ public final class Histogram2D extends PlotData.DistributionData2D<Histogram2D> 
     }
 
     public Histogram2D setXBins(int bins) {
-        this.xEdges = ArrayUtils.linearlySpaced(xMin, xMax, bins + 1);
+        this.xEdges = ArrayUtils.linearlySpaced(xMin, xMax, bins);
         return clear();
     }
 
     public Histogram2D setYBins(int bins) {
-        this.yEdges = ArrayUtils.linearlySpaced(yMin, yMax, bins + 1);
+        this.yEdges = ArrayUtils.linearlySpaced(yMin, yMax, bins);
         return clear();
     }
 

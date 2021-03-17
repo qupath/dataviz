@@ -1,7 +1,6 @@
 package net.mahdilamb.dataviz.graphics.shapes;
 
 import net.mahdilamb.dataviz.graphics.ChartCanvas;
-import net.mahdilamb.dataviz.graphics.MarkerShape;
 
 /**
  * Marker shape
@@ -22,12 +21,12 @@ public class Marker implements Shape {
 
     @Override
     public void fill(ChartCanvas<?> canvas) {
-        Markers.fill(canvas, x, y, size, shape);
+        shape.fill.paint(canvas, x, y, size);
     }
 
     @Override
     public void stroke(ChartCanvas<?> canvas) {
-        Markers.stroke(canvas, x, y, size, shape);
+        shape.stroke.paint(canvas, x, y, size);
     }
 
     @Override

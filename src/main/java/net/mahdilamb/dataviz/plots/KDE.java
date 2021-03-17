@@ -35,14 +35,14 @@ public final class KDE extends PlotData.DistributionData<KDE> {
         super(values);
     }
 
-    private static double kde(double x, double[] values, double bandwidth, DoubleUnaryOperator kernel) {
+    static double kde(double x, double[] values, double bandwidth, DoubleUnaryOperator kernel) {
         if (values.length == 0) {
             return 0;
         }
         double res = 0;
         int j = 0;
         for (double value : values) {
-            if (Double.isNaN(value)) {
+            if (!Double.isFinite(value)) {
                 continue;
             }
             res += kernel.applyAsDouble((x - value) / bandwidth);

@@ -160,7 +160,7 @@ public class SplineInterpolation {
             return;
         }
         int[] order = ArrayUtils.intRange(points.size());
-        IntroSort.argSort(order, points.size(), (IntToDoubleFunction) i -> points.get(i).getX(), true);
+        IntroSort.argSort(order, (IntToDoubleFunction) i -> points.get(i).getX(), true);
         double[] dxs = new double[order.length - 1],
                 ms = new double[dxs.length];
         for (int i = 0; i < dxs.length; i++) {

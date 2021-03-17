@@ -10,7 +10,7 @@ import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
 import net.mahdilamb.dataviz.PlotTrace;
 import net.mahdilamb.dataviz.graphics.FillMode;
-import net.mahdilamb.dataviz.graphics.MarkerShape;
+import net.mahdilamb.dataviz.graphics.shapes.MarkerShape;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.utils.StringUtils;
 import net.mahdilamb.dataviz.utils.VarArgsUtils;
@@ -333,7 +333,7 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
      * @param showEdge whether to show marker edges or not
      * @return this scatter series
      */
-    public Scatter showEdges(boolean showEdge) {
+    public Scatter showEdge(boolean showEdge) {
         this.showEdge = showEdge;//TODO update
         return this;
     }

@@ -38,10 +38,9 @@ dependencies {
     testCompile("junit:junit:4.13")
     compile 'net.mahdilamb:utils-tuples:0.3.1'
     compile 'net.mahdilamb:colormap:0.9.49-SNAPSHOT'
-    compile 'net.mahdilamb:dataframe:0.2.0'
-    implementation group: 'org.locationtech.jts', name: 'jts-core', version: '1.18.1'
+    //compile 'net.mahdilamb:dataframe:0.2.0'
 
-    //compile project(":dataframe")
+    compile project(":dataframe")
 }
 
 test {

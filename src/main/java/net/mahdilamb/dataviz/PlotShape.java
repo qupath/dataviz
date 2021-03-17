@@ -2,7 +2,7 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataframe.utils.IntArrayList;
-import net.mahdilamb.dataviz.graphics.MarkerShape;
+import net.mahdilamb.dataviz.graphics.shapes.MarkerShape;
 import net.mahdilamb.dataviz.utils.rtree.Node2D;
 import net.mahdilamb.dataviz.utils.rtree.PointNode;
 import net.mahdilamb.dataviz.utils.rtree.RectangularNode;

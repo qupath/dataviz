@@ -3,6 +3,7 @@ package net.mahdilamb.dataviz;
 import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataviz.graphics.*;
 import net.mahdilamb.dataviz.graphics.shapes.Marker;
+import net.mahdilamb.dataviz.graphics.shapes.MarkerShape;
 import net.mahdilamb.dataviz.plots.Scatter;
 import net.mahdilamb.dataviz.plots.ScatterMode;
 

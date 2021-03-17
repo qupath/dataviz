@@ -15,7 +15,7 @@ public final class DistanceMetrics {
      * @param name the name of distance metric
      * @return a distance metric by its name
      */
-    public static Functions.DoubleQuaternaryFunction getDistanceMetric(final String name) {
+    public static Functions.DoubleQuaternaryFunction getDistanceMetric2D(final String name) {
         switch (name.toLowerCase()) {
             case "euclid":
             case "euclidean":

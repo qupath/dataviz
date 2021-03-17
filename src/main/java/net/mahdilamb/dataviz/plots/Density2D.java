@@ -37,19 +37,17 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
     @Override
     protected void init(PlotLayout plotLayout) {
         int[] xOrder = ArrayUtils.intRange(x.size());
+        int[] yOrder = ArrayUtils.intRange(y.size());
 
-        double xSD = StatUtils.standardDeviation(x::get, x.size());
-        double ySD = StatUtils.standardDeviation(y::get, y.size());
         double xMin = this.xMin;
         double xMax = this.xMax;
         double yMin = this.yMin;
         double yMax = this.yMax;
         if (Double.isNaN(bandwidth)) {
-            bandwidth = BandwidthEstimators.silvermansRule(x, xOrder) / 4;
+            bandwidth = Math.sqrt(BandwidthEstimators.silvermansRule(x, xOrder) * BandwidthEstimators.silvermansRule(y, yOrder));
         }
-        // xBins = (int) (xMax -xMin)*10;
-        //  yBins = (int) (yMax -yMin)*10;
         double h2 = bandwidth * bandwidth;
+
         double cellWidth = (xMax - xMin) / xBins;
         double cellHeight = (yMax - yMin) / yBins;
         double yCen = yMin + cellHeight * .5;
@@ -93,7 +91,7 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
      * @return this 2d density plot
      */
     public Density2D setDistanceMetric(final String distanceMetric) {
-        this.distanceMetric = DistanceMetrics.getDistanceMetric(distanceMetric);
+        this.distanceMetric = DistanceMetrics.getDistanceMetric2D(distanceMetric);
         clear();
         return this;
     }

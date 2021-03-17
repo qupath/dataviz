@@ -1,6 +1,6 @@
 package net.mahdilamb.dataviz.tests;
 
-import net.mahdilamb.dataviz.graphics.MarkerShape;
+import net.mahdilamb.dataviz.graphics.shapes.MarkerShape;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
