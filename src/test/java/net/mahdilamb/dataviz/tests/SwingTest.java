@@ -1,17 +1,15 @@
 package net.mahdilamb.dataviz.tests;
 
 import net.mahdilamb.dataframe.DataFrame;
-import net.mahdilamb.dataframe.DoubleSeries;
 import net.mahdilamb.dataviz.Figure;
 import net.mahdilamb.dataviz.Theme;
 import net.mahdilamb.dataviz.graphics.FillMode;
 import net.mahdilamb.dataviz.plots.*;
 import net.mahdilamb.stats.ArrayUtils;
-import net.mahdilamb.stats.RankMethod;
 import net.mahdilamb.stats.StatUtils;
 
-import java.util.Arrays;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.concurrent.TimeUnit;
 import java.util.function.IntToDoubleFunction;
 
 import static net.mahdilamb.dataviz.SeriesTests.loadDataFromResource;
@@ -176,7 +174,7 @@ public class SwingTest {
                 .setColors(ArrayUtils.full(ThreadLocalRandom.current()::nextGaussian, N))
                 .setColormap("viridis")
                 .setSize(8)
-                .showEdge(true)
+                .showEdges(true)
                 .show();
     }
 
@@ -363,7 +361,7 @@ public class SwingTest {
                 .addTrace(
                         new Scatter(tips, "total_bill", "tip")
                                 .setSize(4)
-                                .showEdge(true)
+                                .showEdges(true)
                 )
                 .show();
     }
@@ -407,7 +405,7 @@ public class SwingTest {
         new Table(loadDataFromResource("iris.csv"))
                 .show();
     }
-
+/*
     static double determinant(double m00, double m01, double m10, double m11) {
         return m00 * m11 - m01 * m10;
     }
@@ -424,30 +422,32 @@ public class SwingTest {
         };
     }
 
-    static double[][] covariance(IntToDoubleFunction x, IntToDoubleFunction y, int size) {
+    static double[][] covarianceMatrix(IntToDoubleFunction x, IntToDoubleFunction y, int size) {
         double xBar = StatUtils.mean(x, size);
         double yBar = StatUtils.mean(y, size);
-        double xx = StatUtils.sum(i -> (x.applyAsDouble(i) - xBar) * (x.applyAsDouble(i) - xBar), size) / (size - 1);
-        double yy = StatUtils.sum(i -> (y.applyAsDouble(i) - yBar) * (y.applyAsDouble(i) - yBar), size) / (size - 1);
-        double xy = StatUtils.sum(i -> (x.applyAsDouble(i) - xBar) * (y.applyAsDouble(i) - yBar), size) / (size - 1);
+        double xx = StatUtils.sum(i -> (x.applyAsDouble(i) - xBar) * (x.applyAsDouble(i) - xBar), size) / (size);
+        double yy = StatUtils.sum(i -> (y.applyAsDouble(i) - yBar) * (y.applyAsDouble(i) - yBar), size) / (size);
+        double xy = StatUtils.sum(i -> (x.applyAsDouble(i) - xBar) * (y.applyAsDouble(i) - yBar), size) / (size);
         return new double[][]{
                 new double[]{xx, xy},
                 new double[]{xy, yy}
         };
-    }
+    }*/
 
     public static void main(String[] args) {
-        //density2d();
-        DataFrame df = loadDataFromResource("tips.csv");
+       density2d();
+        /*DataFrame df = loadDataFromResource("tips.csv");
         final Scatter s = new Scatter(df, "total_bill", "tip")
                 .setSize(4)
-                .showEdge(true);
+                .showEdges(true);
         new Density2D(df, "total_bill", "tip")
                 .setXBins(50)
                 .setYBins(50)
                 .getFigure()
                 .addTrace(s)
-                .show();
+                .show();*/
+
+
 
     }
 }

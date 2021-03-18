@@ -333,7 +333,7 @@ public final class Scatter extends PlotData.RelationalData<Scatter> {
      * @param showEdge whether to show marker edges or not
      * @return this scatter series
      */
-    public Scatter showEdge(boolean showEdge) {
+    public Scatter showEdges(boolean showEdge) {
         this.showEdge = showEdge;//TODO update
         return this;
     }
