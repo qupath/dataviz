@@ -6,7 +6,7 @@ import net.mahdilamb.dataframe.utils.IntroSort;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
 import net.mahdilamb.dataviz.PlotTrace;
-import net.mahdilamb.dataviz.utils.Kernels;
+import net.mahdilamb.stats.utils.Kernels;
 import net.mahdilamb.stats.ArrayUtils;
 import net.mahdilamb.stats.StatUtils;
 

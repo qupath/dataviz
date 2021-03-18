@@ -31,7 +31,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         public Tooltip hoverText;
         private BufferedImage currentState;
 
-
         Overlay(Panel panel) {
             this.panel = panel;
         }
@@ -126,56 +125,6 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    protected Panel getCanvas() {
-        return panel;
-    }
-
-    @Override
-    protected double getTextBaselineOffset(Font font) {
-        return panel.getTextBaselineOffset(font);
-    }
-
-    @Override
-    protected double getTextWidth(Font font, String text) {
-        return panel.getTextWidth(font, text);
-    }
-
-    @Override
-    protected double getCharWidth(Font font, char character) {
-        return panel.getFontMetrics(SwingUtils.convert(font)).charWidth(character);
-    }
-
-    @Override
-    protected double getTextLineHeight(Font font) {
-        return panel.getTextHeight(font);
-    }
-
-    @Override
-    protected double getImageWidth(BufferedImage image) {
-        return panel.getImageWidth(image);
-    }
-
-    @Override
-    protected double getImageHeight(BufferedImage image) {
-        return panel.getImageHeight(image);
-    }
-
-    @Override
-    protected byte[] bytesFromImage(BufferedImage image) {
-        return panel.bytesFromImage(image);
-    }
-
-    @Override
-    protected int argbFromImage(BufferedImage image, int x, int y) {
-        return image.getRGB(x, y);
-    }
-
-    @Override
-    protected double getTextLineHeight(Title title) {
-        return panel.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
     }
 
     private static final class Panel extends JPanel implements ChartCanvas<BufferedImage> {
@@ -497,6 +446,56 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             return SwingUtils.getLineHeight(getFontMetrics(SwingUtils.convert(font)));
 
         }
+    }
+
+    @Override
+    protected Panel getCanvas() {
+        return panel;
+    }
+
+    @Override
+    protected double getTextBaselineOffset(Font font) {
+        return panel.getTextBaselineOffset(font);
+    }
+
+    @Override
+    protected double getTextWidth(Font font, String text) {
+        return panel.getTextWidth(font, text);
+    }
+
+    @Override
+    protected double getCharWidth(Font font, char character) {
+        return panel.getFontMetrics(SwingUtils.convert(font)).charWidth(character);
+    }
+
+    @Override
+    protected double getTextLineHeight(Font font) {
+        return panel.getTextHeight(font);
+    }
+
+    @Override
+    protected double getImageWidth(BufferedImage image) {
+        return panel.getImageWidth(image);
+    }
+
+    @Override
+    protected double getImageHeight(BufferedImage image) {
+        return panel.getImageHeight(image);
+    }
+
+    @Override
+    protected byte[] bytesFromImage(BufferedImage image) {
+        return panel.bytesFromImage(image);
+    }
+
+    @Override
+    protected int argbFromImage(BufferedImage image, int x, int y) {
+        return image.getRGB(x, y);
+    }
+
+    @Override
+    protected double getTextLineHeight(Title title) {
+        return panel.getFontMetrics(SwingUtils.convert(title.getFont())).getHeight();
     }
 
     private void show() {

@@ -92,6 +92,7 @@ public final class ColorScales extends KeyArea<ColorScales> {
         }
 
         void drawColorBar(Renderer<?> source, ChartCanvas<?> canvas, ColorScales scales) {
+            System.out.println("drawing cb");
             if (scales.showLabels) {
                 double upper = trace.valMax;
                 double lower = trace.valMin;

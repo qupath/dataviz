@@ -2,6 +2,7 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.dataviz.plots.Line;
 import net.mahdilamb.dataviz.plots.Scatter;
+import net.mahdilamb.stats.Regressions;
 import net.mahdilamb.stats.StatUtils;
 
 import java.util.function.DoubleUnaryOperator;
@@ -20,7 +21,7 @@ public final class TrendlinesExperimental {
      * @return a figure with the linear trendline
      */
     public static Figure linear(Scatter data) {
-        final DoubleUnaryOperator pred = StatUtils.linearRegression(data::getX, data::getY, data.size());
+        final DoubleUnaryOperator pred = Regressions.linearRegression(data::getX, data::getY, data.size());
         double minX = StatUtils.min(data::getX, data.size()),
                 maxX = StatUtils.max(data::getX, data.size());
         final Line line = new Line(
@@ -46,7 +47,7 @@ public final class TrendlinesExperimental {
         double minX = StatUtils.min(data::getX, data.size()),
                 maxX = StatUtils.max(data::getX, data.size());
 
-        final DoubleUnaryOperator predict = StatUtils.exponentialRegression(data::getX, data::getY, data.size());
+        final DoubleUnaryOperator predict = Regressions.exponentialRegression(data::getX, data::getY, data.size());
         final Line line = new Line(
                 linearlySpaced(minX, maxX, numberOfSamples),
                 predict
@@ -69,7 +70,7 @@ public final class TrendlinesExperimental {
     public static Figure power(Scatter data, int numberOfSamples) {
         double minX = StatUtils.min(data::getX, data.size()),
                 maxX = StatUtils.max(data::getX, data.size());
-        DoubleUnaryOperator predict = StatUtils.powerRegression(data::getX, data::getY, data.size());
+        DoubleUnaryOperator predict = Regressions.powerRegression(data::getX, data::getY, data.size());
         Line line = new Line(
                 linearlySpaced(minX, maxX, numberOfSamples),
                 predict

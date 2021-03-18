@@ -135,7 +135,6 @@ public final class SwingUtils {
         if (font.getWeight() == net.mahdilamb.dataviz.graphics.Font.Weight.BOLD) {
             style |= Font.BOLD;
         }
-
         return new Font(family, style, convert(font.getSize()));
     }
 

@@ -3,8 +3,8 @@ package net.mahdilamb.dataviz.plots;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
-import net.mahdilamb.dataviz.utils.BandwidthEstimators;
-import net.mahdilamb.dataviz.utils.Kernels;
+import net.mahdilamb.stats.utils.BandwidthEstimators;
+import net.mahdilamb.stats.utils.Kernels;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 import net.mahdilamb.stats.StatUtils;
 
@@ -107,7 +107,7 @@ public final class KDE extends PlotData.DistributionData<KDE> {
      * @return this KDE plot
      */
     public KDE setBandwidth(final String name) {
-        bandwidth = BandwidthEstimators.getEstimator(name).apply(values, getOrder());
+        bandwidth = BandwidthEstimators.getEstimator(name).applyAsDouble(values, getOrder());
         clear();
         return this;
     }

@@ -4,10 +4,10 @@ import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.PlotLayout;
 import net.mahdilamb.dataviz.PlotTrace;
-import net.mahdilamb.dataviz.utils.BandwidthEstimators;
-import net.mahdilamb.dataviz.utils.DistanceMetrics;
+import net.mahdilamb.stats.utils.BandwidthEstimators;
+import net.mahdilamb.stats.utils.DistanceMetrics;
 import net.mahdilamb.dataviz.utils.Functions;
-import net.mahdilamb.dataviz.utils.Kernels;
+import net.mahdilamb.stats.utils.Kernels;
 import net.mahdilamb.stats.ArrayUtils;
 import net.mahdilamb.stats.StatUtils;
 
@@ -20,7 +20,7 @@ public final class Density2D extends PlotData.DistributionData2D<Density2D> {
     int xBins = 20;
     int yBins = 20;
     DoubleUnaryOperator kernel = Kernels::gaussian;
-    Functions.DoubleQuaternaryFunction distanceMetric = DistanceMetrics::euclidean;
+    DistanceMetrics.DoubleQuaternaryFunction distanceMetric = DistanceMetrics::euclidean;
     double bandwidth = Double.NaN;
 
     public Density2D(DataFrame dataFrame, String x, String y) {

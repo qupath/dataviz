@@ -14,6 +14,9 @@ import java.util.function.Consumer;
 
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
+/**
+ * A figure for laying out chart components
+ */
 public final class Figure extends Component implements FigureComponent<Figure>, Themeable<Figure> {
     private static final Colormap DEFAULT_QUALITATIVE_COLORMAP = Colormaps.get("Plotly");
     private static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = Colormaps.get("Viridis");
@@ -52,7 +55,6 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
      */
     public Figure addTrace(final PlotData<?> trace) {
         //See if the trace can be added to an existing plot
-
         if (layout != null) {
             if (layout.add(trace)) {
                 return this;
@@ -255,6 +257,11 @@ public final class Figure extends Component implements FigureComponent<Figure>, 
         return backgroundColor;
     }
 
+    /**
+     * Set the background color
+     * @param color the color
+     * @return this figure
+     */
     public Figure setBackgroundColor(Color color) {
         this.backgroundColor = color;
         update();

@@ -85,7 +85,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
                         canvas.setFill(trace.fillColor);
                     }
                 }
-                @SuppressWarnings("unchecked") final List<PlotShape.Polygon> foundPolygons = (List<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search( minX, minY, maxX, maxY);
+                @SuppressWarnings("unchecked") final List<PlotShape.Polygon> foundPolygons = (List<PlotShape.Polygon>) polygons.getOrDefault(trace, RTree.emptyTree()).search(minX, minY, maxX, maxY);
                 for (final PlotShape.Polygon n : foundPolygons) {
                     fillPolygon(canvas, n);
                 }
@@ -189,10 +189,10 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
         @Override
         public PlotLayout setRange(double minX, double maxX, double minY, double maxY) {
             if (minX == maxX) {
-                maxX += Math.ulp(1);
+                maxX += 1e-13;
             }
             if (minY == maxY) {
-                maxY += Math.ulp(1);
+                maxY += 1e-13;
             }
             x.lower = Math.min(minX, maxX);
             x.upper = Math.max(minX, maxX);
@@ -299,7 +299,7 @@ public abstract class PlotLayout extends Component implements Themeable<PlotLayo
             for (final PlotData<?> data : data) {
                 PlotData.TabularData<?> table = ((PlotData.TabularData<?>) data);
                 for (int i = 0; i < table.numColumns(); ++i) {
-                    canvas.fillText(table.getHeader(i),x,20);
+                    canvas.fillText(table.getHeader(i), x, 20);
                     x += 200;
                 }
             }
