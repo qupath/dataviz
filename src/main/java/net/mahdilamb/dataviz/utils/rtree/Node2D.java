@@ -6,35 +6,28 @@ import java.util.Objects;
 
 /**
  * A 2D node that can be inserted into a 2D spatial tree
- *
- * @param <T> the type of data in the leaf nodes
  */
-public abstract class Node2D<T> {
+public abstract class Node2D {
     int height;
     final boolean leaf;
 
-    final List<Node2D<T>> children;
-    private final T data;
+    final List<Node2D> children;
 
     /**
-     * Create a new 2D Node
-     *
-     * @param data the data to add to the node
+     * Create a lofe node
      */
-    protected Node2D(T data) {
-        this(data, true);
+    protected Node2D() {
+        this(true);
     }
 
-    Node2D(T data, boolean isLeaf) {
+    Node2D(boolean isLeaf) {
         this.leaf = isLeaf;
-        this.data = data;
         this.children = null;
     }
 
-    Node2D(List<Node2D<T>> children, boolean isLeaf) {
+    Node2D(List<Node2D> children, boolean isLeaf) {
         this.leaf = isLeaf;
         this.children = children;
-        this.data = null;
     }
 
     /**
@@ -42,39 +35,18 @@ public abstract class Node2D<T> {
      *
      * @param children the children to initialize with (if {@code null}, assumed to be an orphaned node)
      */
-    Node2D(List<Node2D<T>> children) {
+    Node2D(List<Node2D> children) {
         this(children, children == null);
     }
 
-    @SafeVarargs
-    Node2D(Node2D<T>... nodes) {
+    Node2D(Node2D... nodes) {
         this.children = new ArrayList<>(nodes.length);
-        for (final Node2D<T> n : nodes) {
+        for (final Node2D n : nodes) {
             children.add(n);
         }
         leaf = false;
-        data = null;
     }
 
-    /**
-     * @return get the data if this is a leaf node. Or {@code null} if no data is set or this is not a leaf node.
-     */
-    public final T get() {
-        return data;
-    }
-
-    /**
-     * Set the bounds of this
-     *
-     * @param minX the minimum x component of the data
-     * @param minY the maximum x component of the data
-     * @param maxX the minimum y component of the data
-     * @param maxY the maximum y component of the data
-     * @implNote this must be implemented to allow for unions with other nodes
-     */
-    void set(double minX, double minY, double maxX, double maxY) {
-
-    }
 
     /**
      * @return the minimum x component
@@ -120,7 +92,7 @@ public abstract class Node2D<T> {
      * @return whether this node contains a rectangle defined by its extends
      */
     public boolean contains(double minX, double minY, double maxX, double maxY) {
-        return RectangularNode.contains(this, minX, minY, maxX, maxY);
+        return Node2DImpl.contains(this, minX, minY, maxX, maxY);
     }
 
     /**
@@ -131,7 +103,7 @@ public abstract class Node2D<T> {
      * @return whether this node is contained within a rectangle defined by its extends
      */
     public boolean isContainedIn(double minX, double minY, double maxX, double maxY) {
-        return RectangularNode.contains(minX, minY, maxX, maxY, this);
+        return Node2DImpl.contains(minX, minY, maxX, maxY, this);
     }
 
     /**
@@ -142,7 +114,7 @@ public abstract class Node2D<T> {
      * @return whether this node intersects a rectangle defined by its extends
      */
     public boolean intersects(double minX, double minY, double maxX, double maxY) {
-        return RectangularNode.intersects(minX, minY, maxX, maxY, this);
+        return Node2DImpl.intersects(minX, minY, maxX, maxY, this);
     }
 
     void recalculateBBox() {
@@ -167,15 +139,14 @@ public abstract class Node2D<T> {
 
     @Override
     public String toString() {
-        return String.format("Node {minX: %s, minY: %s, maxX: %s, maxY: %s, %s: %s}", getMinX(), getMinY(), getMaxX(), getMaxY(), leaf ? "data" : "numChildren", leaf ? data : children.size());
+        return String.format("Node {minX: %s, minY: %s, maxX: %s, maxY: %s, %s: %s}", getMinX(), getMinY(), getMaxX(), getMaxY(), leaf ? "data" : "numChildren", leaf ? "" : children.size());
     }
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (!(o instanceof Node2D)) return false;
-        @SuppressWarnings("unchecked")
-        Node2D<T> node = (Node2D<T>) o;
+        Node2D node = (Node2D) o;
         return Double.compare(node.getMinX(), getMinX()) == 0 && Double.compare(node.getMinY(), getMinY()) == 0 && Double.compare(node.getMaxX(), getMaxX()) == 0 && Double.compare(node.getMaxY(), getMaxY()) == 0;
     }
 
@@ -188,9 +159,9 @@ public abstract class Node2D<T> {
     }
 
     // min bounding rectangle of node children from k to p-1
-    static <T> Node2D<T> distBBox(Node2D<T> node, int k, int p, Node2D<T> destNode) {
+    static Node2D distBBox(Node2D node, int k, int p, Node2D destNode) {
         if (destNode == null) {
-            destNode = new RectangularNode<>((List<Node2D<T>>) null);
+            destNode = new Node2DImpl((List<Node2D>) null);
         }
         destNode.set(
                 Double.POSITIVE_INFINITY,
@@ -200,7 +171,7 @@ public abstract class Node2D<T> {
         );
 
         for (int i = k; i < p; i++) {
-            Node2D<T> child = node.children.get(i);
+            Node2D child = node.children.get(i);
             union(destNode, child);
         }
 
@@ -213,7 +184,7 @@ public abstract class Node2D<T> {
      * @param a the node to set
      * @param b the node to union with
      */
-    static void union(Node2D<?> a, Node2D<?> b) {
+    static void union(Node2D a, Node2D b) {
         a.set(
                 Math.min(a.getMinX(), b.getMinX()),
                 Math.min(a.getMinY(), b.getMinY()),
@@ -223,9 +194,15 @@ public abstract class Node2D<T> {
     }
 
     /**
-     * @return whether this is a leaf node or not
+     * Set the bounds of this
+     *
+     * @param minX the minimum x component of the data
+     * @param minY the maximum x component of the data
+     * @param maxX the minimum y component of the data
+     * @param maxY the maximum y component of the data
+     * @implNote this must be implemented by other internal nodes to allow for unions with other nodes
      */
-    public final boolean isLeaf() {
-        return leaf;
+    void set(double minX, double minY, double maxX, double maxY) {
+
     }
 }

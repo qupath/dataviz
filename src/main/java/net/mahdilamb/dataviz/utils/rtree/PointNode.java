@@ -5,32 +5,26 @@ package net.mahdilamb.dataviz.utils.rtree;
  *
  * @param <T> the type of data in the leaf node
  */
-public class PointNode<T> extends Node2D<T> {
-
-    final double x;
-    final double y;
+public class PointNode<T> extends Node2D {
 
     /**
-     * Create a rectangular data node
-     *
-     * @param x the x component of the data
-     * @param y the y component of the data
+     * The data in the node
      */
-    public PointNode(double x, double y) {
-        this(x, y, null);
-    }
+    public T data;
+    final double x, y;
 
     /**
-     * Create a rectangular data node
+     * Create a point data node
      *
      * @param x    the x component of the data
      * @param y    the y component of the data
      * @param data the data
      */
     public PointNode(double x, double y, T data) {
-        super(data, true);
+        super();
         this.x = x;
         this.y = y;
+        this.data = data;
     }
 
     @Override
@@ -61,5 +55,12 @@ public class PointNode<T> extends Node2D<T> {
     @Override
     public final double getMidY() {
         return getMinY();
+    }
+
+    /**
+     * @return the data in this point node
+     */
+    public T get() {
+        return data;
     }
 }

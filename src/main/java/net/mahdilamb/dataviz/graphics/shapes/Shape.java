@@ -1,6 +1,7 @@
 package net.mahdilamb.dataviz.graphics.shapes;
 
-import net.mahdilamb.dataviz.graphics.ChartCanvas;
+import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
+import net.mahdilamb.dataviz.graphics.GraphicsContext;
 
 /**
  * A shape that can be draw on the chart canvas
@@ -11,14 +12,14 @@ public interface Shape {
      *
      * @param canvas the canvas to draw on
      */
-    void fill(ChartCanvas<?> canvas);
+    void fill(GraphicsBuffer<?> canvas);
 
     /**
      * Draw the shape stroked
      *
      * @param canvas the canvas to draw on
      */
-    void stroke(ChartCanvas<?> canvas);
+    void stroke(GraphicsBuffer<?> canvas);
 
 
 }

@@ -1,7 +1,7 @@
 package net.mahdilamb.dataviz.graphics;
 
 /**
- * Enum for the supported clip shapes by {@link ChartCanvas}
+ * Enum for the supported clip shapes by {@link GraphicsContext}
  */
 public enum ClipShape {
     /**

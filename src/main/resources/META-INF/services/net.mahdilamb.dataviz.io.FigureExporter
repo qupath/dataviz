@@ -1,0 +1,9 @@
+net.mahdilamb.dataviz.io.FigureExporter$SVGExporter
+net.mahdilamb.dataviz.io.FigureExporter$SVGZExporter
+net.mahdilamb.dataviz.io.FigureExporter$PNGExporter
+net.mahdilamb.dataviz.io.FigureExporter$TIFFExporter
+net.mahdilamb.dataviz.io.FigureExporter$JPEGExporter
+net.mahdilamb.dataviz.io.FigureExporter$BMPExporter
+
+
+

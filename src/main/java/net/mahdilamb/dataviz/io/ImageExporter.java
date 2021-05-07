@@ -1,118 +1,59 @@
 package net.mahdilamb.dataviz.io;
 
-import net.mahdilamb.dataviz.ChartExporter;
-import net.mahdilamb.dataviz.Renderer;
+import net.mahdilamb.dataviz.figure.FigureExporter;
+import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.graphics.Font;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.graphics.*;
 import net.mahdilamb.dataviz.swing.SwingUtils;
 import net.mahdilamb.dataviz.utils.Variant;
 
-import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.geom.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
+import static net.mahdilamb.dataviz.swing.SwingUtils.computeArc;
 import static net.mahdilamb.dataviz.swing.SwingUtils.convert;
 
 /**
  * Main class for exporting to bitmap types via AWT
  */
-public class ImageExporter extends ChartExporter {
+class ImageExporter extends FigureExporter {
 
-
-    /**
-     * Create a PNG version of a chart
-     *
-     * @param file  the output file
-     * @param chart the chart
-     */
-    public static void toPNG(File file, Renderer<?> chart) {
-        try {
-            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "png", file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Create a TIFF version of a chart
-     *
-     * @param file  the output file
-     * @param chart the chart
-     */
-    public static void toTIFF(File file, Renderer<?> chart) {
-        try {
-            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, chart), "tiff", file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-
-    }
-
-    /**
-     * Create a JPEG version of a chart
-     *
-     * @param file  the output file
-     * @param chart the chart
-     */
-    public static void toJPEG(File file, Renderer<?> chart) {
-        try {
-            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "jpeg", file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    /**
-     * Create a BMP version of a chart
-     *
-     * @param file  the output file
-     * @param chart the chart
-     */
-    public static void toBMP(File file, Renderer<?> chart) {
-        try {
-            ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, chart), "bmp", file);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private static final class ImageExporterCanvas extends Component implements ChartCanvas<java.awt.image.BufferedImage> {
+    private static final class ImageExporterCanvas<T> extends Component implements GraphicsContext<T> {
 
         private final Graphics2D g;
-        private final Renderer<?> chart;
+        private final Renderer<T> chart;
         private final Path2D path = new Path2D.Double();
         private final Rectangle2D rect = new Rectangle2D.Double();
         private final RoundRectangle2D roundedRect = new RoundRectangle2D.Double();
         private final Ellipse2D ellipse = new Ellipse2D.Double();
         private final Line2D line = new Line2D.Double();
+        private final Arc2D.Double arc = new Arc2D.Double();
         private final boolean fillWhite;
-        private final Variant<net.mahdilamb.colormap.Color, Gradient> currentFill = Variant.ofA(net.mahdilamb.colormap.Color.BLACK);
+        private final Variant<Color, Gradient> currentFill = Variant.ofA(Color.BLACK);
         private Stroke currentStroke = Stroke.SOLID;
-        private net.mahdilamb.colormap.Color currentStrokeColor = net.mahdilamb.colormap.Color.BLACK;
+        private Color currentStrokeColor = Color.BLACK;
         boolean usingFill = true;
         private final AffineTransform affineTransform = new AffineTransform();
 
-        public ImageExporterCanvas(boolean fillWhite, Renderer<?> chart, Graphics2D graphics) {
+        ImageExporterCanvas(boolean fillWhite, Renderer<T> chart, Graphics2D graphics) {
             this.g = graphics;
             this.chart = chart;
             this.fillWhite = fillWhite;
         }
 
+
         @Override
-        public void resetRect(double x, double y, double width, double height) {
-            //ignored
+        public Renderer<T> getRenderer() {
+            return chart;
         }
 
         @Override
         public void reset() {
             g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
             if (chart.getFigure().getBackgroundColor() != null) {
-                g.setColor(convert(chart.getFigure().getBackgroundColor()));
+                g.setColor(chart.getFigure().getBackgroundColor());
             } else if (fillWhite) {
                 g.setColor(Color.white);
             }
@@ -124,13 +65,13 @@ public class ImageExporter extends ChartExporter {
 
         @Override
         public void done() {
-
+            //ignored
         }
 
         private void switchToFilled() {
             if (!usingFill) {
                 if (currentFill.isA()) {
-                    g.setColor(convert(currentFill.asA()));
+                    g.setColor(currentFill.asA());
                     g.setPaint(g.getColor());
                 } else {
                     g.setPaint(convert(currentFill.asB()));
@@ -143,7 +84,7 @@ public class ImageExporter extends ChartExporter {
         private void switchToStroked() {
             if (usingFill) {
                 g.setStroke(convert(currentStroke));
-                g.setColor(convert(currentStrokeColor));
+                g.setColor(currentStrokeColor);
                 g.setPaint(g.getColor());
                 usingFill = false;
             }
@@ -199,12 +140,10 @@ public class ImageExporter extends ChartExporter {
         }
 
         @Override
-        public void setFill(net.mahdilamb.colormap.Color color) {
+        public void setFill(Color color) {
             this.currentFill.setToA(color);
-
-            g.setColor(convert(color));
+            g.setColor(color);
             g.setPaint(g.getColor());
-
             usingFill = true;
         }
 
@@ -224,11 +163,11 @@ public class ImageExporter extends ChartExporter {
         }
 
         @Override
-        public void setStroke(net.mahdilamb.colormap.Color color) {
+        public void setStroke(Color color) {
             usingFill = false;
             currentStrokeColor = color;
-            g.setColor(convert(color));
-            g.setPaint(convert(color));
+            g.setColor(color);
+            g.setPaint(color);
         }
 
         @Override
@@ -254,6 +193,15 @@ public class ImageExporter extends ChartExporter {
         @Override
         public void curveTo(double cp1X, double cp1Y, double cp2X, double cp2Y, double endX, double endY) {
             path.curveTo(cp1X, cp1Y, cp2X, cp2Y, endX, endY);
+        }
+
+        @Override
+        public void arcTo(double rx, double ry, double xAxisRotationDegrees, boolean largeArc, boolean sweepFlag, double endX, double endY) {
+            final Point2D point = path.getCurrentPoint();
+            final Arc2D arc = computeArc( point.getX(), point.getY(), rx, ry, xAxisRotationDegrees, largeArc, sweepFlag, endX, endY);
+            affineTransform.setToRotation(Math.toRadians(xAxisRotationDegrees), arc.getCenterX(), arc.getCenterY());
+            path.append(new Path2D.Double(arc, affineTransform), true);
+            affineTransform.setToIdentity();
         }
 
         @Override
@@ -285,7 +233,6 @@ public class ImageExporter extends ChartExporter {
             affineTransform.rotate(Math.toRadians(rotationDegrees), pivotX, pivotY);
             g.setTransform(affineTransform);
             g.drawString(text, convert(x), convert(y));
-
             affineTransform.setToIdentity();
             g.setTransform(affineTransform);
         }
@@ -318,15 +265,20 @@ public class ImageExporter extends ChartExporter {
         }
 
         @Override
-        public void drawImage(java.awt.image.BufferedImage bufferedImage, double x, double y) {
-            g.drawImage(bufferedImage, convert(x), convert(y), null);
+        public void drawImage(T bufferedImage, double x, double y) {
+            g.drawImage((Image) bufferedImage, convert(x), convert(y), null);
+        }
+
+        @Override
+        public void setGlobalAlpha(double alpha) {
+            g.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) alpha));
         }
 
     }
 
-    private static BufferedImage toBufferedImage(int encoding, final Renderer<?> chart) {
-        final BufferedImage image = new BufferedImage((int) chart.getFigure().getWidth(), (int) chart.getFigure().getHeight(), encoding);
-        layoutChart(new ImageExporterCanvas(encoding != BufferedImage.TYPE_INT_ARGB, chart, (Graphics2D) image.getGraphics()), chart);
+    static <T> BufferedImage toBufferedImage(int encoding, final Renderer<T> renderer) {
+        final BufferedImage image = new BufferedImage((int) renderer.getFigure().getWidth(), (int) renderer.getFigure().getHeight(), encoding);
+        drawContent(new ImageExporterCanvas<>(encoding != BufferedImage.TYPE_INT_ARGB, renderer, (Graphics2D) image.getGraphics()), renderer);
         return image;
     }
 

@@ -1,12 +1,12 @@
 package net.mahdilamb.dataviz.io;
 
 
-import net.mahdilamb.colormap.Color;
 import net.mahdilamb.dataviz.graphics.Font;
 import net.mahdilamb.dataviz.graphics.Gradient;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.utils.Variant;
 
+import java.awt.*;
 import java.text.DecimalFormat;
 import java.util.Base64;
 import java.util.Stack;
@@ -31,10 +31,10 @@ final class SVGUtils {
      * @return CSS compatible representation
      */
     static String convertToString(final Color color) {
-        if (color.alpha() == 1.0) {
+        if (color.getAlpha() == 255) {
             return String.format("rgb(%d,%d,%d)", color.getRed(), color.getGreen(), color.getBlue());
         }
-        return String.format("rgba(%d,%d,%d,%s)", color.getRed(), color.getGreen(), color.getBlue(), convertToString(color.alpha()));
+        return String.format("rgba(%d,%d,%d,%s)", color.getRed(), color.getGreen(), color.getBlue(), convertToString(color.getAlpha() / 255f));
 
     }
 
@@ -59,6 +59,10 @@ final class SVGUtils {
         //noinspection StatementWithEmptyBody
         while (r.charAt(--zero) == z && zero >= dot) ;
         return r.substring(0, zero + 1);
+    }
+
+    static int convertToString(final boolean val) {
+        return val ? 1 : 0;
     }
 
     /**

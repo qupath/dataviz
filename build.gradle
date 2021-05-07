@@ -1,8 +1,6 @@
 buildscript {
     repositories {
-        jcenter()
         mavenCentral()
-
     }
     dependencies {
         classpath("com.bmuschko:gradle-nexus-plugin:2.3.1")
@@ -19,40 +17,38 @@ java {
     modularity.inferModulePath = true
 }
 compileJava {
-    sourceCompatibility = JavaVersion.VERSION_1_9
+    sourceCompatibility = JavaVersion.VERSION_11
 //will work with Java 1.8, but this is required as there is a module-info.java
-    targetCompatibility = JavaVersion.VERSION_1_9
+    targetCompatibility = JavaVersion.VERSION_11
 
 }
 group 'net.mahdilamb'
-version '0.1.2-SNAPSHOT'
+version '0.1.3-SNAPSHOT'
 ext.moduleName = 'net.mahdilamb.dataviz'
 repositories {
-    jcenter()
     mavenCentral()
-    maven {
-        url 'https://oss.sonatype.org/content/repositories/snapshots/'
-    }
 }
 dependencies {
-    testCompile("junit:junit:4.13")
-    compile 'net.mahdilamb:utils-tuples:0.3.1'
-    compile 'net.mahdilamb:colormap:0.9.49-SNAPSHOT'
-    //compile 'net.mahdilamb:dataframe:0.2.0'
+    testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
-    compile project(":dataframe")
+    implementation 'net.mahdilamb:colormap:0.9.511'
+    implementation 'net.mahdilamb:dataframe:0.2.2'
 }
 
 test {
-    useJUnit()
+    useJUnitPlatform()
 }
-
 
 task swingTest(type: JavaExec, dependsOn: ['testClasses']) {
     classpath sourceSets.test.runtimeClasspath
     main = "net.mahdilamb.dataviz.tests.SwingTest"
 }
 
+task lruPlaygroundTest(type: JavaExec, dependsOn: ['testClasses']) {
+    classpath sourceSets.test.runtimeClasspath
+    main = "net.mahdilamb.dataviz.lru.LRUPlayground"
+}
 javadoc {
     options.tags = ["apiNote", "implNote", "implSpec"]
 }
@@ -61,13 +57,13 @@ modifyPom {
     project {
         name = "charts"
         description = "Charts"
-        url = "https://github.com/mahdilamb/charts"
+        url = "https://github.com/mahdilamb/dataviz"
         inceptionYear = "2020"
 
         licenses {
             license {
-                name = "The Apache Software License, Version 2.0"
-                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                name = "MIT License"
+                url = "http://www.opensource.org/licenses/mit-license.php"
                 distribution = "repo"
             }
         }
@@ -79,12 +75,10 @@ modifyPom {
             }
         }
         scm {
-            url = "https://github.com/mahdilamb/charts"
-            connection = "scm:https://mahdilamb@github.com/mahdilamb/charts.git"
-            developerConnection = "scm:git://github.com/mahdilamb/charts.git"
+            url = "https://github.com/mahdilamb/dataviz"
+            connection = "scm:https://mahdilamb@github.com/mahdilamb/dataviz.git"
+            developerConnection = "scm:git://github.com/mahdilamb/dataviz.git"
         }
-
-
     }
 
 }

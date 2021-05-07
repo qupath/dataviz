@@ -20,22 +20,21 @@ final class BulkLoaders {
      * @param minEntries the min entries of the tree
      * @param maxEntries the max entries of the tree
      * @param items      the items to add
-     * @param <T>        the type of the data in the nodes
      * @return the root node of this subtree
      */
-    static <T> RectangularNode<T> OMT(int minEntries, int maxEntries, Node2D<T>[] items) {
+    static Node2DImpl OMT(int minEntries, int maxEntries, Node2D[] items) {
         return OMT(minEntries, maxEntries, items, 0, items.length - 1, -1);
     }
 
-    private static <T> RectangularNode<T> OMT(int minEntries, int maxEntries, Node2D<T>[] items, int left, int right, int height) {
+    private static Node2DImpl OMT(int minEntries, int maxEntries, Node2D[] items, int left, int right, int height) {
 
         int N = right - left + 1;
         int M = maxEntries;
-        RectangularNode<T> node;
+        Node2DImpl node;
 
         if (N <= M) {
             // reached leaf level; return leaf
-            node = new RectangularNode<T>(Arrays.copyOfRange(items, left, right + 1));
+            node = new Node2DImpl(Arrays.copyOfRange(items, left, right + 1));
             node.height = 1;
             node.recalculateBBox();
             return node;
@@ -49,7 +48,7 @@ final class BulkLoaders {
 
         }
 
-        node = new RectangularNode<>(new ArrayList<>(minEntries));
+        node = new Node2DImpl(new ArrayList<>(minEntries));
         node.height = height;
 
         // split the items into M mostly square tiles
@@ -57,12 +56,12 @@ final class BulkLoaders {
         int N2 = (int) Math.ceil((double) N / M);
         int N1 = (int) (N2 * Math.ceil(Math.sqrt(M)));
 
-        QuickSelect.multiSelect(items, left, right, N1, RectangularNode::compareMinX);
+        QuickSelect.multiSelect(items, left, right, N1, Node2DImpl::compareMinX);
 
         for (int i = left; i <= right; i += N1) {
 
             int right2 = Math.min(i + N1 - 1, right);
-            QuickSelect.multiSelect(items, i, right2, N2, RectangularNode::compareMinY);
+            QuickSelect.multiSelect(items, i, right2, N2, Node2DImpl::compareMinY);
             for (int j = i; j <= right2; j += N2) {
                 int right3 = Math.min(j + N2 - 1, right2);
                 // pack each entry recursively
@@ -75,14 +74,14 @@ final class BulkLoaders {
 
     }
 
-    private static <T> RectangularNode<T> SpaceFillingCurveSorted(int maxEntries, Node2D<T>[] items, IntBinaryOperator curveFunction) {
+    private static Node2DImpl SpaceFillingCurveSorted(int maxEntries, Node2D[] items, IntBinaryOperator curveFunction) {
 
         double minX = Double.POSITIVE_INFINITY;
         double minY = Double.POSITIVE_INFINITY;
         double maxX = Double.NEGATIVE_INFINITY;
         double maxY = Double.NEGATIVE_INFINITY;
 
-        for (Node2D<T> item : items) {
+        for (Node2D item : items) {
             minX = Math.min(minX, item.getMinX());
             minY = Math.min(minY, item.getMinY());
             maxX = Math.max(maxX, item.getMaxX());
@@ -94,7 +93,7 @@ final class BulkLoaders {
         double width = maxX - minX;
         double height = maxY - minY;
         for (int i = 0; i < items.length; ++i) {
-            Node2D<T> b = items[i];
+            Node2D b = items[i];
             int x = (int) (MAX_16_BIT * ((b.getMinX() + b.getMaxX()) * .5 - minX) / width);
             int y = (int) (MAX_16_BIT * ((b.getMinY() + b.getMaxY()) * .5 - minY) / height);
             indexValues[i] = curveFunction.applyAsInt(x, y);
@@ -107,23 +106,24 @@ final class BulkLoaders {
      * Hilbert sorted bulk loader. The nodes are sorted by their Hilbert value relative to the center of the
      * items.
      *
-     * @param maxEntries the max entries of the tree     * @param items the items to add
-     * @param <T>        the type of the data in the nodes
+     * @param minEntries the min entries per node
+     * @param maxEntries the max entries of the tree
+     * @param items      the items to add
      * @return the root node of this subtree
      */
-    static <T> RectangularNode<T> HilbertSorted(int maxEntries, Node2D<T>[] items) {
+    static Node2DImpl HilbertSorted(int minEntries, int maxEntries, Node2D[] items) {
         return SpaceFillingCurveSorted(maxEntries, items, SpaceFillingCurves::encodeHilbert);
     }
 
     /**
      * Morton curve sorted bulk loaded.
      *
+     * @param minEntries the min entries per node
      * @param maxEntries the max entries of the tree
      * @param items      the items to add
-     * @param <T>        the type of the data in the nodes
      * @return the root node of this subtree
      */
-    static <T> RectangularNode<T> ZOrderSorted(int maxEntries, Node2D<T>[] items) {
+    static Node2DImpl ZOrderSorted(int minEntries, int maxEntries, Node2D[] items) {
         return SpaceFillingCurveSorted(maxEntries, items, SpaceFillingCurves::encodeMorton);
 
     }
@@ -131,12 +131,12 @@ final class BulkLoaders {
     /**
      * Nearest X bulk loader. The nodes are sorted by the center of their bounds
      *
+     * @param minEntries the min entries per node
      * @param maxEntries the max entries of the tree
      * @param items      the items to add
-     * @param <T>        the type of the data in the nodes
      * @return the root node of this subtree
      */
-    static <T> RectangularNode<T> NearestXSorted(int maxEntries, Node2D<T>[] items) {
+    static Node2DImpl NearestXSorted(int minEntries, int maxEntries, Node2D[] items) {
         QuickSelect.multiSelect(items, 0, items.length - 1, maxEntries, Comparator.comparingDouble(Node2D::getMidX));
         return mergeUpwards(items, maxEntries, 2);
     }
@@ -145,11 +145,12 @@ final class BulkLoaders {
      * Sort-tile recursive bulk loader. The nodes are first sorted by their center X value
      * and then sorted by their y axis
      *
-     * @param items the items to add
-     * @param <T>   the type of the data in the nodes
+     * @param minEntries the min entries per node
+     * @param maxEntries the max entries of the tree
+     * @param items      the items to add
      * @return the root node of this subtree
      */
-    static <T> RectangularNode<T> STR(int maxEntries, Node2D<T>[] items) {
+    static Node2DImpl STR(int minEntries, int maxEntries, Node2D[] items) {
 
         final int N = items.length - 1;
 
@@ -173,32 +174,29 @@ final class BulkLoaders {
      * @param items      the items to merge
      * @param maxEntries the maximum children in each leaf
      * @param height     the current height of the tree
-     * @param <T>        the type of the data in the nodes
      * @return a new root node for the generates subtree
      */
-    static <T> RectangularNode<T> mergeUpwards(Node2D<T>[] items, int maxEntries, int height) {
+    static Node2DImpl mergeUpwards(Node2D[] items, int maxEntries, int height) {
         final int N = items.length;
         if (N <= maxEntries) {
-            final RectangularNode<T> node = new RectangularNode<T>(items);
+            final Node2DImpl node = new Node2DImpl(items);
             node.height = height;
             node.recalculateBBox();
             return node;
         }
 
-        @SuppressWarnings("unchecked") final Node2D<T>[] merged = new Node2D[(int) Math.ceil((double) items.length / maxEntries)];
+        final Node2D[] merged = new Node2D[(int) Math.ceil((double) items.length / maxEntries)];
         for (int i = 0, j = 0; i < items.length; i += maxEntries) {
-            final List<Node2D<T>> children = new ArrayList<>(maxEntries);
+            final List<Node2D> children = new ArrayList<>(maxEntries);
             for (int k = 0; k < maxEntries; ++k) {
                 int l = i + k;
                 if (l >= items.length) {
                     break;
                 }
-
                 children.add(items[l]);
-
             }
 
-            final Node2D<T> n = new RectangularNode<>(children);
+            final Node2D n = new Node2DImpl(children);
             n.height = height;
             n.recalculateBBox();
             merged[j++] = n;

@@ -1,12 +1,14 @@
 package net.mahdilamb.dataviz.io;
 
-import net.mahdilamb.colormap.Color;
-import net.mahdilamb.dataviz.ChartExporter;
-import net.mahdilamb.dataviz.Renderer;
+import net.mahdilamb.dataviz.figure.FigureExporter;
+import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.graphics.*;
+import net.mahdilamb.dataviz.graphics.Font;
+import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.utils.Numbers;
 import net.mahdilamb.dataviz.utils.Variant;
 
+import java.awt.*;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -19,11 +21,12 @@ import static net.mahdilamb.dataviz.io.SVGUtils.*;
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
 /**
- * Exporter to save charts as SVGS
+ * Exporter to save charts as SVGs
  */
-public class SVGExporter extends ChartExporter {
+class SVGExporter extends FigureExporter {
 
-    private static final class SVGWriter<T> implements ChartCanvas<T> {
+    static final class SVGWriter<T> implements GraphicsContext<T> {
+        boolean done = false;
         String header;
         final StringBuilder out = new StringBuilder();
         final StringBuilder indent = new StringBuilder("\t");
@@ -44,17 +47,18 @@ public class SVGExporter extends ChartExporter {
             this.compressed = compressed;
             this.renderer = renderer;
             this.output = output;
-            layoutChart(this, renderer);
+            drawContent(this, renderer);
 
         }
 
         SVGWriter(File output, Renderer<T> renderer) {
             this(output, renderer, false);
+
         }
 
         @Override
-        public void resetRect(double x, double y, double width, double height) {
-            //ignored
+        public Renderer<T> getRenderer() {
+            return renderer;
         }
 
         @Override
@@ -156,6 +160,11 @@ public class SVGExporter extends ChartExporter {
         }
 
         @Override
+        public void setGlobalAlpha(double alpha) {
+            System.err.println("Modifying global alpha is currently not supported");
+        }
+
+        @Override
         public void curveTo(double cp1X, double cp1Y, double cp2X, double cp2Y, double endX, double endY) {
             pathD.append(String.format(
                     "C %s %s, %s %s, %s %s ",
@@ -163,6 +172,21 @@ public class SVGExporter extends ChartExporter {
                     convertToString(cp1Y),
                     convertToString(cp2X),
                     convertToString(cp2Y),
+                    convertToString(endX),
+                    convertToString(endY)
+                    )
+            );
+        }
+
+        @Override
+        public void arcTo(double rx, double ry, double xAxisRotationDegrees, boolean largeArc, boolean sweepFlag, double endX, double endY) {
+            pathD.append(String.format(
+                    "A %s %s %s %d %d %s %s ",
+                    convertToString(rx),
+                    convertToString(ry),
+                    convertToString(xAxisRotationDegrees),
+                    convertToString(largeArc),
+                    convertToString(sweepFlag),
                     convertToString(endX),
                     convertToString(endY)
                     )
@@ -252,11 +276,14 @@ public class SVGExporter extends ChartExporter {
 
         @Override
         public void done() {
-            if (isClipped) {
-                clearClip();
+            if (!done) {
+                if (isClipped) {
+                    clearClip();
+                }
+                out.append("</svg>");
+                cleanup(out);
             }
-            out.append("</svg>");
-            cleanup(out);
+            done = true;
             try (final Writer writer = compressed ? new OutputStreamWriter(new GZIPOutputStream(new FileOutputStream(output)), StandardCharsets.UTF_8) : new FileWriter(output)) {
                 writer.write(header);
                 writer.write(defs.get());
@@ -264,29 +291,11 @@ public class SVGExporter extends ChartExporter {
             } catch (IOException e) {
                 e.printStackTrace();
             }
+
         }
 
     }
 
-    /**
-     * Convert a chart to an svg
-     *
-     * @param output the file output
-     * @param chart  the chart to convert
-     */
-    public static <T> void toSVG(final File output, final Renderer<T> chart) {
-        new SVGWriter<>(output, chart);
-    }
-
-    /**
-     * Convert a chart to a compressed svg
-     *
-     * @param file  the output file
-     * @param chart the chart to convert
-     */
-    public static <T> void toSVGZ(File file, Renderer<T> chart) {
-        new SVGWriter<>(file, chart, true);
-    }
 
     /**
      * A class to store the definitions used by an SVG file.
@@ -377,7 +386,7 @@ public class SVGExporter extends ChartExporter {
                             "\t\t\t<stop offset=\"%s\" stop-color=\"%s\"%s />%n",
                             convertToString(entry.getKey()),
                             convertToString(entry.getValue()),
-                            entry.getValue().alpha() == 1 ? EMPTY_STRING : String.format(" stop-opacity=\"%s\"", convertToString(entry.getValue().alpha()))
+                            entry.getValue().getAlpha() == 255 ? EMPTY_STRING : String.format(" stop-opacity=\"%s\"", convertToString(entry.getValue().getAlpha() / 255f))
                     ));
                 }
                 if (gradient.getType() == Gradient.GradientType.LINEAR) {

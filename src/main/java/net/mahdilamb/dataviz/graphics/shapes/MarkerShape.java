@@ -1,7 +1,8 @@
 package net.mahdilamb.dataviz.graphics.shapes;
 
 import net.mahdilamb.dataframe.utils.PrimitiveIterators;
-import net.mahdilamb.dataviz.graphics.ChartCanvas;
+import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
+import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 
 import java.util.HashMap;
 import java.util.List;
@@ -115,7 +116,7 @@ public enum MarkerShape {
     HORIZONTAL_LINE('_', MarkerShape::strokeHorizontalLine, MarkerShape::fillHorizontalLine);
 
     interface MarkerShapePainter {
-        void paint(ChartCanvas<?> canvas, double x, double y, double size);
+        void paint(GraphicsBuffer<?> canvas, double x, double y, double size);
     }
 
     private static final Map<Character, MarkerShape> store = new HashMap<>();
@@ -213,7 +214,7 @@ public enum MarkerShape {
         };
     }
 
-    private static void strokePoint(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokePoint(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double minX, minY;
         double sr = (size) * .5;
         minX = x - sr;
@@ -221,14 +222,14 @@ public enum MarkerShape {
         canvas.strokeOval(minX, minY, (size), (size));
     }
 
-    private static void strokePixel(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokePixel(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double minX, minY;
         minX = x - .5;
         minY = y - .5;
         canvas.strokeRect(minX, minY, 1, 1);
     }
 
-    private static void strokeCircle(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeCircle(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double minX, minY;
         double r = size * .5;
         minX = x - r;
@@ -236,7 +237,7 @@ public enum MarkerShape {
         canvas.strokeOval(minX, minY, size, size);
     }
 
-    private static void strokeSquare(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeSquare(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double minX, minY;
         double r = size * .5;
         minX = x - r;
@@ -244,7 +245,7 @@ public enum MarkerShape {
         canvas.strokeRect(minX, minY, size, size);
     }
 
-    private static void strokeFilledPlus(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeFilledPlus(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double minX, minY;
         double r = size * .5;
         minX = x - r;
@@ -266,7 +267,7 @@ public enum MarkerShape {
     }
 
     // (STAR) adapted from https://stackoverflow.com/questions/16327588/how-to-make-star-shape-in-java
-    private static void strokeStar(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeStar(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         double deltaAngleRad = Math.PI / 5;
         double innerRadius = r / 2.63;
@@ -294,61 +295,61 @@ public enum MarkerShape {
         canvas.stroke();
     }
 
-    private static void strokePentagon(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokePentagon(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-18), 5);
         canvas.stroke();
     }
 
-    private static void strokeHexagon1(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeHexagon1(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-30), 6);
         canvas.stroke();
     }
 
-    private static void strokeHexagon2(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeHexagon2(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 0, 6);
         canvas.stroke();
     }
 
-    private static void strokeOctagon(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeOctagon(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(22.5), 8);
         canvas.stroke();
     }
 
-    private static void strokeDiamond(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeDiamond(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 0, 4);
         canvas.stroke();
     }
 
-    private static void strokeTriangleUp(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriangleUp(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-90), 3);
         canvas.stroke();
     }
 
-    private static void strokeTriangleLeft(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriangleLeft(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-180), 3);
         canvas.stroke();
     }
 
-    private static void strokeTriangleRight(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriangleRight(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 0, 3);
         canvas.stroke();
     }
 
-    private static void strokeTriangleDown(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriangleDown(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 90, 3);
         canvas.stroke();
     }
 
-    private static void strokeThinDiamond(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeThinDiamond(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         double sizeBy4 = size / 4;
         canvas.beginPath();
@@ -360,31 +361,31 @@ public enum MarkerShape {
         canvas.stroke();
     }
 
-    private static void strokeTriLeft(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriLeft(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, 0);
         canvas.stroke();
     }
 
-    private static void strokeTriRight(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriRight(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, 1);
         canvas.stroke();
     }
 
-    private static void strokeTriUp(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriUp(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, Math.toRadians(-90));
         canvas.stroke();
     }
 
-    private static void strokeTriDown(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeTriDown(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, Math.toRadians(90));
         canvas.stroke();
     }
 
-    private static void strokePlus(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokePlus(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.beginPath();
         canvas.moveTo(x, y - r);
@@ -394,7 +395,7 @@ public enum MarkerShape {
         canvas.stroke();
     }
 
-    private static void strokeX(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeX(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.beginPath();
         canvas.moveTo(x - r, y - r);
@@ -404,23 +405,23 @@ public enum MarkerShape {
         canvas.stroke();
     }
 
-    private static void strokeHorizontalLine(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeHorizontalLine(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.strokeLine(x, y - r, x, y + r);
 
     }
 
-    private static void strokeVerticalLine(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeVerticalLine(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.strokeLine(x - r, y, x + r, y);
     }
 
-    private static void strokeFilledX(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void strokeFilledX(GraphicsBuffer<?> canvas, double x, double y, double size) {
         filledX(canvas, x, y, size);
         canvas.stroke();
     }
 
-    private static void fillPoint(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillPoint(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double minX, minY;
         double sr = (size) * .5;
         minX = x - sr;
@@ -428,14 +429,14 @@ public enum MarkerShape {
         canvas.fillOval(minX, minY, (size), (size));
     }
 
-    private static void fillPixel(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillPixel(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double minX, minY;
         minX = x - .5;
         minY = y - .5;
         canvas.fillRect(minX, minY, 1, 1);
     }
 
-    private static void fillCircle(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillCircle(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         double minX, minY;
         minX = x - r;
@@ -443,7 +444,7 @@ public enum MarkerShape {
         canvas.fillOval(minX, minY, size, size);
     }
 
-    private static void fillSquare(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillSquare(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         double minX, minY;
         minX = x - r;
@@ -451,7 +452,7 @@ public enum MarkerShape {
         canvas.fillRect(minX, minY, size, size);
     }
 
-    private static void fillFilledPlus(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillFilledPlus(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         double minX, minY;
         minX = x - r;
@@ -462,7 +463,7 @@ public enum MarkerShape {
     }
 
     // (STAR) adapted from https://stackoverflow.com/questions/16327588/how-to-make-star-shape-in-java
-    private static void fillStar(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillStar(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         double deltaAngleRad = Math.PI / 5;
         double innerRadius = r / 2.63;
@@ -490,61 +491,61 @@ public enum MarkerShape {
         canvas.fill();
     }
 
-    private static void fillPentagon(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillPentagon(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-18), 5);
         canvas.fill();
     }
 
-    private static void fillHexagon1(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillHexagon1(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-30), 6);
         canvas.fill();
     }
 
-    private static void fillHexagon2(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillHexagon2(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 0, 6);
         canvas.fill();
     }
 
-    private static void fillOctagon(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillOctagon(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(22.5), 8);
         canvas.fill();
     }
 
-    private static void fillDiamond(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillDiamond(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 0, 4);
         canvas.fill();
     }
 
-    private static void fillTriangleUp(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriangleUp(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-90), 3);
         canvas.fill();
     }
 
-    private static void fillTriangleLeft(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriangleLeft(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, Math.toRadians(-180), 3);
         canvas.fill();
     }
 
-    private static void fillTriangleRight(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriangleRight(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 0, 3);
         canvas.fill();
     }
 
-    private static void fillTriangleDown(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriangleDown(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         regularPolygonPath(canvas, x, y, r, 90, 3);
         canvas.fill();
     }
 
-    private static void fillThinDiamond(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillThinDiamond(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         double sizeBy4 = size / 4;
         canvas.beginPath();
@@ -556,31 +557,31 @@ public enum MarkerShape {
         canvas.fill();
     }
 
-    private static void fillTriLeft(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriLeft(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, 1);
         canvas.fill();
     }
 
-    private static void fillTriDown(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriDown(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, Math.toRadians(90));
         canvas.fill();
     }
 
-    private static void fillTriRight(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriRight(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, 0);
         canvas.fill();
     }
 
-    private static void fillTriUp(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillTriUp(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         triPath(canvas, x, y, r, Math.toRadians(-90));
         canvas.fill();
     }
 
-    private static void fillPlus(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillPlus(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.beginPath();
         canvas.moveTo(x, y - r);
@@ -590,7 +591,7 @@ public enum MarkerShape {
         canvas.fill();
     }
 
-    private static void fillX(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillX(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.beginPath();
         canvas.moveTo(x - r, y - r);
@@ -600,22 +601,22 @@ public enum MarkerShape {
         canvas.fill();
     }
 
-    private static void fillHorizontalLine(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillHorizontalLine(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.strokeLine(x, y - r, x, y + r);
     }
 
-    private static void fillVerticalLine(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillVerticalLine(GraphicsBuffer<?> canvas, double x, double y, double size) {
         double r = size * .5;
         canvas.strokeLine(x - r, y, x + r, y);
     }
 
-    private static void fillFilledX(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void fillFilledX(GraphicsBuffer<?> canvas, double x, double y, double size) {
         filledX(canvas, x, y, size);
         canvas.fill();
     }
 
-    private static void triPath(ChartCanvas<?> canvas, double x, double y, double r, double j) {
+    private static void triPath(GraphicsBuffer<?> canvas, double x, double y, double r, double j) {
         double rad = Math.PI / (1.5);
         canvas.beginPath();
         for (int i = 0; i < 6; i++) {
@@ -637,7 +638,7 @@ public enum MarkerShape {
         canvas.closePath();
     }
 
-    private static void filledX(ChartCanvas<?> canvas, double x, double y, double size) {
+    private static void filledX(GraphicsBuffer<?> canvas, double x, double y, double size) {
         //divide into three
         double sby3 = size / 3;
         //get the size of the hypotenuse
@@ -661,7 +662,7 @@ public enum MarkerShape {
         canvas.closePath();
     }
 
-    private static void regularPolygonPath(ChartCanvas<?> canvas, double x, double y, double r, double j, int sides) {
+    private static void regularPolygonPath(GraphicsBuffer<?> canvas, double x, double y, double r, double j, int sides) {
         double rad = Math.PI / (sides * .5);
         canvas.beginPath();
         for (int i = 0; i < sides; i++) {

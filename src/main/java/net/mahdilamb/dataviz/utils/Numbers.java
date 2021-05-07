@@ -106,5 +106,33 @@ public final class Numbers {
         return approximateDouble(v, 5);
     }
 
+    /**
+     * Perform an integer ceiling division. The operation is modified from {@link java.lang.Math#floorDiv(int, int)}
+     *
+     * @param a the numerator
+     * @param b the denominator
+     * @return the ceiling division of a over b
+     */
+    public static int ceilDiv(int a, int b) {
+        int r = a / b;
+        if ((a ^ b) > 0 && (r * b != a)) {
+            ++r;
+        }
+        return r;
+    }
 
+    /**
+     * Perform an integer ceiling division. The operation is modified from {@link java.lang.Math#floorDiv(long, long)}
+     *
+     * @param a the numerator
+     * @param b the denominator
+     * @return the ceiling division of a over b
+     */
+    public static long ceilDiv(long a, long b) {
+        long r = a / b;
+        if ((a ^ b) > 0 && (r * b != a)) {
+            ++r;
+        }
+        return r;
+    }
 }

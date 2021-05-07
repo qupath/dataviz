@@ -43,16 +43,6 @@ public final class Interpolations {
     }
 
     /**
-     * Exponential ease out function
-     *
-     * @param t the parametric value
-     * @return the value transformed to exponential ease out
-     */
-    public static double easeOutExpo(double t) {
-        return t == 1 ? 1 : 1 - pow(2, -10 * t);
-    }
-
-    /**
      * @param x the value to interpolate
      * @return the linearly interpolated value
      */
@@ -186,6 +176,16 @@ public final class Interpolations {
      */
     public static double easeInExpo(double x) {
         return x == 0 ? 0 : pow(2, 10 * x - 10);
+    }
+
+    /**
+     * Exponential ease out function
+     *
+     * @param t the parametric value
+     * @return the value transformed to exponential ease out
+     */
+    public static double easeOutExpo(double t) {
+        return t == 1 ? 1 : 1 - pow(2, -10 * t);
     }
 
     /**

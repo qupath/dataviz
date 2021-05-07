@@ -3,6 +3,9 @@ package net.mahdilamb.dataviz.utils;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
+/**
+ * Utility methods for working with variable arguents
+ */
 public final class VarArgsUtils {
 
     private VarArgsUtils() {

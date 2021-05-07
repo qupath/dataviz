@@ -1,6 +1,6 @@
 package net.mahdilamb.dataviz.graphics.shapes;
 
-import net.mahdilamb.dataviz.graphics.ChartCanvas;
+import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 
 /**
  * Marker shape
@@ -20,12 +20,12 @@ public class Marker implements Shape {
     public double x = 8, y = 8, size = 16;
 
     @Override
-    public void fill(ChartCanvas<?> canvas) {
+    public void fill(GraphicsBuffer<?> canvas) {
         shape.fill.paint(canvas, x, y, size);
     }
 
     @Override
-    public void stroke(ChartCanvas<?> canvas) {
+    public void stroke(GraphicsBuffer<?> canvas) {
         shape.stroke.paint(canvas, x, y, size);
     }
 

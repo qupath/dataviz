@@ -1,8 +1,8 @@
 package net.mahdilamb.dataviz.graphics;
 
-import net.mahdilamb.colormap.Color;
 import net.mahdilamb.colormap.Colormap;
 
+import java.awt.*;
 import java.util.Collections;
 import java.util.NavigableMap;
 import java.util.Objects;
