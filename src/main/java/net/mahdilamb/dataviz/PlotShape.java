@@ -257,7 +257,14 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
             if (color.getAlpha() != 255) {
                 color = new Color(color.getRGB());
             }
-            return Tooltip.createWithOutline(parent.getLayout().getXAxis().getPositionFromValue(x), parent.getLayout().getYAxis().getPositionFromValue(y), Side.LEFT, color, parent.hoverFormatter.get(i), true);
+            return Tooltip.createWithOutline(
+                    parent.getLayout().getXAxis().getPositionFromValue(x),
+                    parent.getLayout().getYAxis().getPositionFromValue(y),
+                    Side.LEFT,
+                    color,
+                    parent.hoverFormatter.get(i),
+                    true
+            );
 
         }
 

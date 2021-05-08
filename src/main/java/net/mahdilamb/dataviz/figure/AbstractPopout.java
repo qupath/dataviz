@@ -93,7 +93,6 @@ abstract class AbstractPopout<T> extends Component {
             } else if (hAlign == HAlign.RIGHT) {
                 x += component.getWidth();
             }
-
         }
         if (side.isHorizontal()) {
             contentX = x - triHeight - radius - (width - radius * 2 - triWidth) * (relativePosition);
@@ -142,9 +141,9 @@ abstract class AbstractPopout<T> extends Component {
         canvas.lineTo(right, bottom - radius);
         canvas.curveTo(right, bottom + radius * (Numbers.MORTENSEN_CONSTANT - 1), right + radius * (Numbers.MORTENSEN_CONSTANT - 1), bottom, right - radius, bottom);
         if (showArrow && side == Side.TOP) {
-            canvas.lineTo(x - triHeight, bottom);
-            canvas.lineTo(x, y);
             canvas.lineTo(x + triHeight, bottom);
+            canvas.lineTo(x, y);
+            canvas.lineTo(x - triHeight, bottom);
         }
         canvas.lineTo(contentX + radius, bottom);
         canvas.curveTo(contentX + radius * (1 - Numbers.MORTENSEN_CONSTANT), bottom, contentX, bottom + radius * (Numbers.MORTENSEN_CONSTANT - 1), contentX, bottom - radius);
