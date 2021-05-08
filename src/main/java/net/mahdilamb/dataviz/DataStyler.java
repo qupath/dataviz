@@ -299,7 +299,10 @@ public abstract class DataStyler {
     }
 
     public final String getName() {
-        return series == null ? name : series.getName();
+        return series == null ?
+                name :
+                series.getName()
+                ;
     }
 
 }
