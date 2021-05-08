@@ -73,10 +73,10 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
                 }
             } else {
                 if (((Figure) getContext().getRenderer().getFigure()).toggleHover.getValue()) {
-                   //todo System.out.println(contains(x, getY(), getY() + getHeight()).size());
+                    //todo System.out.println(contains(x, getY(), getY() + getHeight()).size());
                     final List<? extends PlotShape<PL>> matches = contains(x, y);
                     if (!matches.isEmpty()) {
-                        setTooltip(matches.get(matches.size() - 1).createTooltip());
+                        setTooltip(matches.get(matches.size() - 1).createTooltip(getContext().getRenderer()));
                     } else {
                         setTooltip(null);
                     }

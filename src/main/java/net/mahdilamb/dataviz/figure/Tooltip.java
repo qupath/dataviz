@@ -93,4 +93,19 @@ public final class Tooltip extends AbstractPopout<String> {
     public static Tooltip createWithOutline(double x, double y, Side side, Color background, String content, boolean showArrow) {
         return new Tooltip(x, y, DEFAULT_TOOLTIP_RADIUS, background, Colors.calculateLuminance(background) > 0.1791 ? Color.BLACK : Color.WHITE, side, content, Font.DEFAULT_FONT, showArrow);
     }
+
+    public static Tooltip createWithOutlineFlipHorizontal(final FigureBase<?> component, double x, double y, double offsetX, boolean popoutRight, Color background, String content, boolean showArrow) {
+        final double width = component.getContext().getRenderer().getTextWidth(Font.DEFAULT_FONT, content);
+        if ((x + width) > component.getWidth()) {
+            if (popoutRight) {
+                popoutRight = false;
+            }
+        }
+        if (popoutRight) {
+            x += offsetX;
+        } else {
+            x -= offsetX;
+        }
+        return new Tooltip(x, y, DEFAULT_TOOLTIP_RADIUS, background, Colors.calculateLuminance(background) > 0.1791 ? Color.BLACK : Color.WHITE, popoutRight ? Side.RIGHT : Side.LEFT, content, Font.DEFAULT_FONT, showArrow);
+    }
 }

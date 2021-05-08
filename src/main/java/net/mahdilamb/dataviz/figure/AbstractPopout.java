@@ -9,6 +9,9 @@ import java.awt.*;
 
 abstract class AbstractPopout<T> extends Component {
 
+    static final double triWidth = 10;
+    ;
+
     static final double DEFAULT_TOOLTIP_RADIUS = 5;
     static final double DEFAULT_RELATIVE_POSITION = 0.5;
     static final VAlign DEFAULT_VALIGN = VAlign.BOTTOM;
@@ -120,7 +123,6 @@ abstract class AbstractPopout<T> extends Component {
         if (content == null) {
             return;
         }
-        double triWidth = 10;
         double right = contentX + width;
         double bottom = contentY + height;
         double triHeight = triWidth / 2;
