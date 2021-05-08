@@ -26,6 +26,7 @@ abstract class AbstractPopout<T> extends Component {
 
     private final double paddingX = 6, paddingY = 4;
     private double x, y, width, height;
+    private final boolean drawRelative;
     private final double relativePosition;
     private double contentX = Double.NaN, contentY = Double.NaN;
     private final Side side;
@@ -39,6 +40,19 @@ abstract class AbstractPopout<T> extends Component {
         this.vAlign = vAlign;
         this.hAlign = hAlign;
         this.relativePosition = relativePosition;
+        this.background = background;
+        this.outline = outline;
+        this.side = side;
+        this.content = content;
+        this.showArrow = showArrow;
+        drawRelative = true;
+    }
+
+    protected AbstractPopout(double x, double y, Color background, Color outline, Side side, T content, boolean showArrow) {
+        relativePosition = .5;
+        drawRelative = false;
+        this.x = x;
+        this.y = y;
         this.background = background;
         this.outline = outline;
         this.side = side;
@@ -62,22 +76,25 @@ abstract class AbstractPopout<T> extends Component {
 
     @Override
     protected final <S> void layoutComponent(Renderer<S> renderer, double minX, double minY, double maxX, double maxY) {
-        x = component.getX();
-        y = component.getY();
-        if (vAlign == VAlign.MIDDLE) {
-            y += component.getHeight() * .5;
-        } else if (vAlign == VAlign.BOTTOM) {
-            y += component.getHeight();
-        }
-        if (hAlign == HAlign.CENTER) {
-            x += component.getWidth() * .5;
-        } else if (hAlign == HAlign.RIGHT) {
-            x += component.getWidth();
-        }
         width = getContentWidth(renderer) + paddingX + paddingX;
         height = getContentHeight(renderer) + paddingY + paddingY;
         double triWidth = 10;
         double triHeight = triWidth * .5;
+        if (drawRelative) {
+            x = component.getX();
+            y = component.getY();
+            if (vAlign == VAlign.MIDDLE) {
+                y += component.getHeight() * .5;
+            } else if (vAlign == VAlign.BOTTOM) {
+                y += component.getHeight();
+            }
+            if (hAlign == HAlign.CENTER) {
+                x += component.getWidth() * .5;
+            } else if (hAlign == HAlign.RIGHT) {
+                x += component.getWidth();
+            }
+
+        }
         if (side.isHorizontal()) {
             contentX = x - triHeight - radius - (width - radius * 2 - triWidth) * (relativePosition);
             if (side == Side.TOP) {
@@ -143,7 +160,7 @@ abstract class AbstractPopout<T> extends Component {
         canvas.fill();
         if (outline != null) {
             canvas.setStroke(outline);
-            canvas.setStroke(Stroke.SOLID);
+            canvas.setStroke(Stroke.SOLID_THIN);
             canvas.stroke();
         }
         drawContent(renderer, canvas, contentX + paddingX, contentY + paddingY);

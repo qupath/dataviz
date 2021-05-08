@@ -45,7 +45,7 @@ public class WrappedLabel extends Label {
         lineStarts.clear();
         numLines = 0;
         double maxWidth = maxX - minX - (paddingX * 2);
-        double lineHeight = getTextLineHeight(renderer, font);
+        double lineHeight = getTextLineHeight(renderer, font,text);
         double baselineOffset = getTextBaselineOffset(renderer, font);
         double lineWidth = 0;
         double actualWidth = 0;

@@ -35,7 +35,10 @@ public class InputMode extends ToggleButtonGroup {
         boolean enableManualZoom = true,
                 enablePan = true,
                 enablePolygonSelect = true;
-        for (final PlotData<?> data : layout.data) {
+        for (final PlotData<?, ?> data : layout.data) {
+            if (data.getPlotOptions() == null) {
+                continue;
+            }
             enableManualZoom &= data.getPlotOptions().supportsManualZoom();
             enablePan &= data.getPlotOptions().supportsPan();
             enablePolygonSelect &= data.getPlotOptions().supportsPolygonSelection();

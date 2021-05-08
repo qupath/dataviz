@@ -12,7 +12,6 @@ module net.mahdilamb.dataviz {
     exports net.mahdilamb.dataviz.data;
     exports net.mahdilamb.dataviz.layouts;
     exports net.mahdilamb.dataviz.graphics;
-    exports net.mahdilamb.dataviz.graphics.shapes;
     exports net.mahdilamb.dataviz.figure;
     exports net.mahdilamb.dataviz.ui;
     exports net.mahdilamb.dataviz.utils;

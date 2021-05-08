@@ -121,7 +121,6 @@ public final class SwingUtils {
         }
         if (lineStart < text.length()) {
             maxWidth = Math.max(fontMetrics.stringWidth(text.substring(lineStart)), maxWidth);
-
         }
         return maxWidth;
     }
@@ -154,6 +153,24 @@ public final class SwingUtils {
             final String line = text.substring(wordStart);
             double pad = frac == 0 ? 0 : ((g.getFontMetrics().stringWidth(line) - width) * frac);
             g.drawString(line, SwingUtils.convert(x - pad), currentY + SwingUtils.convert(y));
+        }
+        return currentY;
+    }
+
+    public static double getLineHeight(final FontMetrics g, String text, double lineSpacing) {
+        int lineHeight = g.getHeight();
+        int currentY = 0;
+        int i = 0;
+        int wordStart = 0;
+        while (i < text.length()) {
+            char c = text.charAt(i++);
+            if (c == '\n') {
+                currentY += lineHeight * lineSpacing;
+                wordStart = i;
+            }
+        }
+        if (wordStart < text.length()) {
+            currentY += lineHeight * lineSpacing;
         }
         return currentY;
     }
@@ -235,12 +252,12 @@ public final class SwingUtils {
 
 
      */
-    public static Arc2D computeArc( double x0, double y0, double rx, double ry, double angle, boolean largeArcFlag,
+    public static Arc2D computeArc(double x0, double y0, double rx, double ry, double angle, boolean largeArcFlag,
                                    boolean sweepFlag, double x, double y) {
         //
         // Elliptical arc implementation based on the SVG specification notes
         //
-        final Arc2D.Double arc=new Arc2D.Double();
+        final Arc2D.Double arc = new Arc2D.Double();
         // Compute the half distance between the current and the final point
         double dx2 = (x0 - x) / 2.0;
         double dy2 = (y0 - y) / 2.0;

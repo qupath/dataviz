@@ -12,7 +12,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
     /**
      * The plot area
      */
-    protected final RectanglePlotArea plotArea = new RectanglePlotArea(this);
+    protected final RectangularPlotArea plotArea = new RectangularPlotArea(this);
     /*
      * Bounds for when resetting the display
      */
@@ -68,7 +68,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
 
 
     @Override
-    protected void onAdd(PlotData<XYLayout> data) {
+    protected void onAdd(PlotData<?, XYLayout> data) {
         updateHomeBounds(getHomeMinX(data), getHomeMinY(data), getHomeMaxX(data), getHomeMaxY(data));
         setRange(homeMinX, homeMinY, homeMaxX, homeMaxY);
     }
@@ -83,8 +83,8 @@ public final class XYLayout extends PlotLayout<XYLayout> {
 
     @Override
     protected void panPlotArea(double dx, double dy) {
-        final double xMin = getXAxis().lower - dx / getXAxis().scale,
-                yMin = getYAxis().lower + dy / getYAxis().scale,
+        final double xMin = getXAxis().lower - dx / getScale(getXAxis()),
+                yMin = getYAxis().lower + dy / getScale(getYAxis()),
                 xRange = getXAxis().upper - getXAxis().lower,
                 yRange = getYAxis().upper - getYAxis().lower;
 

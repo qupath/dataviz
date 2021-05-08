@@ -93,6 +93,7 @@ public abstract class PlotAxis<PL extends PlotLayout<PL>> extends Component {
 
     @Override
     protected abstract <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY);
+    protected   double scale;
 
     protected final Label title = new Label(EMPTY_STRING, Font.DEFAULT_TITLE_FONT);
     protected PL layout;

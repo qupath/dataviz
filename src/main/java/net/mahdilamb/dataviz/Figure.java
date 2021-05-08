@@ -35,7 +35,7 @@ public final class Figure extends FigureBase<Figure> {
      * @param plotData the data to add
      * @return this figure
      */
-    public Figure addData(final PlotData<?> plotData) {
+    public Figure addData(final PlotData<?,?> plotData) {
         if (layout != null && layout.getClass() != plotData.getLayout().getClass()) {
             System.err.println("Old layout removed while adding data");
             remove(layout);
@@ -77,7 +77,10 @@ public final class Figure extends FigureBase<Figure> {
         final Toolbar toolbar = new Toolbar();
         toolbar.addIconButton(getMaterialIcon(IconStore.MaterialIconKey.CAMERA_ALT, null), "Save")
                 .setOnMouseClick(() -> getContext().getRenderer().saveAs(getOutputPath(getContext().getRenderer(), FigureExporter.getSupportedExtensions(), ".svg")));
-        for (final PlotData<?> data : layout.data) {
+        for (final PlotData<?,?> data : layout.data) {
+            if (data.getPlotOptions() == null){
+                continue;
+            }
             enableZoom &= data.getPlotOptions().supportsZoom();
         }
         if (inputMode == null) {

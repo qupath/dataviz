@@ -1,7 +1,5 @@
 package net.mahdilamb.dataviz;
 
-import net.mahdilamb.colormap.Colormap;
-import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.dataviz.figure.Group;
 import net.mahdilamb.dataviz.graphics.Font;
 import net.mahdilamb.dataviz.layouts.XYLayout;
@@ -23,7 +21,7 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
     /**
      * A list of the data in this layout
      */
-    protected final List<PlotData<PL>> data = new ArrayList<>();
+    protected final List<PlotData<?, PL>> data = new ArrayList<>();
     protected Label title = new Label(EMPTY_STRING, Font.DEFAULT_FONT);
     protected PlotSelection<PL> selection;
 
@@ -39,7 +37,7 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
      *
      * @param data the data to add
      */
-    protected final void addData(PlotData<PL> data) {
+    protected final void addData(PlotData<?, PL> data) {
         this.data.add(data);
         onAdd(data);
     }
@@ -77,7 +75,7 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
         layout.redraw();
     }
 
-    protected abstract void onAdd(PlotData<PL> data);
+    protected abstract void onAdd(PlotData<?, PL> data);
 
     protected abstract void panPlotArea(double dx, double dy);
 
@@ -87,19 +85,19 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
 
     public abstract void transformPositionToValue(double x, double y, BiDoubleConsumer xy);
 
-    protected static double getHomeMinX(PlotData<XYLayout> data) {
+    protected static double getHomeMinX(PlotData<?, XYLayout> data) {
         return ((PlotBounds.XY) data.getBoundPreferences().home).getMinX();
     }
 
-    protected static double getHomeMinY(PlotData<XYLayout> data) {
+    protected static double getHomeMinY(PlotData<?, XYLayout> data) {
         return ((PlotBounds.XY) data.getBoundPreferences().home).getMinY();
     }
 
-    protected static double getHomeMaxX(PlotData<XYLayout> data) {
+    protected static double getHomeMaxX(PlotData<?, XYLayout> data) {
         return ((PlotBounds.XY) data.getBoundPreferences().home).getMaxX();
     }
 
-    protected static double getHomeMaxY(PlotData<XYLayout> data) {
+    protected static double getHomeMaxY(PlotData<?, XYLayout> data) {
         return ((PlotBounds.XY) data.getBoundPreferences().home).getMaxY();
     }
 
@@ -114,4 +112,9 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
     protected void clearCache() {
         getPlotArea().clearCache();
     }
+
+    protected static <PL extends PlotLayout<PL>> double getScale(final PlotAxis<PL> plotAxis) {
+        return plotAxis.scale;
+    }
+
 }

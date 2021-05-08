@@ -9,10 +9,13 @@ import net.mahdilamb.dataviz.utils.ColorUtils;
 import net.mahdilamb.dataviz.utils.Numbers;
 
 import java.awt.*;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.function.DoubleUnaryOperator;
+import java.util.function.IntFunction;
 
 @PlotOptions(name = "Scatter", supportsZoom = true, supportsManualZoom = true, supportsPan = true, supportsPolygonSelection = true, supportsZoomByWheel = true)
-public class Scatter extends RelationalData {
+public class Scatter extends RelationalData<Scatter> {
     /**
      * Default marker size
      */
@@ -39,13 +42,20 @@ public class Scatter extends RelationalData {
     public Scatter(double[] x, DoubleUnaryOperator y) {
         super(x, y);
     }
-@Override
+
+    @Override
     protected void init() {
         @SuppressWarnings("unchecked") final PlotShape<XYLayout>[] shapes = new PlotShape[x.size()];
         for (int i = 0; i < shapes.length; ++i) {
-            shapes[i] = createMarker(this, i, x.getDouble(i), y.getDouble(i), markerSize);
+            shapes[i] = createMarker(this, i, x.getDouble(i), y.getDouble(i));
         }
         addShapes(shapes, true);
+        final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
+        formatters.put("x", this.x::get);
+        formatters.put("y", this.y::get);
+        hoverFormatter = new HoverText<>(formatters);
+        hoverFormatter.add("%s = %{x:s}", this.getLayout().getXAxis()::getTitle);
+        hoverFormatter.add("%s = %{y:s}", this.getLayout().getYAxis()::getTitle);
     }
 
     @Override
@@ -64,26 +74,38 @@ public class Scatter extends RelationalData {
     }
 
     public Scatter setColors(final String seriesName) throws DataFrameOnlyMethodException {
-        setStyle(seriesName, DataStyler.StyleAttribute.COLOR,
+        setStyler(seriesName, DataStyler.StyleAttribute.COLOR,
                 (attr, series) -> {
                     markerOpacity = DEFAULT_MULTICOLOR_OPACITY;
-                    return new DataStyler.Numeric(this, attr, series,0,1);
+                    return new DataStyler.Numeric(this, attr, series, 0, 1);
                 },
                 (attr, series) -> {
                     markerOpacity = DEFAULT_MULTICOLOR_OPACITY;
-                    return new DataStyler.Categorical(this, attr, series);
+                    final DataStyler.Categorical styler = new DataStyler.Categorical(this, attr, series);
+                    addToHoverText(styler, "%s = %{color:s}", styler::getName, "color", styler::get);
+                    return styler;
                 });
         return this;
     }
 
     public Scatter setColor(final Color color) {
-        clearStyle(DataStyler.StyleAttribute.COLOR);
+        clearStyler(DataStyler.StyleAttribute.COLOR);
         markerColor = color;
         return this;
     }
 
     public Scatter setColor(final String colorName) {
         return setColor(ColorUtils.convertToColor(colorName));
+    }
+
+    @Override
+    public Scatter setXLabel(String name) {
+        return (Scatter) super.setXLabel(name);
+    }
+
+    @Override
+    public Scatter setYLabel(String name) {
+        return (Scatter) super.setYLabel(name);
     }
 
     @Override
@@ -96,15 +118,18 @@ public class Scatter extends RelationalData {
     }
 
     public Scatter setSizes(final String seriesName, double minSize, double maxSize) throws DataFrameOnlyMethodException {
-        setStyle(seriesName,
+        setStyler(seriesName,
                 DataStyler.StyleAttribute.SIZE,
-                (attr, series) -> new DataStyler.Numeric(this, DataStyler.StyleAttribute.SIZE, series, minSize, maxSize),
+                (attr, series) -> {
+                    final DataStyler.Numeric styler = new DataStyler.Numeric(this, DataStyler.StyleAttribute.SIZE, series, minSize, maxSize);
+                    addToHoverText(styler, "%s = %{size:.1f}", styler::getName, "size", i -> getRaw(styler, i));
+                    return styler;
+                },
                 (attr, series) -> {
                     //todo
                     return null;
 
-                }
-        );
+                });
         return this;
     }
 
@@ -114,7 +139,7 @@ public class Scatter extends RelationalData {
 
     public Scatter setSize(final double size) {
         markerSize = Numbers.requireFinitePositive(size);
-        clearStyle(DataStyler.StyleAttribute.SIZE);
+        clearStyler(DataStyler.StyleAttribute.SIZE);
         return this;
     }
 
@@ -136,12 +161,17 @@ public class Scatter extends RelationalData {
 
     @Override
     protected double getSearchPaddingX() {
+        //TODO check
+        final DataStyler styler;
+        if ((styler = getStyler(DataStyler.StyleAttribute.SIZE)) instanceof DataStyler.Numeric) {
+            return ((DataStyler.Numeric) styler).getMax() * .5;
+        }
         return markerSize;//todo
     }
 
     @Override
     protected double getSearchPaddingY() {
-        return markerSize;//todo
+        return getSearchPaddingX();
     }
 
 }

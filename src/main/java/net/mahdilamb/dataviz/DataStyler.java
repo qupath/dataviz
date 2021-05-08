@@ -16,6 +16,7 @@ import static net.mahdilamb.dataviz.utils.Interpolations.lerp;
  * A plot trace - containing the information used to style shapes
  */
 public abstract class DataStyler {
+
     /**
      * The possible attributes for a plot trace to have ownership over
      */
@@ -50,7 +51,7 @@ public abstract class DataStyler {
         boolean[] isVisible;
         int[] indices;
 
-        Categorical(PlotData<?> data, StyleAttribute attribute, String name, String[] categories) {
+        Categorical(PlotData<?, ?> data, StyleAttribute attribute, String name, String[] categories) {
             super(data, attribute);
             this.name = name;
             final GroupBy<String> groupBy = new GroupBy<>(categories);
@@ -70,12 +71,12 @@ public abstract class DataStyler {
          * @param attribute the attribute
          * @param series    the series
          */
-        public Categorical(final PlotData<?> data, final StyleAttribute attribute, final Series<?> series) {
+        public Categorical(final PlotData<?, ?> data, final StyleAttribute attribute, final Series<?> series) {
             this(data, attribute, series.getName(), series.asString().toArray(new String[series.size()]));
             this.series = series;
         }
 
-        Categorical(final PlotData<?> data, final StyleAttribute attribute, String[] categories, int[] indices) {
+        Categorical(final PlotData<?, ?> data, final StyleAttribute attribute, String[] categories, int[] indices) {
             super(data, attribute);
             this.categories = categories;
             this.indices = indices;
@@ -149,7 +150,7 @@ public abstract class DataStyler {
          * @param scaleMin  the output min value
          * @param scaleMax  the output max value
          */
-        public Numeric(final PlotData<?> data, final StyleAttribute attribute, String name, double[] values, double scaleMin, double scaleMax) {
+        public Numeric(final PlotData<?, ?> data, final StyleAttribute attribute, String name, double[] values, double scaleMin, double scaleMax) {
             this(data, attribute, Series.of(name, values), scaleMin, scaleMax);
 
         }
@@ -162,7 +163,7 @@ public abstract class DataStyler {
          * @param name      the name of the trace
          * @param values    the values
          */
-        public Numeric(final PlotData<?> data, final StyleAttribute attribute, String name, double[] values) {
+        public Numeric(final PlotData<?, ?> data, final StyleAttribute attribute, String name, double[] values) {
             this(data, attribute, Series.of(name, values));
         }
 
@@ -174,7 +175,7 @@ public abstract class DataStyler {
          * @param attribute the attribute
          * @param series    the series
          */
-        public Numeric(final PlotData<?> data, final StyleAttribute attribute, final DoubleSeries series) {
+        public Numeric(final PlotData<?, ?> data, final StyleAttribute attribute, final DoubleSeries series) {
             super(data, attribute);
             this.series = this.values = series;
             valMin = scaleMin = StatUtils.min(values::get, values.size());
@@ -192,7 +193,7 @@ public abstract class DataStyler {
          * @param scaleMin  the output min value
          * @param scaleMax  the output max value
          */
-        public Numeric(final PlotData<?> data, final StyleAttribute attribute, final DoubleSeries series, double scaleMin, double scaleMax) {
+        public Numeric(final PlotData<?, ?> data, final StyleAttribute attribute, final DoubleSeries series, double scaleMin, double scaleMax) {
             this(data, attribute, series);
             this.scaleMin = scaleMin;
             this.scaleMax = scaleMax;
@@ -232,15 +233,19 @@ public abstract class DataStyler {
         Color calculateColor(Colormap colormap, int i) {
             return colormap.get(get(i));
         }
+
+        public double getMax() {
+            return scaleMax;
+        }
     }
 
     static final class UncategorizedTrace extends DataStyler {
         final Figure figure;
-        PlotData<?>[] data;
+        PlotData<?, ?>[] data;
         Legend.LegendItem[] legendItems;
         boolean[] isVisible;
 
-        UncategorizedTrace(Figure figure, PlotData<?>[] data) {
+        UncategorizedTrace(Figure figure, PlotData<?, ?>[] data) {
             super(null, null);
             this.data = data;
             this.figure = figure;
@@ -252,7 +257,7 @@ public abstract class DataStyler {
         }
     }
 
-    final PlotData<?> data;
+    final PlotData<?, ?> data;
     final StyleAttribute attribute;
     double indent = 5,
             glyphWidth = -1,
@@ -266,8 +271,9 @@ public abstract class DataStyler {
      */
     protected String name;
     Series<?> series;
+    protected HoverText.Segment defaultSeg;//TODO
 
-    DataStyler(PlotData<?> data, final StyleAttribute attribute) {
+    DataStyler(PlotData<?, ?> data, final StyleAttribute attribute) {
         this.data = data;
         this.attribute = attribute;
 
@@ -291,4 +297,9 @@ public abstract class DataStyler {
         }
         return attribute == ((DataStyler) obj).attribute;
     }
+
+    public final String getName() {
+        return series == null ? name : series.getName();
+    }
+
 }

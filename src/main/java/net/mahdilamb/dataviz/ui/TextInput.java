@@ -88,8 +88,8 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
     }
 
     @Override
-    protected <T>void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
-        setBoundsFromRect(minX, minY, paddingX * 2 + width, getTextLineHeight(renderer, font) + paddingY * 2);
+    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+        setBoundsFromRect(minX, minY, paddingX * 2 + width, getTextLineHeight(renderer, font, rawValue.toString()) + paddingY * 2);
     }
 
     @Override
@@ -103,7 +103,8 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
         if (!isFocused()) {
             stroke = THIN_LINE;
         }
-        redraw();    }
+        redraw();
+    }
 
     @Override
     protected void onMouseDown(boolean ctrlDown, boolean shiftDown, double x, double y) {

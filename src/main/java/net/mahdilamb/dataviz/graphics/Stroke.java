@@ -21,6 +21,10 @@ public class Stroke {
      */
     public static final Stroke SOLID = new Stroke(1);
     /**
+     * A default solid stroke .5 pixel width.
+     */
+    public static final Stroke SOLID_THIN = new Stroke(.5);
+    /**
      * A default dashed stroke
      */
     public static final Stroke DASHED = new Stroke(1, new double[]{8, 2});

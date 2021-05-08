@@ -5,20 +5,25 @@ import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataframe.*;
 import net.mahdilamb.dataframe.utils.BooleanArrayList;
+import net.mahdilamb.dataframe.utils.IntArrayList;
+import net.mahdilamb.dataviz.data.RelationalData;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.dataviz.plots.DataFrameOnlyMethodException;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 
 import java.awt.*;
 import java.util.*;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.IntFunction;
+import java.util.function.Supplier;
 
 /**
  * Plot data is the source of data for generating traces which, in turn, generate shapes/glyph.
  *
  * @param <PL> the supported plot layout
  */
-public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureComponent {
+public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayout<PL>> implements FigureComponent {
     private static final Colormap DEFAULT_QUALITATIVE_COLORMAP = Colormaps.get("Plotly");
     private static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = Colormaps.get("Viridis");
 
@@ -34,6 +39,12 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
     boolean anySelected = false;
     BooleanArrayList selected = null;
     Color selectedColor = Colors.lightgray;
+
+    protected Color lineColor;
+    protected Color fillColor;
+
+    protected HoverText<PD, PL> hoverFormatter;
+
 
     /**
      * The backing dataframe
@@ -84,26 +95,27 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
         }
     }
 
-    protected void addShapes(PlotShape<PL>[] shapes) {
+    @SafeVarargs
+    protected final void addShapes(PlotShape<PL>... shapes) {
         addShapes(shapes, true);
     }
 
     protected Color getColor(int i) {
         final DataStyler styler = getStyler(DataStyler.StyleAttribute.COLOR);
         if (styler != null) {
-                return styler.calculateColor(styler.getClass() == DataStyler.Categorical.class?
-                        qualitativeColormap:
-                        sequentialColormap, i);
+            return styler.calculateColor(styler.getClass() == DataStyler.Categorical.class ?
+                    qualitativeColormap :
+                    sequentialColormap, i);
 
         }
-        return null;
+        return qualitativeColormap.get(0);
     }
 
-    protected double getSize(int i){
+    protected double getSize(int i) {
         final DataStyler styler = getStyler(DataStyler.StyleAttribute.SIZE);
         if (styler != null) {
             if (styler.getClass() == DataStyler.Categorical.class) {
-//todo
+                //todo
             } else {
                 return ((DataStyler.Numeric) styler).get(i);
             }
@@ -111,25 +123,54 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
         return Double.NaN;
     }
 
-    protected final void setStyle(final String seriesName, final DataStyler.StyleAttribute attribute, BiFunction<DataStyler.StyleAttribute, DoubleSeries, DataStyler.Numeric> ifNumeric, BiFunction<DataStyler.StyleAttribute, StringSeries, DataStyler.Categorical> ifCategorical) throws DataFrameOnlyMethodException {
+    protected final void setStyler(
+            final String seriesName,
+            final DataStyler.StyleAttribute attribute,
+            BiFunction<DataStyler.StyleAttribute, DoubleSeries, DataStyler.Numeric> ifNumeric,
+            BiFunction<DataStyler.StyleAttribute, StringSeries, DataStyler.Categorical> ifCategorical
+    ) throws DataFrameOnlyMethodException {
         if (dataFrame == null) {
             throw new DataFrameOnlyMethodException();
         }
         final Series<?> series = dataFrame.get(seriesName);
+        final DataStyler styler;
         if (series.getType() == DataType.DOUBLE) {
-            stylers.put(attribute, ifNumeric.apply(attribute, series.asDouble()));
+            styler = ifNumeric.apply(attribute, series.asDouble());
         } else {
-            stylers.put(attribute, ifCategorical.apply(attribute, series.asString()));
+            styler = ifCategorical.apply(attribute, series.asString());
         }
+        stylers.put(attribute, styler);
         if (layout != null) {
             layout.clearCache();
             PlotLayout.redraw(layout);
         }
-
     }
 
-    protected final void clearStyle(final DataStyler.StyleAttribute attribute) {
-        stylers.remove(attribute);
+    protected final DataStyler addToHoverText(final DataStyler styler, String formatting, Supplier<?> supplier, String key, IntFunction<?> getter) {
+        styler.defaultSeg = hoverFormatter.add(formatting, supplier);
+        hoverFormatter.put(key, getter);
+        //Todo clear overrideing
+        /*
+
+        boolean found = false;
+        for (final Map.Entry<Attribute, PlotTrace> t : attributes()) {
+            if (t.getValue() == trace) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            hoverFormatter.remove(trace.defaultSeg);
+        }
+         */
+        return styler;
+    }
+
+    protected final void clearStyler(final DataStyler.StyleAttribute attribute) {
+        final DataStyler styler = stylers.remove(attribute);
+        if (styler != null) {
+            hoverFormatter.remove(styler);
+        }
         if (layout != null) {
             layout.clearCache();
             PlotLayout.redraw(layout);
@@ -139,6 +180,10 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
 
     protected DataStyler getStyler(final DataStyler.StyleAttribute attribute) {
         return stylers.get(attribute);
+    }
+
+    protected boolean hasStyler(final DataStyler.StyleAttribute attribute) {
+        return stylers.containsKey(attribute);
     }
 
     /**
@@ -194,20 +239,27 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
      * @param height the height of the rectangle
      * @return a rectangle shape for the plot area
      */
-    protected static PlotShape<XYLayout> createRectangle(PlotData<XYLayout> data, int i, double x, double y, double width, double height) {
+    protected static PlotShape<XYLayout> createRectangle(PlotData<?, XYLayout> data, int i, double x, double y, double width, double height) {
         return new PlotShape.Rectangle(data, i, x, y, width, height);
     }
 
     /**
-     * @param i    the corresponding index for the marker
-     * @param x    the x position of the marker
-     * @param y    the y position of the marker
-     * @param size the size of the marker
+     * @param i the corresponding index for the marker
+     * @param x the x position of the marker
+     * @param y the y position of the marker
      * @return a marker to be used in the plot area
      */
-    protected static PlotShape<XYLayout> createMarker(PlotData<XYLayout> data, int i, double x, double y, double size) {
-        return new PlotShape.PlotMarker(data, i, x, y, size);
+    protected static PlotShape<XYLayout> createMarker(PlotData<?, XYLayout> data, int i, double x, double y) {
+        return new PlotShape.PlotMarker(data, i, x, y);
+    }
+
+    protected static PlotShape<XYLayout> createPolyLine(RelationalData<?> data, int i, IntArrayList ids) {
+        return new PlotShape.PolyLine(data, i, ids);
     }
 
     public abstract int size();
+
+    protected static double getRaw(DataStyler.Numeric styler, int i) {
+        return styler.getRaw(i);
+    }
 }

@@ -130,9 +130,23 @@ public abstract class Component extends AbstractComponent {
      * @param tooltip the tooltip
      */
     public final void setTooltip(final Tooltip tooltip) {
-        tooltip.component = this;
-        tooltip.setContext(context);
-        this.tooltip = tooltip;
+        if (tooltip == null) {
+            if (context.getRenderer().lastHover == this) {
+                context.getRenderer().getOverlay().clearTooltip();
+                redraw();
+            }
+        } else {
+            tooltip.component = this;
+            tooltip.setContext(context);
+            this.tooltip = tooltip;
+            if (context != null) {
+                if (context.getRenderer().lastHover == this) {
+                    context.getRenderer().getOverlay().showTooltip(tooltip);
+                    redraw();
+                }
+            }
+        }
+
     }
 
     @Override

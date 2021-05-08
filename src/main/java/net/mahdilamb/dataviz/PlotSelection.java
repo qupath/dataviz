@@ -95,14 +95,14 @@ public abstract class PlotSelection<PL extends PlotLayout<PL>> {
         @Override
         protected void apply(XYLayout layout) {
             if (size() <= 2) {
-                for (final PlotData<XYLayout> t : layout.data) {
+                for (final PlotData<?, XYLayout> t : layout.data) {
                     t.selected = (t.selected == null) ? new BooleanArrayList(t.size()) : t.selected;
                     t.selected.fill(false, t.size());
                     t.anySelected = false;
                 }
                 return;
             }
-            for (final PlotData<XYLayout> t : layout.data) {
+            for (final PlotData<?, XYLayout> t : layout.data) {
                 t.selected = (t.selected == null) ? new BooleanArrayList(t.size()) : t.selected;
                 t.selected.fill(false, t.size());
                 t.anySelected = false;
@@ -119,7 +119,6 @@ public abstract class PlotSelection<PL extends PlotLayout<PL>> {
                 }
             }
         }
-
 
 
         @Override
@@ -205,7 +204,7 @@ public abstract class PlotSelection<PL extends PlotLayout<PL>> {
     protected abstract void apply(PL layout);
 
     protected final void clear(PL layout) {
-        for (final PlotData<PL> data : layout.data) {
+        for (final PlotData<?, PL> data : layout.data) {
             data.anySelected = false;
         }
     }

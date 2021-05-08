@@ -9,7 +9,7 @@ import net.mahdilamb.dataviz.layouts.XYLayout;
 /**
  * Data in a table format with rows and columns
  */
-public abstract class TabularData extends PlotData<XYLayout> {
+public abstract class TabularData<PD extends PlotData<PD, XYLayout>> extends PlotData<PD, XYLayout> {
 
     /**
      * Create a tabular data series
