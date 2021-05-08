@@ -12,6 +12,8 @@ import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
 
 import java.awt.*;
 
+import static net.mahdilamb.dataviz.figure.AbstractComponent.print;
+
 public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
     static final class PolyLine extends PlotShape<XYLayout> {
 
@@ -270,9 +272,9 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
 
         @Override
         public boolean contains(double minX, double minY, double maxX, double maxY) {
-            double w = parent.getSize(i) / parent.getLayout().getXAxis().scale;
-            double h = parent.getSize(i) / parent.getLayout().getYAxis().scale;
-            return RectangularNode.intersects(x, y, x, y, x - w, y - h, x + w, y + h);
+            double w = parent.getSize(i)*.5 / parent.getLayout().getXAxis().scale;
+            double h = parent.getSize(i)*.5 / parent.getLayout().getYAxis().scale;
+            return RectangularNode.intersects(minX, minY, maxX, maxY, x - w, y - h, x + w, y + h);
         }
 
 

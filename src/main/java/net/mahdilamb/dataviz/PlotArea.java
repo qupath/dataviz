@@ -3,9 +3,7 @@ package net.mahdilamb.dataviz;
 import net.mahdilamb.dataviz.figure.BufferingStrategy;
 import net.mahdilamb.dataviz.figure.Component;
 import net.mahdilamb.dataviz.figure.Renderer;
-import net.mahdilamb.dataviz.figure.Tooltip;
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
-import net.mahdilamb.dataviz.graphics.Side;
 import net.mahdilamb.dataviz.ui.Label;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 
@@ -74,8 +72,9 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
                     //todo
                 }
             } else {
-                if (((Figure)getContext().getRenderer().getFigure()).toggleHover.getValue()){
-                    final List<? extends PlotShape<PL>> matches = shapeAt(x, y);
+                if (((Figure) getContext().getRenderer().getFigure()).toggleHover.getValue()) {
+                   //todo System.out.println(contains(x, getY(), getY() + getHeight()).size());
+                    final List<? extends PlotShape<PL>> matches = contains(x, y);
                     if (!matches.isEmpty()) {
                         setTooltip(matches.get(matches.size() - 1).createTooltip());
                     } else {
@@ -87,7 +86,9 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         super.onMouseMove(ctrlDown, shiftDown, x, y);
     }
 
-    protected abstract List<? extends PlotShape<PL>> shapeAt(double x, double y);
+    protected abstract List<? extends PlotShape<PL>> contains(double x, double y);
+
+    protected abstract List<? extends PlotShape<PL>> contains(double x, double minY, double maxY);
 
 
     @Override

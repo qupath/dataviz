@@ -93,22 +93,42 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
     }
 
     @Override
-    protected List<? extends PlotShape<XYLayout>> shapeAt(double x, double y) {
+    protected List<? extends PlotShape<XYLayout>> contains(double x, double y) {
         final List<PlotShape<XYLayout>> out = new LinkedList<>();
         for (final PlotData<?, XYLayout> data : getData(layout)) {
             final double searchX = getSearchPaddingX(data) / getScale(layout.getXAxis()),
                     searchY = getSearchPaddingY(data) / getScale(layout.getYAxis());
             for (final RTree<PlotShape<XYLayout>> shapes : getShapes(data)) {
-
-                layout.transformPositionToValue(x, y, (_x, _y) -> {
-                    shapes.findAll(out,
-                            node2D -> pointIntersectsPaddedNode(node2D, _x, _y, searchX, searchY),
-                            node2D -> node2D.contains(_x, _y, _x, _y));
-                });
+                layout.transformPositionToValue(x, y, (_x, _y) ->
+                        shapes.findAll(out,
+                                node2D -> pointIntersectsPaddedNode(node2D, _x, _y, searchX, searchY),
+                                node2D -> node2D.contains(_x, _y, _x, _y)));
             }
         }
         return out;
     }
+
+    @Override
+    protected List<? extends PlotShape<XYLayout>> contains(double x, double minY, double maxY) {
+        //todo
+        final List<PlotShape<XYLayout>> out = new LinkedList<>();
+        for (final PlotData<?, XYLayout> data : getData(layout)) {
+            final double searchX = getSearchPaddingX(data) / getScale(layout.getXAxis()),
+                    searchY = getSearchPaddingY(data) / getScale(layout.getYAxis());
+            for (final RTree<PlotShape<XYLayout>> shapes : getShapes(data)) {
+                double _x = layout.getXAxis().getValueFromPosition(x);
+                double _minY = layout.getYAxis().getValueFromPosition(minY);
+                double _maxY = layout.getYAxis().getValueFromPosition(maxY);
+                shapes.findAll(
+                        out,
+                        node2D -> node2D.intersects(_x - searchX, Math.min(_minY, _maxY), _x + searchX, Math.max(_minY, _maxY)),
+                        node2D -> Math.abs(node2D.getMidX() - _x) < 1 / getScale(layout.getXAxis())
+                );
+            }
+        }
+        return out;
+    }
+
 
     @Override
     protected void clearCache() {
