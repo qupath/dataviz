@@ -81,7 +81,7 @@ public final class Numbers {
         long signBit = bits & 0x8000000000000000L;
         long exponentBits = (bits & 0x7FF0000000000000L);
         long significandBits = bits & 0x000FFFFFFFFFFFFFL;
-        for (int i = -1; i > -5; --i) {
+        for (int i = -1; i >= -5; --i) {
             double w = Double.longBitsToDouble(signBit | exponentBits | (significandBits + i));
             if (!Double.isFinite(w)){
                 continue;
@@ -90,8 +90,7 @@ public final class Numbers {
                 return w;
             }
         }
-        for (int i = 1; i < 5; ++i) {
-
+        for (int i = 1; i <= 5; ++i) {
             double w = Double.longBitsToDouble(signBit | exponentBits | (significandBits + i));
             if (!Double.isFinite(w)){
                 continue;

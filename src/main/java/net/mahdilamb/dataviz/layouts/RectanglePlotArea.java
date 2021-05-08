@@ -6,10 +6,14 @@ import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.graphics.ClipShape;
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 import net.mahdilamb.dataviz.graphics.Stroke;
+import net.mahdilamb.dataviz.utils.rtree.Node2D;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 import net.mahdilamb.dataviz.utils.SpatialCache;
+import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
 
 import java.awt.*;
+import java.util.LinkedList;
+import java.util.List;
 
 public class RectanglePlotArea extends PlotArea<XYLayout> {
     /**
@@ -32,7 +36,7 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
             if (!component.containsShapes(xMin, yMin, xMax, yMax)) {
                 return null;
             }
-            final GraphicsBuffer<IMG> tile = createBuffer(renderer, width, height, minX + component.getX(), minY + component.getY(), 0,0,0,0);
+            final GraphicsBuffer<IMG> tile = createBuffer(renderer, width, height, minX + component.getX(), minY + component.getY(), 0, 0, 0, 0);
             component.drawShapes(renderer, tile, xMin, yMin, xMax, yMax);
             // tile.setStroke(Color.black);
             // tile.strokeRect(minX + component.getX(), minY + component.getY(),width,height);
@@ -82,6 +86,28 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
     public RectanglePlotArea(XYLayout layout) {
         super(layout, RectangularPlotAreaBufferStrategy.INSTANCE);
 
+    }
+
+    private boolean pointIntersectsPaddedNode(Node2D node, double x, double y, double w, double h) {
+        return RectangularNode.intersects(x, y, x, y, node.getMinX() - w, node.getMinY() - h, node.getMaxX() + w, node.getMaxY() + h);
+    }
+
+    @Override
+    protected List<? extends PlotShape<XYLayout>> shapeAt(double x, double y) {
+        final List<PlotShape<XYLayout>> out = new LinkedList<>();
+        for (final PlotData<?, XYLayout> data : getData(layout)) {
+            final double searchX = getSearchPaddingX(data) / getScale(layout.getXAxis()),
+                    searchY = getSearchPaddingY(data) / getScale(layout.getYAxis());
+            for (final RTree<PlotShape<XYLayout>> shapes : getShapes(data)) {
+
+                layout.transformPositionToValue(x, y, (_x, _y) -> {
+                    shapes.findAll(out,
+                            node2D -> pointIntersectsPaddedNode(node2D, _x, _y, searchX, searchY),
+                            node2D -> node2D.contains(_x, _y, _x, _y));
+                });
+            }
+        }
+        return out;
     }
 
     @Override
@@ -135,22 +161,19 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
     }
 
     protected <T> void drawShapes(Renderer<T> renderer, GraphicsBuffer<T> canvas, double xMin, double yMin, double xMax, double yMax) {
-        for (final PlotData<XYLayout> data : getData(layout)) {
-            final double searchXMin = xMin - getSearchPaddingX(data) / layout.getXAxis().scale,
-                    searchYMin = yMin - getSearchPaddingY(data) / layout.getYAxis().scale,
-                    searchXMax = xMax + getSearchPaddingX(data) / layout.getXAxis().scale,
-                    searchYMax = yMax + getSearchPaddingY(data) / layout.getYAxis().scale;
+        for (final PlotData<?, XYLayout> data : getData(layout)) {
+            final double searchXMin = xMin - getSearchPaddingX(data) / getScale(layout.getXAxis()),
+                    searchYMin = yMin - getSearchPaddingY(data) / getScale(layout.getYAxis()),
+                    searchXMax = xMax + getSearchPaddingX(data) / getScale(layout.getXAxis()),
+                    searchYMax = yMax + getSearchPaddingY(data) / getScale(layout.getYAxis());
 
-            canvas.setStroke(Color.white);
-            canvas.setStroke(Stroke.SOLID);
             if (hasSelection(data)) {
                 canvas.setStroke(Color.white);
                 canvas.setStroke(Stroke.SOLID);
                 for (final RTree<PlotShape<XYLayout>> tree : getShapes(data)) {
                     for (final PlotShape<XYLayout> shape : tree.search(searchXMin, searchYMin, searchXMax, searchYMax)) {
                         canvas.setFill(getColor(data, shape));
-                        fill(layout, shape, renderer, canvas);
-                        stroke(layout, shape, renderer, canvas);
+                        draw(layout, shape, renderer, canvas);
                     }
                 }
             } else {
@@ -159,8 +182,7 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
                 for (final RTree<PlotShape<XYLayout>> tree : getShapes(data)) {
                     for (final PlotShape<XYLayout> shape : tree.search(searchXMin, searchYMin, searchXMax, searchYMax)) {
                         canvas.setFill(getColor(data, shape));
-                        fill(layout, shape, renderer, canvas);
-                        stroke(layout, shape, renderer, canvas);
+                        draw(layout, shape, renderer, canvas);
                     }
                 }
             }
@@ -168,12 +190,12 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
     }
 
     protected boolean containsShapes(double xMin, double yMin, double xMax, double yMax) {
-        for (final PlotData<XYLayout> data : getData(layout)) {
+        for (final PlotData<?, XYLayout> data : getData(layout)) {
             for (final RTree<PlotShape<XYLayout>> tree : getShapes(data)) {
-                final double searchXMin = xMin - getSearchPaddingX(data) / layout.getXAxis().scale,
-                        searchYMin = yMin - getSearchPaddingY(data) / layout.getYAxis().scale,
-                        searchXMax = xMax + getSearchPaddingX(data) / layout.getXAxis().scale,
-                        searchYMax = yMax + getSearchPaddingY(data) / layout.getYAxis().scale;
+                final double searchXMin = xMin - getSearchPaddingX(data) / getScale(layout.getXAxis()),
+                        searchYMin = yMin - getSearchPaddingY(data) / getScale(layout.getYAxis()),
+                        searchXMax = xMax + getSearchPaddingX(data) / getScale(layout.getXAxis()),
+                        searchYMax = yMax + getSearchPaddingY(data) / getScale(layout.getYAxis());
                 if (tree.collides(searchXMin, searchYMin, searchXMax, searchYMax)) {
                     return true;
                 }

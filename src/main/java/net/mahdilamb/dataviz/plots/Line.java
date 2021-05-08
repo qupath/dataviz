@@ -1,28 +1,34 @@
 package net.mahdilamb.dataviz.plots;
 
+import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataframe.DataFrame;
+import net.mahdilamb.dataframe.utils.IntArrayList;
 import net.mahdilamb.dataviz.PlotBounds;
+import net.mahdilamb.dataviz.PlotShape;
 import net.mahdilamb.dataviz.data.RelationalData;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.stats.ArrayUtils;
 
 import java.util.function.DoubleUnaryOperator;
 
-public class Line extends RelationalData {
-    protected Line(DataFrame dataFrame, String xAxis, String yAxis) {
+public class Line extends RelationalData<Line> {
+    public Line(DataFrame dataFrame, String xAxis, String yAxis) {
         super(dataFrame, xAxis, yAxis);
     }
 
-    protected Line(double[] x, double[] y) {
+    public Line(double[] x, double[] y) {
         super(x, y);
     }
 
-    protected Line(double[] x, DoubleUnaryOperator y) {
+    public Line(double[] x, DoubleUnaryOperator y) {
         super(x, y);
     }
 
     @Override
     protected void init() {
 
+        final PlotShape<XYLayout> line = createPolyLine(this, 0, new IntArrayList(ArrayUtils.intRange(x.size())));
+        addShapes(line);
     }
 
     @Override
@@ -38,5 +44,14 @@ public class Line extends RelationalData {
         return bounds;
     }
 
+    @Override
+    public Line setXLabel(String name) {
+        return (Line) super.setXLabel(name);
+    }
+
+    @Override
+    public Line setYLabel(String name) {
+        return (Line) super.setYLabel(name);
+    }
 
 }

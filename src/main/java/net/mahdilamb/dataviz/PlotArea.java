@@ -3,7 +3,9 @@ package net.mahdilamb.dataviz;
 import net.mahdilamb.dataviz.figure.BufferingStrategy;
 import net.mahdilamb.dataviz.figure.Component;
 import net.mahdilamb.dataviz.figure.Renderer;
+import net.mahdilamb.dataviz.figure.Tooltip;
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
+import net.mahdilamb.dataviz.graphics.Side;
 import net.mahdilamb.dataviz.ui.Label;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 
@@ -66,16 +68,18 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
                 startY = y;
             }
         } else {
-            //TODO hover
             if (getInputMode() == InputMode.State.POLYGON_SELECT) {
                 if (getSelection(layout) != null && !getSelection(layout).isClosed()) {
                     //todo
                 }
             } else {
-                for (final PlotData<PL> data : layout.data) {
-                    for (final RTree<PlotShape<PL>> shapes : getShapes(data)) {
-                        //todo
-                    }
+                //TODO hover
+                final List<? extends PlotShape<PL>> matches = shapeAt(x, y);
+                if (!matches.isEmpty()) {
+                    setTooltip(matches.get(0).createTooltip());
+                } else {
+                    setTooltip(null);
+
                 }
             }
 
@@ -83,26 +87,25 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         super.onMouseMove(ctrlDown, shiftDown, x, y);
     }
 
+    protected abstract List<? extends PlotShape<PL>> shapeAt(double x, double y);
+
+
     @Override
     protected void onMouseScrolled(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
         //todo if allowed
         layout.zoomPlotArea(x, y, rotation);
     }
 
-    protected static <PL extends PlotLayout<PL>> List<RTree<PlotShape<PL>>> getShapes(final PlotData<PL> data) {
+    protected static <PL extends PlotLayout<PL>> List<RTree<PlotShape<PL>>> getShapes(final PlotData<?, PL> data) {
         return data.shapes;
     }
 
-    protected static <PL extends PlotLayout<PL>> List<PlotData<PL>> getData(PlotLayout<PL> layout) {
+    protected static <PL extends PlotLayout<PL>> List<PlotData<?, PL>> getData(PlotLayout<PL> layout) {
         return layout.data;
     }
 
-    protected static <PL extends PlotLayout<PL>, T> void fill(PL layout, PlotShape<PL> shape, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-        shape.fill(layout, renderer, canvas);
-    }
-
-    protected static <PL extends PlotLayout<PL>, T> void stroke(PL layout, PlotShape<PL> shape, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-        shape.stroke(layout, renderer, canvas);
+    protected static <PL extends PlotLayout<PL>, T> void draw(PL layout, PlotShape<PL> shape, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        shape.draw(layout, renderer, canvas);
     }
 
     protected static <PL extends PlotLayout<PL>> Label getTitle(final PlotLayout<PL> layout) {
@@ -113,15 +116,15 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         axis.drawGrid(layout, renderer, canvas);
     }
 
-    protected static <PL extends PlotLayout<PL>> double getSearchPaddingX(PlotData<PL> data) {
+    protected static <PL extends PlotLayout<PL>> double getSearchPaddingX(PlotData<?, PL> data) {
         return data.getSearchPaddingX();
     }
 
-    protected static <PL extends PlotLayout<PL>> double getSearchPaddingY(PlotData<PL> data) {
+    protected static <PL extends PlotLayout<PL>> double getSearchPaddingY(PlotData<?, PL> data) {
         return data.getSearchPaddingY();
     }
 
-    protected static <PL extends PlotLayout<PL>> Color getColor(PlotData<PL> data, PlotShape<PL> shape) {
+    protected static <PL extends PlotLayout<PL>> Color getColor(PlotData<?, PL> data, PlotShape<PL> shape) {
         final int i = shape == null ? 0 : shape.i;//TODO
         if (data.anySelected && !data.selected.get(i)) {
             return data.selectedColor;
@@ -155,7 +158,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
 
     }
 
-    protected static <PL extends PlotLayout<PL>> boolean hasSelection(PlotData<PL> layout) {
+    protected static <PL extends PlotLayout<PL>> boolean hasSelection(PlotData<?, PL> layout) {
         return layout.anySelected;
     }
 
@@ -163,5 +166,9 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
 
     protected static boolean isSelection(final InputMode.State state) {
         return state != null && state.isSelection;
+    }
+
+    protected static <PL extends PlotLayout<PL>> double getScale(PlotAxis<PL> plotAxis) {
+        return plotAxis.scale;
     }
 }

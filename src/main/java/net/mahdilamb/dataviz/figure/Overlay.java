@@ -46,6 +46,7 @@ public final class Overlay extends Group {
                 getToolbar().draw(renderer, canvas);
             }
         }
+
         if (tooltip != null) {
             if (tooltipHasChanges) {
                 tooltip.layout(renderer, 0, 0, figure.getWidth(), figure.getHeight());

@@ -1,5 +1,6 @@
 package net.mahdilamb.dataviz.figure;
 
+import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataviz.graphics.*;
 import net.mahdilamb.dataviz.graphics.Font;
 
@@ -11,6 +12,12 @@ public final class Tooltip extends AbstractPopout<String> {
 
     Tooltip(Side side, double relativePosition, VAlign vAlign, HAlign hAlign, double radius, Color background, Color outline, String content, Font font, boolean showArrow) {
         super(vAlign, hAlign, relativePosition, background, outline, side, content, showArrow);
+        this.font = font;
+        this.radius = radius;
+    }
+
+    Tooltip(double x, double y, double radius, Color background, Color outline, Side side, String content, Font font, boolean showArrow) {
+        super(x, y, background, outline, side, content, showArrow);
         this.font = font;
         this.radius = radius;
     }
@@ -33,7 +40,7 @@ public final class Tooltip extends AbstractPopout<String> {
 
     @Override
     protected <IMG> double getContentHeight(Renderer<IMG> renderer) {
-        return getTextLineHeight(renderer, font);
+        return getTextLineHeight(renderer, font, content);
     }
 
     @Override
@@ -73,5 +80,17 @@ public final class Tooltip extends AbstractPopout<String> {
 
     public static Tooltip create(Color background, String content) {
         return new Tooltip(DEFAULT_SIDE, DEFAULT_RELATIVE_POSITION, DEFAULT_VALIGN, DEFAULT_HALIGN, DEFAULT_TOOLTIP_RADIUS, background, DEFAULT_OUTLINE, content, Font.DEFAULT_FONT, DEFAULT_SHOW_ARROW);
+    }
+
+    public static Tooltip create(double x, double y, Side side, Color background, String content) {
+        return new Tooltip(x, y, DEFAULT_TOOLTIP_RADIUS, background, DEFAULT_OUTLINE, side, content, Font.DEFAULT_FONT, DEFAULT_SHOW_ARROW);
+    }
+
+    public static Tooltip create(double x, double y, Side side, Color background, String content, boolean showArrow) {
+        return new Tooltip(x, y, DEFAULT_TOOLTIP_RADIUS, background, DEFAULT_OUTLINE, side, content, Font.DEFAULT_FONT, showArrow);
+    }
+
+    public static Tooltip createWithOutline(double x, double y, Side side, Color background, String content, boolean showArrow) {
+        return new Tooltip(x, y, DEFAULT_TOOLTIP_RADIUS, background, Colors.calculateLuminance(background) > 0.1791 ? Color.BLACK : Color.WHITE, side, content, Font.DEFAULT_FONT, showArrow);
     }
 }

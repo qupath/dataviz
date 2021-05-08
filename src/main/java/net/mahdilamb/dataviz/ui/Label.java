@@ -142,7 +142,7 @@ public class Label extends Component {
     }
 
     @Override
-    protected <T>void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             setBoundsFromRect(minX, minY, 0, 0);
             return;
@@ -153,7 +153,7 @@ public class Label extends Component {
         while (i < text.length()) {
             sizeX += getTextCharWidth(renderer, font, text.charAt(i++));
         }
-        double sizeY = getTextLineHeight(renderer, font) + paddingY;
+        double sizeY = getTextLineHeight(renderer, font, text) + paddingY;
         if (textAlign != HAlign.LEFT) {
             minX += (textAlign == HAlign.RIGHT ? 1 : 0.5) * (maxX - minX - sizeX);
         }

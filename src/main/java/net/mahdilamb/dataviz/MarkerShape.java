@@ -1,7 +1,6 @@
-package net.mahdilamb.dataviz.graphics.shapes;
+package net.mahdilamb.dataviz;
 
 import net.mahdilamb.dataframe.utils.PrimitiveIterators;
-import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 
 import java.util.HashMap;

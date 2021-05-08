@@ -246,10 +246,11 @@ public abstract class AbstractComponent {
     /**
      * @param source the renderer
      * @param font   the font
+     * @param text   the text
      * @return the line height using a renderer
      */
-    protected static double getTextLineHeight(Renderer<?> source, final Font font) {
-        return source.getTextLineHeight(font);
+    protected static double getTextLineHeight(Renderer<?> source, final Font font, final String text) {
+        return source.getTextLineHeight(font, text);
     }
 
     /**

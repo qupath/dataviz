@@ -24,7 +24,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         protected final <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
             double sizeY = 0;
             if (title.isVisible()) {
-                sizeY += getTextLineHeight(renderer, title.getFont()) + titlePadding;
+                sizeY += getTextLineHeight(renderer, title.getFont(), title.getText()) + titlePadding;
             }
             if (showMajorTicks & !majorTicksInside) {
                 sizeY += majorTickLength;
@@ -32,7 +32,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
                 sizeY += minorTickLength;
             }
             if (showLabels) {
-                sizeY += getTextLineHeight(renderer, labelFont) + labelPadding;
+                sizeY += getTextLineHeight(renderer, labelFont, title.getText()) + labelPadding;
             }
             setBoundsFromRect(minX, maxY - sizeY, maxX - minX, sizeY);
         }
@@ -108,7 +108,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
                 }
             }
             if (title.isVisible()) {
-                double height = getTextLineHeight(renderer, title.getFont()) - getTextBaselineOffset(renderer, title.getFont());
+                double height = getTextLineHeight(renderer, title.getFont(), title.getText()) - getTextBaselineOffset(renderer, title.getFont());
                 canvas.setFont(title.getFont());
                 canvas.setFill(title.getColor());
                 double width = 0;
@@ -137,12 +137,12 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         }
 
         @Override
-        double getValueFromPosition(double ex) {
+        public double getValueFromPosition(double ex) {
             return lower + ((ex - layout.plotArea.getX()) * range / layout.plotArea.getWidth());
         }
 
         @Override
-        double getPositionFromValue(double v) {
+        public double getPositionFromValue(double v) {
             return layout.plotArea.getX() + ((v - lower) * scale);
         }
     }
@@ -190,7 +190,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
                 }
             }
             if (showLabels) {
-                double yOff = (vLabelAlignment == VAlign.TOP ? 0 : ((vLabelAlignment == VAlign.MIDDLE ? 0.5 : 1) * getTextLineHeight(renderer, labelFont))) - getTextBaselineOffset(renderer, labelFont);
+                double yOff = (vLabelAlignment == VAlign.TOP ? 0 : ((vLabelAlignment == VAlign.MIDDLE ? 0.5 : 1) * getTextLineHeight(renderer, labelFont, title.getText()))) - getTextBaselineOffset(renderer, labelFont);
                 for (double d = getIterStart(lower, majorTickSpacing); d <= upper; d += majorTickSpacing) {
                     double dRev = ((upper - d) / range);
                     double e = posY + (dRev * sizeY);
@@ -200,20 +200,20 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
                 }
             }
             if (title.isVisible()) {
-                double x = getX() + getTextLineHeight(renderer, title.getFont()) * .5, y = getY();
+                double x = getX() + getTextLineHeight(renderer, title.getFont(), title.getText()) * .5, y = getY();
                 canvas.setFont(title.getFont());
                 canvas.setFill(title.getColor());
                 switch (title.getAlignment()) {
                     case CENTER:
                         y += (sizeY * .5);
-                        canvas.fillText(title.getText(), x - (getTextWidth(renderer, title.getFont(), title.getText()) * .5), y + (0.5 * (getTextLineHeight(renderer, title.getFont()) - getTextBaselineOffset(renderer, title.getFont()))), -90, x, y);
+                        canvas.fillText(title.getText(), x - (getTextWidth(renderer, title.getFont(), title.getText()) * .5), y + (0.5 * (getTextLineHeight(renderer, title.getFont(), title.getText()) - getTextBaselineOffset(renderer, title.getFont()))), -90, x, y);
                         break;
                     case LEFT:
                         y += (sizeY);
-                        canvas.fillText(title.getText(), x, y + (0.5 * (getTextLineHeight(renderer, title.getFont()) - getTextBaselineOffset(renderer, title.getFont()))), -90, x, y);
+                        canvas.fillText(title.getText(), x, y + (0.5 * (getTextLineHeight(renderer, title.getFont(), title.getText()) - getTextBaselineOffset(renderer, title.getFont()))), -90, x, y);
                         break;
                     case RIGHT:
-                        canvas.fillText(title.getText(), x - getTextWidth(renderer, title.getFont(), title.getText()), y + (0.5 * (getTextLineHeight(renderer, title.getFont()) - getTextBaselineOffset(renderer, title.getFont()))), -90, x, y);
+                        canvas.fillText(title.getText(), x - getTextWidth(renderer, title.getFont(), title.getText()), y + (0.5 * (getTextLineHeight(renderer, title.getFont(), title.getText()) - getTextBaselineOffset(renderer, title.getFont()))), -90, x, y);
                         break;
                 }
             }
@@ -229,7 +229,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
             double sizeX = 0;
             if (title.isVisible()) {
-                sizeX += getTextLineHeight(renderer, title.getFont()) + titlePadding;
+                sizeX += getTextLineHeight(renderer, title.getFont(), title.getText()) + titlePadding;
             }
             if (showMajorTicks & !majorTicksInside) {
                 sizeX += majorTickLength;
@@ -293,12 +293,12 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         }
 
         @Override
-        double getValueFromPosition(double ex) {
+        public double getValueFromPosition(double ex) {
             return upper - ((ex - layout.plotArea.getY()) * range / layout.plotArea.getHeight());
         }
 
         @Override
-        double getPositionFromValue(double v) {
+        public double getPositionFromValue(double v) {
             return layout.plotArea.getY() + (((upper - v) / range) * layout.plotArea.getHeight());
         }
     }
@@ -347,7 +347,6 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
     HAlign hLabelAlignment = HAlign.CENTER;
     VAlign vLabelAlignment = VAlign.MIDDLE;
 
-    double scale;
     double range;
 
     public final double getMin() {
@@ -382,9 +381,9 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         updateScale();
     }
 
-    abstract double getValueFromPosition(double v);
+    public abstract double getValueFromPosition(double v);
 
-    abstract double getPositionFromValue(double v);
+    public abstract double getPositionFromValue(double v);
 
 
 }

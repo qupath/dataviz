@@ -136,8 +136,9 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
     }
 
     @Override
-    protected double getTextLineHeight(Font font) {
-        return SwingUtils.getLineHeight(canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)));
+    protected double getTextLineHeight(Font font, final String text) {
+        //TODO
+        return SwingUtils.getLineHeight(canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)), text, 1);
     }
 
     @Override

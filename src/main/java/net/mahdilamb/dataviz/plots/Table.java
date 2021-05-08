@@ -11,7 +11,7 @@ import net.mahdilamb.dataviz.utils.ExtendedColormap;
 import java.awt.*;
 
 @PlotOptions(name = "Table", supportsManualZoom = false, supportsZoom = false, supportsPan = true, supportsPolygonSelection = false, supportsZoomByWheel = false)
-public class Table extends TabularData {
+public class Table extends TabularData<Table> {
     static final class CellID {
         final int col, row;
 

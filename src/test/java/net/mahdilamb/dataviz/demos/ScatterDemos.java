@@ -1,9 +1,7 @@
-package net.mahdilamb.dataviz.scatter;
+package net.mahdilamb.dataviz.demos;
 
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.plots.Scatter;
-
-import java.awt.*;
 
 import static net.mahdilamb.dataviz.tests.SwingTest.loadDataFromResource;
 

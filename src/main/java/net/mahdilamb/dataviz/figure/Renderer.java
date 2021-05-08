@@ -93,9 +93,10 @@ public abstract class Renderer<IMG> {
 
     /**
      * @param font the font
+     * @param text the text
      * @return the height of the text with the given font
      */
-    protected abstract double getTextLineHeight(final Font font);
+    protected abstract double getTextLineHeight(final Font font, final String text);
 
     /**
      * Load an image given a file

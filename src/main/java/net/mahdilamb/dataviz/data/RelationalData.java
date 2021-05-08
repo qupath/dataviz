@@ -14,7 +14,7 @@ import java.util.function.DoubleUnaryOperator;
 /**
  * Data for XY series
  */
-public abstract class RelationalData extends PlotData<XYLayout> {
+public abstract class RelationalData<PD extends RelationalData<PD>> extends PlotData<PD, XYLayout> {
     protected final DoubleSeries x, y;
 
     protected RelationalData(final DataFrame dataFrame, final String xAxis, final String yAxis) {
@@ -41,17 +41,37 @@ public abstract class RelationalData extends PlotData<XYLayout> {
     protected RelationalData(double[] x, DoubleUnaryOperator y) {
         super();
         this.x = Series.of(null, x);
-        this.y = Series.of(null, ArrayUtils.map(x,y));
+        this.y = Series.of(null, ArrayUtils.map(x, y));
         if (this.x.size() != this.y.size()) {
             throw new IllegalArgumentException("x and y are of different sizes");
         }
         init();
     }
-protected abstract void init();
+
+    protected abstract void init();
+
+    protected RelationalData setXLabel(final String name) {
+        getLayout().getXAxis().setTitle(name);
+        return this;
+    }
+
+    protected RelationalData setYLabel(final String name) {
+        getLayout().getYAxis().setTitle(name);
+        return this;
+    }
+
     @Override
     protected final XYLayout createLayout() {
         //todo consider multiple axes
         return new XYLayout(new XYAxis.XAxis(), new XYAxis.YAxis(true));
+    }
+
+    public double getX(int i) {
+        return x.get(i);
+    }
+
+    public double getY(int i) {
+        return y.get(i);
     }
 
     @Override

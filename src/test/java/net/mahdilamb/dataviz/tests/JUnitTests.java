@@ -1,6 +1,6 @@
 package net.mahdilamb.dataviz.tests;
 
-import net.mahdilamb.dataviz.graphics.shapes.MarkerShape;
+import net.mahdilamb.dataviz.MarkerShape;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;

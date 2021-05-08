@@ -68,7 +68,7 @@ public class Button extends Component {
                 width += padding;
             }
             width += getTextWidth(renderer, Font.DEFAULT_FONT, text);
-            height = Math.max(getTextLineHeight(renderer, Font.DEFAULT_FONT), height);
+            height = Math.max(getTextLineHeight(renderer, Font.DEFAULT_FONT, text), height);
         }
         if (text != null && icon != null) {
             width += spacing;
@@ -121,7 +121,7 @@ public class Button extends Component {
             }
             canvas.setFont(Font.DEFAULT_FONT);
             canvas.setFill(Color.BLACK);
-            final double vAlign = (getMaterialIconHeight(renderer) - getTextLineHeight(renderer, Font.DEFAULT_FONT)) / 2;
+            final double vAlign = (getMaterialIconHeight(renderer) - getTextLineHeight(renderer, Font.DEFAULT_FONT, text)) / 2;
             canvas.fillText(text, getX() + left, getY() + padding + getTextBaselineOffset(renderer, Font.DEFAULT_FONT) + vAlign);
         }
         if (alpha != 1) {
