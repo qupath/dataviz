@@ -10,7 +10,10 @@ public class ToggleButton extends Button implements InputComponent<Boolean> {
     public <IMG> ToggleButton(IMG icon, String text) {
         super(icon, text);
     }
-
+    public <IMG> ToggleButton(IMG icon, String text, boolean selected) {
+        super(icon, text);
+        this.selected=selected;
+    }
     @Override
     public void setValue(Boolean value) {
         if (this.selected != (this.selected = value)) {

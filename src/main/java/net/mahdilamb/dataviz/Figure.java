@@ -7,6 +7,7 @@ import net.mahdilamb.dataviz.figure.FigureBase;
 import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.io.FigureExporter;
 import net.mahdilamb.dataviz.ui.IconStore;
+import net.mahdilamb.dataviz.ui.ToggleButton;
 import net.mahdilamb.dataviz.ui.Toolbar;
 
 import java.awt.*;
@@ -20,7 +21,7 @@ public final class Figure extends FigureBase<Figure> {
     final Legend legend = new Legend();
     final ColorScales colorScales = new ColorScales();
     private InputMode inputMode;
-
+    ToggleButton toggleHover;
 
     /**
      * Create an empty figure
@@ -35,7 +36,7 @@ public final class Figure extends FigureBase<Figure> {
      * @param plotData the data to add
      * @return this figure
      */
-    public Figure addData(final PlotData<?,?> plotData) {
+    public Figure addData(final PlotData<?, ?> plotData) {
         if (layout != null && layout.getClass() != plotData.getLayout().getClass()) {
             System.err.println("Old layout removed while adding data");
             remove(layout);
@@ -77,8 +78,8 @@ public final class Figure extends FigureBase<Figure> {
         final Toolbar toolbar = new Toolbar();
         toolbar.addIconButton(getMaterialIcon(IconStore.MaterialIconKey.CAMERA_ALT, null), "Save")
                 .setOnMouseClick(() -> getContext().getRenderer().saveAs(getOutputPath(getContext().getRenderer(), FigureExporter.getSupportedExtensions(), ".svg")));
-        for (final PlotData<?,?> data : layout.data) {
-            if (data.getPlotOptions() == null){
+        for (final PlotData<?, ?> data : layout.data) {
+            if (data.getPlotOptions() == null) {
                 continue;
             }
             enableZoom &= data.getPlotOptions().supportsZoom();
@@ -98,6 +99,7 @@ public final class Figure extends FigureBase<Figure> {
                     .setOnMouseClick(layout::decreaseZoom);
             toolbar.addSpacing();
         }
+        toggleHover = toolbar.addToggleButton(getMaterialIcon(IconStore.MaterialIconKey.LABEL, null), "Toggle hover text", true);
         return toolbar;
     }
 

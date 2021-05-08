@@ -26,8 +26,8 @@ public class ScatterDemos {
 
     static void irisSepalSizeAndColorScatter() {
         new Scatter(iris, "sepal_width", "sepal_length")
-                .setColors("species")
                 .setSizes("petal_length")
+                .setColors("species")
                 .show();
     }
 

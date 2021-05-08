@@ -74,12 +74,13 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
                     //todo
                 }
             } else {
-                //TODO if hover enabled
-                final List<? extends PlotShape<PL>> matches = shapeAt(x, y);
-                if (!matches.isEmpty()) {
-                    setTooltip(matches.get(matches.size() - 1).createTooltip());
-                } else {
-                    setTooltip(null);
+                if (((Figure)getContext().getRenderer().getFigure()).toggleHover.getValue()){
+                    final List<? extends PlotShape<PL>> matches = shapeAt(x, y);
+                    if (!matches.isEmpty()) {
+                        setTooltip(matches.get(matches.size() - 1).createTooltip());
+                    } else {
+                        setTooltip(null);
+                    }
                 }
             }
         }

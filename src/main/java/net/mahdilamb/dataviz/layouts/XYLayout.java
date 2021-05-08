@@ -151,6 +151,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
 
     @Override
     protected void inputModeChanged(InputMode.State state) {
+
         clearCache();
         redraw();
     }

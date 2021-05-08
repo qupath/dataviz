@@ -60,7 +60,8 @@ public final class IconStore<IMG> {
         SORT(12),
         COLOR_LENS(13),
         SORT_RESERVED(14),
-        CAMERA_ALT(15);
+        CAMERA_ALT(15),
+        LABEL(16);
         /**
          * The column of the icon
          */

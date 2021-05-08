@@ -138,7 +138,6 @@ public abstract class Component extends AbstractComponent {
         } else {
             tooltip.component = this;
             tooltip.setContext(context);
-            this.tooltip = tooltip;
             if (context != null) {
                 if (context.getRenderer().lastHover == this) {
                     context.getRenderer().getOverlay().showTooltip(tooltip);
@@ -146,6 +145,8 @@ public abstract class Component extends AbstractComponent {
                 }
             }
         }
+        this.tooltip = tooltip;
+
 
     }
 

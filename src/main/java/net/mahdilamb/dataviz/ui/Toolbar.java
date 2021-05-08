@@ -32,8 +32,8 @@ public final class Toolbar extends Group {
         return button;
     }
 
-    public Button addToggleButton(IconStore.MaterialIconKey icon, final String tooltipText) {
-        final Button button = new ToggleButton(icon, null);
+    public <IMG> ToggleButton addToggleButton(IMG icon, final String tooltipText, boolean defaultSelected) {
+        final ToggleButton button = new ToggleButton(icon, null,defaultSelected);
         button.setTooltip(Tooltip.create(Color.DARK_GRAY, tooltipText));
         add(button);
         return button;
