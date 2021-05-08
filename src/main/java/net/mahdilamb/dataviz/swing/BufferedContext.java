@@ -8,11 +8,11 @@ import net.mahdilamb.dataviz.graphics.Stroke;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class BufferedContext<R extends Renderer<BufferedImage>> implements GraphicsContext<BufferedImage> {
-    final R renderer;
+public class BufferedContext implements GraphicsContext<BufferedImage> {
+    final SwingRenderer renderer;
     private BufferedImageExtended buffer;
 
-    BufferedContext(R renderer) {
+    BufferedContext(SwingRenderer renderer) {
         this.renderer = renderer;
     }
 
@@ -195,7 +195,7 @@ public class BufferedContext<R extends Renderer<BufferedImage>> implements Graph
     }
 
     @Override
-    public R getRenderer() {
+    public SwingRenderer getRenderer() {
         return renderer;
     }
 }

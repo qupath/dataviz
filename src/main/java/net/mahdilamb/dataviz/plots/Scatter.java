@@ -2,33 +2,45 @@ package net.mahdilamb.dataviz.plots;
 
 import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataframe.DataFrame;
-import net.mahdilamb.dataviz.PlotBounds;
-import net.mahdilamb.dataviz.PlotOptions;
-import net.mahdilamb.dataviz.PlotShape;
+import net.mahdilamb.dataviz.*;
 import net.mahdilamb.dataviz.data.RelationalData;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.dataviz.utils.ColorUtils;
+import net.mahdilamb.dataviz.utils.Numbers;
 
 import java.awt.*;
+import java.util.function.DoubleUnaryOperator;
 
 @PlotOptions(name = "Scatter", supportsZoom = true, supportsManualZoom = true, supportsPan = true, supportsPolygonSelection = true, supportsZoomByWheel = true)
 public class Scatter extends RelationalData {
-    PlotBounds<PlotBounds.XY, XYLayout> bounds;
+    /**
+     * Default marker size
+     */
+    public final static double DEFAULT_MARKER_SIZE = 10;
+    /**
+     * Default largest marker size (for numerical traces)
+     */
+    public final static double DEFAULT_MAX_MARKER_SIZE = 30;
 
-    double markerSize = 10;
+    public final static double DEFAULT_MULTICOLOR_OPACITY = 0.8;
+
+    double markerSize = DEFAULT_MARKER_SIZE;
     Color markerColor = Colors.deepskyblue;
+    double markerOpacity = 1.0;
 
     public Scatter(DataFrame dataFrame, String xAxis, String yAxis) {
         super(dataFrame, xAxis, yAxis);
-        init();
-
     }
 
     public Scatter(double[] x, double[] y) {
         super(x, y);
-        init();
     }
 
-    void init() {
+    public Scatter(double[] x, DoubleUnaryOperator y) {
+        super(x, y);
+    }
+@Override
+    protected void init() {
         @SuppressWarnings("unchecked") final PlotShape<XYLayout>[] shapes = new PlotShape[x.size()];
         for (int i = 0; i < shapes.length; ++i) {
             shapes[i] = createMarker(this, i, x.getDouble(i), y.getDouble(i), markerSize);
@@ -36,10 +48,74 @@ public class Scatter extends RelationalData {
         addShapes(shapes, true);
     }
 
-
     @Override
     protected Color getColor(int i) {
-        return markerColor;
+        final Color baseColor;
+        final Color color;
+        if ((color = super.getColor(i)) != null) {
+            baseColor = color;
+        } else {
+            baseColor = markerColor;
+        }
+        if (markerOpacity == 1.0) {
+            return baseColor;
+        }
+        return new Color(baseColor.getRed() / 255f, baseColor.getGreen() / 255f, baseColor.getBlue() / 255f, baseColor.getAlpha() / 255f * (float) markerOpacity);
+    }
+
+    public Scatter setColors(final String seriesName) throws DataFrameOnlyMethodException {
+        setStyle(seriesName, DataStyler.StyleAttribute.COLOR,
+                (attr, series) -> {
+                    markerOpacity = DEFAULT_MULTICOLOR_OPACITY;
+                    return new DataStyler.Numeric(this, attr, series,0,1);
+                },
+                (attr, series) -> {
+                    markerOpacity = DEFAULT_MULTICOLOR_OPACITY;
+                    return new DataStyler.Categorical(this, attr, series);
+                });
+        return this;
+    }
+
+    public Scatter setColor(final Color color) {
+        clearStyle(DataStyler.StyleAttribute.COLOR);
+        markerColor = color;
+        return this;
+    }
+
+    public Scatter setColor(final String colorName) {
+        return setColor(ColorUtils.convertToColor(colorName));
+    }
+
+    @Override
+    protected double getSize(int i) {
+        final double size;
+        if (!Double.isNaN(size = super.getSize(i))) {
+            return size;
+        }
+        return markerSize;
+    }
+
+    public Scatter setSizes(final String seriesName, double minSize, double maxSize) throws DataFrameOnlyMethodException {
+        setStyle(seriesName,
+                DataStyler.StyleAttribute.SIZE,
+                (attr, series) -> new DataStyler.Numeric(this, DataStyler.StyleAttribute.SIZE, series, minSize, maxSize),
+                (attr, series) -> {
+                    //todo
+                    return null;
+
+                }
+        );
+        return this;
+    }
+
+    public Scatter setSizes(final String seriesName) throws DataFrameOnlyMethodException {
+        return setSizes(seriesName, DEFAULT_MARKER_SIZE, DEFAULT_MAX_MARKER_SIZE);
+    }
+
+    public Scatter setSize(final double size) {
+        markerSize = Numbers.requireFinitePositive(size);
+        clearStyle(DataStyler.StyleAttribute.SIZE);
+        return this;
     }
 
     @Override
@@ -68,8 +144,4 @@ public class Scatter extends RelationalData {
         return markerSize;//todo
     }
 
-    @Override
-    public int size() {
-        return x.size();
-    }
 }

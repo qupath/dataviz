@@ -7,10 +7,6 @@ import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
  */
 public class Marker implements Shape {
     /**
-     * Reusable marker - can be used for single-thread applications
-     */
-    public static final Marker MARKER = new Marker();
-    /**
      * The shape of the marker
      */
     public MarkerShape shape = MarkerShape.CIRCLE;
@@ -18,15 +14,24 @@ public class Marker implements Shape {
      * The position and size of the marker
      */
     public double x = 8, y = 8, size = 16;
+public Marker(){
 
-    @Override
-    public void fill(GraphicsBuffer<?> canvas) {
-        shape.fill.paint(canvas, x, y, size);
+}
+    public Marker(MarkerShape shape, double x, double y, double size) {
+        this.shape = shape;
+        this.x = x;
+        this.y = y;
+        this.size = size;
     }
 
     @Override
-    public void stroke(GraphicsBuffer<?> canvas) {
-        shape.stroke.paint(canvas, x, y, size);
+    public void fill(GraphicsBuffer<?> buffer) {
+        shape.fill.paint(buffer, x, y, size);
+    }
+
+    @Override
+    public void stroke(GraphicsBuffer<?> buffer) {
+        shape.stroke.paint(buffer, x, y, size);
     }
 
     @Override

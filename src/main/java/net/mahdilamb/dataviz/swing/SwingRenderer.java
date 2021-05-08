@@ -30,8 +30,8 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
     private static final JFileChooser fileChooser = new JFileChooser();
 
     FigurePanel panel;
-    private final BufferedContext<SwingRenderer> canvas = new BufferedContext<>(this);
-    private final BufferedContext<SwingRenderer> overlay = new BufferedContext<>(this);
+    private final BufferedContext canvas = new BufferedContext(this);
+    private final BufferedContext overlay = new BufferedContext(this);
 
     private static final class FigurePanel extends JPanel {
 
@@ -77,12 +77,12 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
     }
 
     @Override
-    protected BufferedContext<SwingRenderer> getFigureContext() {
+    protected BufferedContext getFigureContext() {
         return canvas;
     }
 
     @Override
-    protected GraphicsContext<BufferedImage> getOverlayContext() {
+    protected BufferedContext getOverlayContext() {
         return overlay;
     }
 
@@ -225,7 +225,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
                     SwingRenderer.this.mouseMoved(e.isControlDown(), e.isShiftDown(), e.getX(), e.getY());
                 }
             });
-            panel.addMouseWheelListener(e -> SwingRenderer.this.mouseScrolled(e.isControlDown(), e.isShiftDown(), e.getX(), e.getY(), ((e.getPreciseWheelRotation() * e.getScrollAmount()))));
+            panel.addMouseWheelListener(e -> SwingRenderer.this.mouseScrolled(e.isControlDown(), e.isShiftDown(), e.getX(), e.getY(), scaleScroll((e.getPreciseWheelRotation() * e.getScrollAmount()))));
             panel.addKeyListener(new KeyListener() {
                 @Override
                 public void keyTyped(KeyEvent e) {
@@ -276,6 +276,14 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             });
         }
         return panel;
+    }
+
+    private static double scaleScroll(double v) {
+        v *= .1;
+        if (Math.abs(v) > 1) {
+            return 1 / v;
+        }
+        return v;
     }
 
     private void show() {

@@ -32,7 +32,7 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
             if (!component.containsShapes(xMin, yMin, xMax, yMax)) {
                 return null;
             }
-            final GraphicsBuffer<IMG> tile = createBuffer(renderer, width, height, minX + component.getX(), minY + component.getY(), 1, 1, 1, 1);
+            final GraphicsBuffer<IMG> tile = createBuffer(renderer, width, height, minX + component.getX(), minY + component.getY(), 0,0,0,0);
             component.drawShapes(renderer, tile, xMin, yMin, xMax, yMax);
             // tile.setStroke(Color.black);
             // tile.strokeRect(minX + component.getX(), minY + component.getY(),width,height);
@@ -45,8 +45,7 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
             plotArea.drawGrid(renderer, context);
             SpatialCache<GraphicsBuffer<IMG>> cache;
             if ((cache = getBufferStore(plotArea)) == null) {
-                //todo all selection
-                final int tileSize = plotArea.getInputMode() == InputMode.State.POLYGON_SELECT ? 48 : 256;
+                final int tileSize = isSelection(plotArea.getInputMode()) ? 48 : 256;
                 cache = setBufferStore(plotArea, new SpatialCache<>(128, tileSize, tileSize,
                         (a, b, c, d) -> createTile(plotArea, renderer, context, a, b, c, d),
                         (x, y, tile) -> drawBuffer(renderer, context, tile, plotArea.getX() + x, plotArea.getY() + y)
@@ -157,9 +156,9 @@ public class RectanglePlotArea extends PlotArea<XYLayout> {
             } else {
                 canvas.setStroke(Color.white);
                 canvas.setStroke(Stroke.SOLID);
-                canvas.setFill(getColor(data, null));
                 for (final RTree<PlotShape<XYLayout>> tree : getShapes(data)) {
                     for (final PlotShape<XYLayout> shape : tree.search(searchXMin, searchYMin, searchXMax, searchYMax)) {
+                        canvas.setFill(getColor(data, shape));
                         fill(layout, shape, renderer, canvas);
                         stroke(layout, shape, renderer, canvas);
                     }

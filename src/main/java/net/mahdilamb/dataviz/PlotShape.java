@@ -59,14 +59,24 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
     }
 
     static final class PlotMarker extends PlotShape<XYLayout> {
-        final double size;
-        double x, y;
+
+        final Marker marker = new Marker();
+        final double x, y;
 
         PlotMarker(PlotData<XYLayout> parent, int i, double x, double y, double size) {
             super(parent, i);
-            this.size = size;
+            marker.size = size;
             this.x = x;
             this.y = y;
+        }
+
+        private Marker getMarker(double x, double y) {
+
+            marker.x = x;
+            marker.y = y;
+            marker.size = parent.getSize(i);
+
+            return marker;
         }
 
         @Override
@@ -94,28 +104,15 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
             return String.format("PlotMarker {%s, %s}", x, y);
         }
 
-        private static void updateMarker(double x, double y, double size, MarkerShape shape) {
-            Marker.MARKER.x = x;
-            Marker.MARKER.y = y;
-            Marker.MARKER.shape = shape;
-            Marker.MARKER.size = size;
-        }
-
 
         @Override
         <T> void fill(XYLayout plotLayout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-            plotLayout.transformValueToPosition(x, y, (x, y) -> {
-                updateMarker(x, y, size, MarkerShape.POINT);
-                Marker.MARKER.fill(canvas);
-            });
+            plotLayout.transformValueToPosition(x, y, (x, y) -> getMarker(x, y).fill(canvas));
         }
 
         @Override
         <T> void stroke(XYLayout plotLayout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-            plotLayout.transformValueToPosition(x, y, (x, y) -> {
-                updateMarker(x, y, size, MarkerShape.POINT);
-                Marker.MARKER.stroke(canvas);
-            });
+            plotLayout.transformValueToPosition(x, y, (x, y) -> getMarker(x, y).stroke(canvas));
         }
     }
 

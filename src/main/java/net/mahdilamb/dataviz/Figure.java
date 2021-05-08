@@ -12,11 +12,6 @@ import net.mahdilamb.dataviz.ui.Toolbar;
 import java.awt.*;
 
 public final class Figure extends FigureBase<Figure> {
-    private static final Colormap DEFAULT_QUALITATIVE_COLORMAP = Colormaps.get("Plotly");
-    private static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = Colormaps.get("Viridis");
-
-    Colormap qualitativeColormap = DEFAULT_QUALITATIVE_COLORMAP;
-    Colormap sequentialColormap = DEFAULT_SEQUENTIAL_COLORMAP;
 
     double paddingLeft = 5, paddingRight = 5, paddingTop = 30, paddingBottom = 5;
 

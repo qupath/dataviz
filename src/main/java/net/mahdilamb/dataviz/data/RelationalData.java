@@ -6,6 +6,10 @@ import net.mahdilamb.dataframe.Series;
 import net.mahdilamb.dataviz.PlotData;
 import net.mahdilamb.dataviz.layouts.XYAxis;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.stats.ArrayUtils;
+
+import java.util.Arrays;
+import java.util.function.DoubleUnaryOperator;
 
 /**
  * Data for XY series
@@ -19,6 +23,8 @@ public abstract class RelationalData extends PlotData<XYLayout> {
         y = dataFrame.getDoubleSeries(yAxis);
         getLayout().getXAxis().setTitle(xAxis);
         getLayout().getYAxis().setTitle(yAxis);
+        init();
+
     }
 
     protected RelationalData(double[] x, double[] y) {
@@ -28,12 +34,28 @@ public abstract class RelationalData extends PlotData<XYLayout> {
         if (this.x.size() != this.y.size()) {
             throw new IllegalArgumentException("x and y are of different sizes");
         }
+        init();
+
     }
 
+    protected RelationalData(double[] x, DoubleUnaryOperator y) {
+        super();
+        this.x = Series.of(null, x);
+        this.y = Series.of(null, ArrayUtils.map(x,y));
+        if (this.x.size() != this.y.size()) {
+            throw new IllegalArgumentException("x and y are of different sizes");
+        }
+        init();
+    }
+protected abstract void init();
     @Override
     protected final XYLayout createLayout() {
         //todo consider multiple axes
         return new XYLayout(new XYAxis.XAxis(), new XYAxis.YAxis(true));
     }
 
+    @Override
+    public int size() {
+        return x.size();
+    }
 }

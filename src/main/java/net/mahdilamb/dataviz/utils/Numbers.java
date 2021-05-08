@@ -83,12 +83,19 @@ public final class Numbers {
         long significandBits = bits & 0x000FFFFFFFFFFFFFL;
         for (int i = -1; i > -5; --i) {
             double w = Double.longBitsToDouble(signBit | exponentBits | (significandBits + i));
+            if (!Double.isFinite(w)){
+                continue;
+            }
             if ((startLength - Ryu.lengthOfDouble(w)) > minDifference) {
                 return w;
             }
         }
         for (int i = 1; i < 5; ++i) {
+
             double w = Double.longBitsToDouble(signBit | exponentBits | (significandBits + i));
+            if (!Double.isFinite(w)){
+                continue;
+            }
             if ((startLength - Ryu.lengthOfDouble(w)) > minDifference) {
                 return w;
             }
@@ -134,5 +141,15 @@ public final class Numbers {
             ++r;
         }
         return r;
+    }
+
+    public static double requireFinitePositive(double x) {
+        if (!Double.isFinite(x)) {
+            throw new IllegalArgumentException("Number is not finite");
+        }
+        if (x <= 0) {
+            throw new IllegalArgumentException("Number must be greater than 0");
+        }
+        return x;
     }
 }

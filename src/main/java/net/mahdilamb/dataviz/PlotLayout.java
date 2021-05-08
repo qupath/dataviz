@@ -1,5 +1,7 @@
 package net.mahdilamb.dataviz;
 
+import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.dataviz.figure.Group;
 import net.mahdilamb.dataviz.graphics.Font;
 import net.mahdilamb.dataviz.layouts.XYLayout;
@@ -17,6 +19,7 @@ import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
  * @param <PL> the concrete type of the plot layout
  */
 public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
+
     /**
      * A list of the data in this layout
      */
@@ -70,6 +73,10 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
         redraw();
     }
 
+    static <PL extends PlotLayout<PL>> void redraw(final PlotLayout<PL> layout) {
+        layout.redraw();
+    }
+
     protected abstract void onAdd(PlotData<PL> data);
 
     protected abstract void panPlotArea(double dx, double dy);
@@ -104,7 +111,7 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
 
     protected abstract void inputModeChanged(InputMode.State state);
 
-    protected void  clearCache(){
+    protected void clearCache() {
         getPlotArea().clearCache();
     }
 }

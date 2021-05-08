@@ -1,7 +1,9 @@
 package net.mahdilamb.dataviz;
 
+import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.Colors;
-import net.mahdilamb.dataframe.DataFrame;
+import net.mahdilamb.dataframe.*;
 import net.mahdilamb.dataframe.utils.BooleanArrayList;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
@@ -9,6 +11,7 @@ import net.mahdilamb.dataviz.utils.rtree.RTree;
 import java.awt.*;
 import java.util.*;
 import java.util.List;
+import java.util.function.BiFunction;
 
 /**
  * Plot data is the source of data for generating traces which, in turn, generate shapes/glyph.
@@ -16,6 +19,14 @@ import java.util.List;
  * @param <PL> the supported plot layout
  */
 public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureComponent {
+    private static final Colormap DEFAULT_QUALITATIVE_COLORMAP = Colormaps.get("Plotly");
+    private static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = Colormaps.get("Viridis");
+
+    protected Colormap qualitativeColormap = DEFAULT_QUALITATIVE_COLORMAP;
+    protected Colormap sequentialColormap = DEFAULT_SEQUENTIAL_COLORMAP;
+
+    protected PlotBounds<PlotBounds.XY, XYLayout> bounds;
+
 
     private Figure figure;
     private PL layout;
@@ -24,10 +35,6 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
     BooleanArrayList selected = null;
     Color selectedColor = Colors.lightgray;
 
-    /**
-     * Whether to draw all the elements after setting the global style, or style and draw each shape individually
-     */
-    boolean singleStyle = true;
     /**
      * The backing dataframe
      */
@@ -39,7 +46,7 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
     /**
      * Set of the traces that are used to style the data
      */
-    final Set<PlotTrace> traces = new LinkedHashSet<>(PlotTrace.Attribute.values().length);
+    final Map<DataStyler.StyleAttribute, DataStyler> stylers = new EnumMap<>(DataStyler.StyleAttribute.class);
 
     /**
      * Create a plot data that does not use a dataframe
@@ -72,14 +79,67 @@ public abstract class PlotData<PL extends PlotLayout<PL>> implements FigureCompo
         }
         tree.putAll(shapes);
         this.shapes.add(tree);
-        layout.clearCache();
+        if (layout != null) {
+            layout.clearCache();
+        }
     }
 
     protected void addShapes(PlotShape<PL>[] shapes) {
         addShapes(shapes, true);
     }
 
-    protected abstract Color getColor(int i);
+    protected Color getColor(int i) {
+        final DataStyler styler = getStyler(DataStyler.StyleAttribute.COLOR);
+        if (styler != null) {
+                return styler.calculateColor(styler.getClass() == DataStyler.Categorical.class?
+                        qualitativeColormap:
+                        sequentialColormap, i);
+
+        }
+        return null;
+    }
+
+    protected double getSize(int i){
+        final DataStyler styler = getStyler(DataStyler.StyleAttribute.SIZE);
+        if (styler != null) {
+            if (styler.getClass() == DataStyler.Categorical.class) {
+//todo
+            } else {
+                return ((DataStyler.Numeric) styler).get(i);
+            }
+        }
+        return Double.NaN;
+    }
+
+    protected final void setStyle(final String seriesName, final DataStyler.StyleAttribute attribute, BiFunction<DataStyler.StyleAttribute, DoubleSeries, DataStyler.Numeric> ifNumeric, BiFunction<DataStyler.StyleAttribute, StringSeries, DataStyler.Categorical> ifCategorical) throws DataFrameOnlyMethodException {
+        if (dataFrame == null) {
+            throw new DataFrameOnlyMethodException();
+        }
+        final Series<?> series = dataFrame.get(seriesName);
+        if (series.getType() == DataType.DOUBLE) {
+            stylers.put(attribute, ifNumeric.apply(attribute, series.asDouble()));
+        } else {
+            stylers.put(attribute, ifCategorical.apply(attribute, series.asString()));
+        }
+        if (layout != null) {
+            layout.clearCache();
+            PlotLayout.redraw(layout);
+        }
+
+    }
+
+    protected final void clearStyle(final DataStyler.StyleAttribute attribute) {
+        stylers.remove(attribute);
+        if (layout != null) {
+            layout.clearCache();
+            PlotLayout.redraw(layout);
+        }
+
+    }
+
+    protected DataStyler getStyler(final DataStyler.StyleAttribute attribute) {
+        return stylers.get(attribute);
+    }
 
     /**
      * @return an empty layout

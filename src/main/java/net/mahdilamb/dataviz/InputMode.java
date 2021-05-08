@@ -13,7 +13,16 @@ public class InputMode extends ToggleButtonGroup {
     public enum State {
         PAN,
         MANUAL_ZOOM,
-        POLYGON_SELECT;
+        POLYGON_SELECT(true);
+        final boolean isSelection;
+
+        State(final boolean isSelection) {
+            this.isSelection = isSelection;
+        }
+
+        State() {
+            this.isSelection = false;
+        }
     }
 
     private final Figure figure;

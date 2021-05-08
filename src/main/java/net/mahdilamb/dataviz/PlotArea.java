@@ -160,4 +160,8 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
     }
 
     protected abstract void clearCache();
+
+    protected static boolean isSelection(final InputMode.State state) {
+        return state != null && state.isSelection;
+    }
 }
