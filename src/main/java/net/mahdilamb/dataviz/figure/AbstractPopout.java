@@ -10,7 +10,6 @@ import java.awt.*;
 abstract class AbstractPopout<T> extends Component {
 
     static final double triWidth = 10;
-    ;
 
     static final double DEFAULT_TOOLTIP_RADIUS = 5;
     static final double DEFAULT_RELATIVE_POSITION = 0.5;
@@ -27,7 +26,7 @@ abstract class AbstractPopout<T> extends Component {
     protected T content;
     AbstractComponent component;
 
-    private final double paddingX = 6, paddingY = 4;
+    static final double paddingX = 6, paddingY = 4;
     private double x, y, width, height;
     private final boolean drawRelative;
     private final double relativePosition;

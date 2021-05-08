@@ -96,7 +96,7 @@ public final class Tooltip extends AbstractPopout<String> {
 
     public static Tooltip createWithOutlineFlipHorizontal(final FigureBase<?> component, double x, double y, double offsetX, boolean popoutRight, Color background, String content, boolean showArrow) {
         final double width = component.getContext().getRenderer().getTextWidth(Font.DEFAULT_FONT, content);
-        if ((x + width) > component.getWidth()) {
+        if ((x + width + paddingX * 2 + triWidth) > component.getWidth()) {
             if (popoutRight) {
                 popoutRight = false;
             }
