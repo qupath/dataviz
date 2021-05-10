@@ -105,8 +105,8 @@ public class Legend extends KeyArea<Legend> {
         @Override
         protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
             final double labelHeight = getTextLineHeight(renderer, legend.itemFont, label);
-            if (labelHeight > glyph.getMaxSize()) {
-                layoutComponent(glyph, renderer, minX + legend.paddingX, minY + (.5 * (labelHeight - glyph.getMaxSize())), maxX, maxY);
+            if (labelHeight > glyph.getSize()) {
+                layoutComponent(glyph, renderer, minX + legend.paddingX, minY + (.5 * (labelHeight - glyph.getSize())), maxX, maxY);
             } else {
                 layoutComponent(glyph, renderer, minX + legend.paddingX, minY, maxX, maxY);
 
