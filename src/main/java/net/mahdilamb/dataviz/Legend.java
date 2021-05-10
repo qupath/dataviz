@@ -32,6 +32,7 @@ public class Legend extends KeyArea<Legend> {
             this.legend = legend;
             this.items = items;
 
+
         }
 
         void mirrorContexts() {
@@ -79,21 +80,23 @@ public class Legend extends KeyArea<Legend> {
             }
         }
 
-        @Override
-        protected Component getComponentAt(double x, double y) {
+        protected Item getItemAt(double x, double y) {
             for (final Item item : items) {
                 if (item.containsPoint(x, y)) {
                     return item;
                 }
             }
+            return null;
+        }
+        @Override
+        protected Component getComponentAt(double x, double y) {
             return super.getComponentAt(x, y);
         }
-
     }
 
     static class Item extends Component {
         private final Glyph glyph;
-        private final String label;
+        final String label;
         final Legend legend;
 
         Item(final Legend legend, final Glyph glyph, final String label) {

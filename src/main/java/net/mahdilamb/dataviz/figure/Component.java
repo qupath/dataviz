@@ -299,7 +299,15 @@ public abstract class Component extends AbstractComponent {
         Objects.requireNonNull(consumer);
         this.onMouseEnter = (ctrl, shirt, x, y) -> consumer.run();
     }
-
+    /**
+     * Set the mouse out action
+     *
+     * @param consumer the hover action
+     */
+    public final void setOnMouseExit(Runnable consumer) {
+        Objects.requireNonNull(consumer);
+        this.onMouseExit = (ctrl, shirt, x, y) -> consumer.run();
+    }
     /**
      * Method called on single click
      *

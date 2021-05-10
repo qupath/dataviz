@@ -42,6 +42,7 @@ class SVGExporter extends FigureExporter {
         private static final StringBuilder pathD = new StringBuilder();
         private Font font = new Font(Font.Family.SANS_SERIF, 12);
         boolean compressed;
+        double globalAlpha = 1;
 
         SVGWriter(File output, Renderer<T> renderer, boolean compressed) {
             this.compressed = compressed;
@@ -161,7 +162,7 @@ class SVGExporter extends FigureExporter {
 
         @Override
         public void setGlobalAlpha(double alpha) {
-            System.err.println("Modifying global alpha is currently not supported");
+            System.err.println("Modifying global alpha is currently not supported");//TODO
         }
 
         @Override

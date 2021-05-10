@@ -117,11 +117,15 @@ public abstract class PlotDataAttribute {
                 int i = 0;
                 for (String category : categories) {
                     final Legend.TogglableItem item = new Legend.TogglableItem(legend, data.getGlyph(this, i++), category);
-                    item.setOnMouseClick(() -> setVisibility(category, item.toggleVisibility()));
                     items.add(item);
                 }
                 legendGroup = new Legend.Group(legend, this, items);
-
+                legendGroup.setOnMouseClick((x, y) -> {
+                    final Legend.Item item;
+                    if ((item = legendGroup.getItemAt(x, y)) != null) {
+                        setVisibility(item.label, ((Legend.TogglableItem) item).toggleVisibility());
+                    }
+                });
             }
             return legendGroup;
         }
@@ -290,11 +294,16 @@ public abstract class PlotDataAttribute {
                 final java.util.List<Legend.Item> items = new ArrayList<>(points().length);
                 for (double v : legendPoints) {
                     final Legend.Item item = new Legend.Item(legend, data.getGlyph(this, v), Double.toString(Numbers.approximateDouble(v)));
-                 //   item.setOnMouseClick(() -> setVisibility(category, item.toggleVisibility()));
+                    //   item.setOnMouseClick(() -> setVisibility(category, item.toggleVisibility()));
                     items.add(item);
                 }
                 legendGroup = new Legend.Group(legend, this, items);
-
+                legendGroup.setOnMouseEnter(() -> {
+                    System.out.println("enter");
+                });
+                legendGroup.setOnMouseExit(() -> {
+                    System.out.println("out");
+                });
             }
             return legendGroup;
         }
@@ -354,6 +363,7 @@ public abstract class PlotDataAttribute {
             }
             return values.get(index) >= filterMin && values.get(index) <= filterMax;
         }
+
         @Override
         public String toString() {
             final StringBuilder stringBuilder = new StringBuilder("Trace {\"").append(getName()).append("\"}");
