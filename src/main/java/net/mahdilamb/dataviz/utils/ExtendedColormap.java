@@ -150,4 +150,9 @@ public class ExtendedColormap implements Colormap {
     public Collection<Float> getDefinedPositions() {
         return colormap.getDefinedPositions();
     }
+
+    @Override
+    public boolean isQualitative() {
+        return colormap.isQualitative();
+    }
 }

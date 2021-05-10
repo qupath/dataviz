@@ -34,7 +34,7 @@ public class WrappedLabel extends Label {
     }
 
     @Override
-    protected <T>void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             setBoundsFromRect(minX, minY, 0, 0);
             return;
@@ -45,7 +45,7 @@ public class WrappedLabel extends Label {
         lineStarts.clear();
         numLines = 0;
         double maxWidth = maxX - minX - (paddingX * 2);
-        double lineHeight = getTextLineHeight(renderer, font,text);
+        double lineHeight = getTextLineHeight(renderer, font, text);
         double baselineOffset = getTextBaselineOffset(renderer, font);
         double lineWidth = 0;
         double actualWidth = 0;

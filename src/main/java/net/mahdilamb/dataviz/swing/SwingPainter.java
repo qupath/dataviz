@@ -23,6 +23,11 @@ public final class SwingPainter {
     private Color currentStrokeColor = Color.BLACK;
     private final Path2D path = new Path2D.Double();
     private final AffineTransform affineTransform = new AffineTransform();
+    private final Rectangle2D rectangle = new Rectangle2D.Double();
+    private final RoundRectangle2D roundRectangle = new RoundRectangle2D.Double();
+    private final Ellipse2D ellipse = new Ellipse2D.Double();
+    private final Line2D line = new Line2D.Double();
+    private final Arc2D.Double arc = new Arc2D.Double();
     private boolean usingFill = true;
 
     public SwingPainter() {
@@ -31,37 +36,44 @@ public final class SwingPainter {
 
     void strokeRect(final Graphics2D g, double x, double y, double width, double height) {
         switchToStroked(g);
-        g.draw(new Rectangle2D.Double(x, y, width, height));
+        rectangle.setRect(x, y, width, height);
+        g.draw(rectangle);
     }
 
     void fillRect(final Graphics2D g, double x, double y, double width, double height) {
         switchToFilled(g);
-        g.fill(new Rectangle2D.Double(x, y, width, height));
+        rectangle.setRect(x, y, width, height);
+        g.fill(rectangle);
     }
 
     void strokeRoundRect(final Graphics2D g, double x, double y, double width, double height, double arcWidth, double arcHeight) {
         switchToStroked(g);
-        g.draw(new RoundRectangle2D.Double(x, y, width, height, arcWidth, arcHeight));
+        roundRectangle.setRoundRect(x, y, width, height, arcWidth, arcHeight);
+        g.draw(roundRectangle);
     }
 
     void fillRoundRect(final Graphics2D g, double x, double y, double width, double height, double arcWidth, double arcHeight) {
         switchToFilled(g);
-        g.fill(new RoundRectangle2D.Double(x, y, width, height, arcWidth, arcHeight));
+        roundRectangle.setRoundRect(x, y, width, height, arcWidth, arcHeight);
+        g.fill(roundRectangle);
     }
 
     void strokeOval(final Graphics2D g, double x, double y, double width, double height) {
         switchToStroked(g);
-        g.draw(new Ellipse2D.Double(x, y, width, height));
+        ellipse.setFrame(x, y, width, height);
+        g.draw(ellipse);
     }
 
     void fillOval(final Graphics2D g, double x, double y, double width, double height) {
         switchToFilled(g);
-        g.fill(new Ellipse2D.Double(x, y, width, height));
+        ellipse.setFrame(x, y, width, height);
+        g.fill(ellipse);
     }
 
     void strokeLine(final Graphics2D g, double x0, double y0, double x1, double y1) {
         switchToStroked(g);
-        g.draw(new Line2D.Double(x0, y0, x1, y1));
+        line.setLine(x0, y0, x1, y1);
+        g.draw(line);
     }
 
     void setFill(final Graphics2D g, Color color) {
@@ -97,7 +109,7 @@ public final class SwingPainter {
         final Composite before = g.getComposite();
         g.setComposite(AlphaComposite.Clear);
         g.setTransform(BufferedImageExtended.IDENTITY);
-        g.fillRect(0,0, (int) Math.ceil(width), (int) Math.ceil(height));
+        g.fillRect(0, 0, (int) Math.ceil(width), (int) Math.ceil(height));
         g.setComposite(before);
         switchToFilled(g);
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, VALUE_ANTIALIAS_ON);
@@ -129,7 +141,7 @@ public final class SwingPainter {
 
     void arcTo(double rx, double ry, double xAxisRotationDegrees, boolean largeArc, boolean sweepFlag, double endX, double endY) {
         final Point2D point = path.getCurrentPoint();
-        final Arc2D arc = computeArc(point.getX(), point.getY(), rx, ry, xAxisRotationDegrees, largeArc, sweepFlag, endX, endY);
+        computeArc(arc, point.getX(), point.getY(), rx, ry, xAxisRotationDegrees, largeArc, sweepFlag, endX, endY);
         affineTransform.setToRotation(Math.toRadians(xAxisRotationDegrees), arc.getCenterX(), arc.getCenterY());
         path.append(new Path2D.Double(arc, affineTransform), true);
         affineTransform.setToIdentity();

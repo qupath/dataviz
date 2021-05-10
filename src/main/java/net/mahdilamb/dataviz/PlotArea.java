@@ -9,11 +9,13 @@ import net.mahdilamb.dataviz.utils.rtree.RTree;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
 
 public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
     protected PL layout;
     boolean mouseDown = false;
     double startX, startY;
+    PlotShape<PL> lastHover;
 
     protected PlotArea(PL layout, BufferingStrategy<? extends PlotArea<PL>, ?> bufferingStrategy) {
         super(bufferingStrategy);
@@ -30,7 +32,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         startX = x;
         startY = y;
         mouseDown = true;
-        setTooltip(null);
+        clearTooltip();
         super.onMouseDown(ctrlDown, shiftDown, x, y);
     }
 
@@ -73,17 +75,26 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
                 }
             } else {
                 if (((Figure) getContext().getRenderer().getFigure()).toggleHover.getValue()) {
-                    //todo System.out.println(contains(x, getY(), getY() + getHeight()).size());
                     final List<? extends PlotShape<PL>> matches = contains(x, y);
                     if (!matches.isEmpty()) {
-                        setTooltip(matches.get(matches.size() - 1).createTooltip(getContext().getRenderer()));
+                        final PlotShape<PL> thisMatch = matches.get(matches.size() - 1);
+                        if (thisMatch != lastHover) {
+                            setTooltip(thisMatch.createTooltip(getContext().getRenderer()));
+                            lastHover = thisMatch;
+                        }
                     } else {
-                        setTooltip(null);
+                        clearTooltip();
                     }
                 }
             }
         }
         super.onMouseMove(ctrlDown, shiftDown, x, y);
+    }
+
+    protected void clearTooltip() {
+        lastHover = null;
+        setTooltip(null);
+
     }
 
     protected abstract List<? extends PlotShape<PL>> contains(double x, double y);
@@ -92,9 +103,10 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
 
 
     @Override
-    protected void onMouseScrolled(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
+    protected void onMouseScroll(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
         //todo if allowed
         layout.zoomPlotArea(x, y, rotation);
+
     }
 
     protected static <PL extends PlotLayout<PL>> List<RTree<PlotShape<PL>>> getShapes(final PlotData<?, PL> data) {
@@ -127,10 +139,11 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
 
     protected static <PL extends PlotLayout<PL>> Color getColor(PlotData<?, PL> data, PlotShape<PL> shape) {
         final int i = shape == null ? 0 : shape.i;//TODO
+        final Color color = data.getColor(i);
         if (data.anySelected && !data.selected.get(i)) {
-            return data.selectedColor;
+            return new Color(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, color.getAlpha() * .25f / 255f);
         }
-        return data.getColor(i);
+        return color;
     }
 
     protected static <PL extends PlotLayout<PL>> PlotSelection<PL> getSelection(PL layout) {
@@ -165,6 +178,20 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
 
     protected abstract void clearCache();
 
+    protected final boolean isVisible(PlotShape<PL> shape) {
+        if (layout.data.size() == 1 && layout.data.get(0).attributes.isEmpty()) {
+            return true;
+        }
+        boolean visible = true;
+        for (final PlotData<?, PL> data : layout.data) {
+            for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> attribute : data.attributes.entrySet()) {
+                visible &= attribute.getValue().isVisible(shape.i);
+            }
+        }
+        return visible;
+    }
+
+
     protected static boolean isSelection(final InputMode.State state) {
         return state != null && state.isSelection;
     }
@@ -172,4 +199,5 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
     protected static <PL extends PlotLayout<PL>> double getScale(PlotAxis<PL> plotAxis) {
         return plotAxis.scale;
     }
+
 }

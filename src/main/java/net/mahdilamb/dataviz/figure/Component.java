@@ -157,7 +157,7 @@ public abstract class Component extends AbstractComponent {
 
     @SuppressWarnings("unchecked")
     @Override
-    protected final <T> void markBufferAsOldQuietly() {
+    protected final <T> void markDrawAsOldQuietly() {
         bufferNeedsRefresh = true;
         if (context != null && bufferStore != null) {
             final BufferingStrategy<Component, T> bufferingStrategy = getBufferingStrategy();
@@ -320,7 +320,7 @@ public abstract class Component extends AbstractComponent {
      * @param x         the absolution x position of the mouse in respect to the panel
      * @param y         the absolution y position of the mouse in respect to the panel
      */
-    protected void onMouseDoubleClicked(boolean ctrlDown, boolean shiftDown, double x, double y) {
+    protected void onMouseDoubleClick(boolean ctrlDown, boolean shiftDown, double x, double y) {
 
     }
 
@@ -333,7 +333,7 @@ public abstract class Component extends AbstractComponent {
      * @param y         the absolution y position of the mouse in respect to the panel
      * @param rotation  the amount of rotation
      */
-    protected void onMouseScrolled(boolean ctrlDown, boolean shiftDown, double x, double y, double rotation) {
+    protected void onMouseScroll(boolean ctrlDown, boolean shiftDown, double x, double y, double rotation) {
 
     }
 
@@ -482,4 +482,7 @@ public abstract class Component extends AbstractComponent {
         return renderer.getIcons(IconStore.DATAVIZ_ICONS, IconStore.DataVizIconKey.class).getIconHeight();
     }
 
+    protected static void mirrorContext(final Component a, final Component b) {
+        b.setContext(a.context);
+    }
 }

@@ -4,12 +4,13 @@ import net.mahdilamb.dataframe.Axis;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.PlotAxis;
 import net.mahdilamb.dataviz.PlotData;
+import net.mahdilamb.dataviz.layouts.TableLayout;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 
 /**
  * Data in a table format with rows and columns
  */
-public abstract class TabularData<PD extends PlotData<PD, XYLayout>> extends PlotData<PD, XYLayout> {
+public abstract class TabularData<PD extends PlotData<PD, TableLayout>> extends PlotData<PD, TableLayout> {
 
     /**
      * Create a tabular data series
@@ -35,8 +36,8 @@ public abstract class TabularData<PD extends PlotData<PD, XYLayout>> extends Plo
     }
 
     @Override
-    protected final XYLayout createLayout() {
-        return new XYLayout(new PlotAxis.ColumnHeadings(), new PlotAxis.RowNames());
+    protected final TableLayout createLayout() {
+        return new TableLayout();
     }
 
 

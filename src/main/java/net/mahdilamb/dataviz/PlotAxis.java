@@ -1,6 +1,5 @@
 package net.mahdilamb.dataviz;
 
-import net.mahdilamb.dataviz.figure.BufferingStrategy;
 import net.mahdilamb.dataviz.figure.Component;
 import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.graphics.Font;
@@ -9,7 +8,6 @@ import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.ui.Label;
 import net.mahdilamb.dataviz.utils.Numbers;
 
-import static net.mahdilamb.dataviz.PlotAxis.UnmodifiableAxis.INSTANCE;
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
 public abstract class PlotAxis<PL extends PlotLayout<PL>> extends Component {
@@ -62,35 +60,6 @@ public abstract class PlotAxis<PL extends PlotLayout<PL>> extends Component {
         }
     }
 
-    static final class UnmodifiableAxis<PL extends PlotLayout<PL>> extends PlotAxis<PL> {
-        static final PlotAxis<?> INSTANCE = new UnmodifiableAxis<>();
-
-        @Override
-        protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
-
-        }
-
-        @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-
-        }
-
-        @Override
-        protected <T> void drawGrid(PL layout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-
-        }
-
-        @Override
-        protected String getLabel(double value) {
-            return Double.toString(value);
-        }
-    }
-
-    @SuppressWarnings("unchecked")
-    public static <PL extends PlotLayout<PL>> PlotAxis<PL> emptyAxis() {
-        return (PlotAxis<PL>) INSTANCE;
-    }
-
     @Override
     protected abstract <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY);
     protected   double scale;
@@ -114,7 +83,7 @@ public abstract class PlotAxis<PL extends PlotLayout<PL>> extends Component {
     protected abstract String getLabel(double value);
 
     @Override
-    protected void onMouseScrolled(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
+    protected void onMouseScroll(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
         //todo check if allowed
         layout.zoomPlotArea(x, y, rotation);
     }

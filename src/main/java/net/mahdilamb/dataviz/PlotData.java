@@ -2,7 +2,6 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.colormap.Colormap;
 import net.mahdilamb.colormap.Colormaps;
-import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataframe.*;
 import net.mahdilamb.dataframe.utils.BooleanArrayList;
 import net.mahdilamb.dataframe.utils.IntArrayList;
@@ -23,28 +22,23 @@ import java.util.function.Supplier;
  *
  * @param <PL> the supported plot layout
  */
-public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayout<PL>> implements FigureComponent {
+public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayout<PL>> implements FigureComponent<PD> {
     private static final Colormap DEFAULT_QUALITATIVE_COLORMAP = Colormaps.get("Plotly");
     private static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = Colormaps.get("Viridis");
 
     protected Colormap qualitativeColormap = DEFAULT_QUALITATIVE_COLORMAP;
     protected Colormap sequentialColormap = DEFAULT_SEQUENTIAL_COLORMAP;
 
-    protected PlotBounds<PlotBounds.XY, XYLayout> bounds;
-
-
     private Figure figure;
     private PL layout;
 
     boolean anySelected = false;
     BooleanArrayList selected = null;
-    Color selectedColor = Colors.lightgray;
 
     protected Color lineColor;
     protected Color fillColor;
 
     protected HoverText<PD, PL> hoverFormatter;
-
 
     /**
      * The backing dataframe
@@ -57,7 +51,7 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
     /**
      * Set of the traces that are used to style the data
      */
-    final Map<DataStyler.StyleAttribute, DataStyler> stylers = new EnumMap<>(DataStyler.StyleAttribute.class);
+    final Map<PlotDataAttribute.Type, PlotDataAttribute> attributes = new EnumMap<>(PlotDataAttribute.Type.class);
 
     /**
      * Create a plot data that does not use a dataframe
@@ -101,52 +95,38 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
     }
 
     protected Color getColor(int i) {
-        final DataStyler styler = getStyler(DataStyler.StyleAttribute.COLOR);
-        if (styler != null) {
-            return styler.calculateColor(styler.getClass() == DataStyler.Categorical.class ?
+        final PlotDataAttribute styler;
+        if ((styler = getAttribute(PlotDataAttribute.Type.COLOR)) != null) {
+            return styler.calculateColorOf(styler.getClass() == PlotDataAttribute.Categorical.class ?
                     qualitativeColormap :
                     sequentialColormap, i);
-
         }
         return qualitativeColormap.get(0);
     }
 
     protected double getSize(int i) {
-        final DataStyler styler = getStyler(DataStyler.StyleAttribute.SIZE);
+        final PlotDataAttribute styler = getAttribute(PlotDataAttribute.Type.SIZE);
         if (styler != null) {
-            if (styler.getClass() == DataStyler.Categorical.class) {
+            if (styler.getClass() == PlotDataAttribute.Categorical.class) {
                 //todo
             } else {
-                return ((DataStyler.Numeric) styler).get(i);
+                return ((PlotDataAttribute.Numeric) styler).get(i);
             }
         }
         return Double.NaN;
     }
 
-    protected final void setStyler(
-            final String seriesName,
-            final DataStyler.StyleAttribute attribute,
-            BiFunction<DataStyler.StyleAttribute, DoubleSeries, DataStyler.Numeric> ifNumeric,
-            BiFunction<DataStyler.StyleAttribute, StringSeries, DataStyler.Categorical> ifCategorical
-    ) throws DataFrameOnlyMethodException {
-        if (dataFrame == null) {
-            throw new DataFrameOnlyMethodException();
-        }
-        final Series<?> series = dataFrame.get(seriesName);
-        final DataStyler styler;
-        if (series.getType() == DataType.DOUBLE) {
-            styler = ifNumeric.apply(attribute, series.asDouble());
-        } else {
-            styler = ifCategorical.apply(attribute, series.asString());
-        }
-        stylers.put(attribute, styler);
+
+    @SuppressWarnings("unchecked")
+    protected final PD refresh() {
         if (layout != null) {
             layout.clearCache();
             PlotLayout.redraw(layout);
         }
+        return (PD) this;
     }
 
-    protected final DataStyler addToHoverText(final DataStyler styler, String formatting, Supplier<?> supplier, String key, IntFunction<?> getter) {
+    protected final PlotDataAttribute addToHoverText(final PlotDataAttribute styler, String formatting, Supplier<?> supplier, String key, IntFunction<?> getter) {
         styler.defaultSeg = hoverFormatter.add(formatting, supplier);
         hoverFormatter.put(key, getter);
         //Todo clear overrideing
@@ -166,24 +146,44 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         return styler;
     }
 
-    protected final void clearStyler(final DataStyler.StyleAttribute attribute) {
-        final DataStyler styler = stylers.remove(attribute);
+    protected final void addAttribute(
+            final String seriesName,
+            final PlotDataAttribute.Type attribute,
+            BiFunction<PlotDataAttribute.Type, DoubleSeries, PlotDataAttribute.Numeric> ifNumeric,
+            BiFunction<PlotDataAttribute.Type, StringSeries, PlotDataAttribute.Categorical> ifCategorical
+    ) throws DataFrameOnlyMethodException {
+        if (dataFrame == null) {
+            throw new DataFrameOnlyMethodException();
+        }
+        final Series<?> series = dataFrame.get(seriesName);
+        final PlotDataAttribute styler;
+        if (series.getType() == DataType.DOUBLE) {
+            styler = ifNumeric.apply(attribute, series.asDouble());
+        } else {
+            styler = ifCategorical.apply(attribute, series.asString());
+        }
+        attributes.put(attribute, styler);
+        refresh();
+    }
+
+    protected final void removeAttribute(final PlotDataAttribute.Type attribute) {
+        final PlotDataAttribute styler = attributes.remove(attribute);
         if (styler != null) {
             hoverFormatter.remove(styler);
+            //todo remove legend item/ colorbar
         }
         if (layout != null) {
             layout.clearCache();
             PlotLayout.redraw(layout);
         }
-
     }
 
-    protected DataStyler getStyler(final DataStyler.StyleAttribute attribute) {
-        return stylers.get(attribute);
+    protected PlotDataAttribute getAttribute(final PlotDataAttribute.Type attribute) {
+        return attributes.get(attribute);
     }
 
-    protected boolean hasStyler(final DataStyler.StyleAttribute attribute) {
-        return stylers.containsKey(attribute);
+    protected boolean hasAttribute(final PlotDataAttribute.Type attribute) {
+        return attributes.containsKey(attribute);
     }
 
     /**
@@ -231,6 +231,10 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         return getClass().getAnnotation(PlotOptions.class);
     }
 
+    protected abstract Legend.Glyph getGlyph(final PlotDataAttribute.Categorical attribute, int category);
+
+    protected abstract Legend.Glyph getGlyph(final PlotDataAttribute.Numeric attribute, double value);
+
     /**
      * @param i      the corresponding index for the rectangle
      * @param x      the min x position of the rectangle
@@ -259,7 +263,14 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
 
     public abstract int size();
 
-    protected static double getRaw(DataStyler.Numeric styler, int i) {
+    protected static double getRaw(PlotDataAttribute.Numeric styler, int i) {
         return styler.getRaw(i);
+    }
+
+    protected static Color calculateColor(final PlotDataAttribute.Categorical attribute, final Colormap colormap, int i) {
+        return attribute.calculateColor(colormap, i);
+    }
+    protected static Color calculateColorOf(final PlotDataAttribute attribute, final Colormap colormap, int i) {
+        return attribute.calculateColorOf(colormap, i);
     }
 }

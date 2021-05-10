@@ -1,5 +1,6 @@
 package net.mahdilamb.dataviz.figure;
 
+import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataviz.graphics.Font;
 import net.mahdilamb.dataviz.graphics.GraphicsContext;
 import net.mahdilamb.dataviz.swing.SwingRenderer;
@@ -152,7 +153,7 @@ public abstract class FigureBase<C extends FigureBase<C>> extends Group {
      */
     @SuppressWarnings("unchecked")
     public final C setBackgroundColor(Color color) {
-        this.backgroundColor = color;
+        this.backgroundColor = (color == null ? Colors.TRANSPARENT : color);
         update();
         return (C) this;
     }
@@ -160,6 +161,7 @@ public abstract class FigureBase<C extends FigureBase<C>> extends Group {
     /**
      * @return the width of the figure
      */
+    @Override
     public double getWidth() {
         return width;
     }
@@ -167,6 +169,7 @@ public abstract class FigureBase<C extends FigureBase<C>> extends Group {
     /**
      * @return the height of the figure
      */
+    @Override
     public double getHeight() {
         return height;
     }
@@ -196,6 +199,10 @@ public abstract class FigureBase<C extends FigureBase<C>> extends Group {
             return;
         }
         System.err.println("No renderer");
+    }
+
+    protected static void markComponentLayoutAsOld(final AbstractComponent component) {
+        component.markLayoutAsOldQuietly();
     }
 
 }

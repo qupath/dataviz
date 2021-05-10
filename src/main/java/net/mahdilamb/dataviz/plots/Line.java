@@ -3,7 +3,9 @@ package net.mahdilamb.dataviz.plots;
 import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataframe.utils.IntArrayList;
+import net.mahdilamb.dataviz.Legend;
 import net.mahdilamb.dataviz.PlotBounds;
+import net.mahdilamb.dataviz.PlotDataAttribute;
 import net.mahdilamb.dataviz.PlotShape;
 import net.mahdilamb.dataviz.data.RelationalData;
 import net.mahdilamb.dataviz.layouts.XYLayout;
@@ -42,6 +44,18 @@ public class Line extends RelationalData<Line> {
             bounds = new PlotBounds<>(home, home);
         }
         return bounds;
+    }
+
+    @Override
+    protected Legend.Glyph getGlyph(PlotDataAttribute.Categorical attribute, int category) {
+        //TODO
+        return null;
+    }
+
+    @Override
+    protected Legend.Glyph getGlyph(PlotDataAttribute.Numeric attribute, double value) {
+        //TODO
+        return null;
     }
 
     @Override

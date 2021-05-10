@@ -34,6 +34,7 @@ public class Group extends AbstractComponent {
 
     @Override
     protected final <T> void draw(Renderer<T> renderer, GraphicsBuffer<T> context) {
+
         drawComponent(renderer, context);
     }
 
@@ -71,6 +72,12 @@ public class Group extends AbstractComponent {
      */
     protected final void add(final AbstractComponent component) {
         getChildren().add(component);
+        component.setContext(context);
+        relayout();
+    }
+
+    protected final void add(int index, final AbstractComponent component) {
+        getChildren().add(index, component);
         component.setContext(context);
         relayout();
     }
@@ -165,10 +172,10 @@ public class Group extends AbstractComponent {
     }
 
     @Override
-    protected final <T> void markBufferAsOldQuietly() {
+    protected final <T> void markDrawAsOldQuietly() {
         if (children != null) {
             for (final AbstractComponent c : children) {
-                c.markBufferAsOldQuietly();
+                c.markDrawAsOldQuietly();
             }
         }
     }

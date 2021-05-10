@@ -3,9 +3,12 @@ package net.mahdilamb.dataviz.data;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataframe.DoubleSeries;
 import net.mahdilamb.dataframe.Series;
+import net.mahdilamb.dataviz.PlotBounds;
 import net.mahdilamb.dataviz.PlotData;
+import net.mahdilamb.dataviz.graphics.FillMode;
 import net.mahdilamb.dataviz.layouts.XYAxis;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.dataviz.plots.ScatterMode;
 import net.mahdilamb.stats.ArrayUtils;
 
 import java.util.Arrays;
@@ -16,6 +19,11 @@ import java.util.function.DoubleUnaryOperator;
  */
 public abstract class RelationalData<PD extends RelationalData<PD>> extends PlotData<PD, XYLayout> {
     protected final DoubleSeries x, y;
+    protected PlotBounds<PlotBounds.XY, XYLayout> bounds;
+
+    protected FillMode fillMode = FillMode.NONE;
+
+    protected ScatterMode markerMode = ScatterMode.MARKER_ONLY;
 
     protected RelationalData(final DataFrame dataFrame, final String xAxis, final String yAxis) {
         super(dataFrame);

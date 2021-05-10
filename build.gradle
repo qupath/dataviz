@@ -17,13 +17,13 @@ java {
     modularity.inferModulePath = true
 }
 compileJava {
+    //will work with Java 1.8, but this is required as there is a module-info.java
     sourceCompatibility = JavaVersion.VERSION_11
-//will work with Java 1.8, but this is required as there is a module-info.java
     targetCompatibility = JavaVersion.VERSION_11
 
 }
 group 'net.mahdilamb'
-version '0.1.31-SNAPSHOT'
+version '0.1.311-SNAPSHOT'
 ext.moduleName = 'net.mahdilamb.dataviz'
 repositories {
     mavenCentral()
@@ -32,7 +32,7 @@ dependencies {
     testImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.0'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
-    implementation 'net.mahdilamb:colormap:0.9.511'
+    implementation 'net.mahdilamb:colormap:0.9.6'
     implementation 'net.mahdilamb:dataframe:0.2.2'
 }
 

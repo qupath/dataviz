@@ -43,6 +43,7 @@ public class ToggleButton extends Button implements InputComponent<Boolean> {
             ((ToggleButtonGroup) group).setSelected(this);
         }
         super.onMouseClick(ctrlDown, shiftDown, x, y);
+        //todo color on mouse over after click
     }
 
 }

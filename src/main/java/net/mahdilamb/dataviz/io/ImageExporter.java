@@ -198,7 +198,7 @@ class ImageExporter extends FigureExporter {
         @Override
         public void arcTo(double rx, double ry, double xAxisRotationDegrees, boolean largeArc, boolean sweepFlag, double endX, double endY) {
             final Point2D point = path.getCurrentPoint();
-            final Arc2D arc = computeArc( point.getX(), point.getY(), rx, ry, xAxisRotationDegrees, largeArc, sweepFlag, endX, endY);
+            computeArc(new Arc2D.Double(), point.getX(), point.getY(), rx, ry, xAxisRotationDegrees, largeArc, sweepFlag, endX, endY);
             affineTransform.setToRotation(Math.toRadians(xAxisRotationDegrees), arc.getCenterX(), arc.getCenterY());
             path.append(new Path2D.Double(arc, affineTransform), true);
             affineTransform.setToIdentity();

@@ -1,6 +1,7 @@
 package net.mahdilamb.dataviz.demos;
 
 import net.mahdilamb.dataframe.DataFrame;
+import net.mahdilamb.dataviz.graphics.Side;
 import net.mahdilamb.dataviz.plots.Scatter;
 
 import static net.mahdilamb.dataviz.tests.SwingTest.loadDataFromResource;
@@ -26,8 +27,15 @@ public class ScatterDemos {
 
     static void irisSepalSizeAndColorScatter() {
         new Scatter(iris, "sepal_width", "sepal_length")
+                // .setTitle("Sepal width v length (iris)")
                 .setSizes("petal_length")
                 .setColors("species")
+                .updateLegend(legend -> {
+                    //  legend.setSide(Side.LEFT);
+                    // legend.setFloating(true);
+                    //legend.setFloating(false);
+
+                })
                 .show();
     }
 

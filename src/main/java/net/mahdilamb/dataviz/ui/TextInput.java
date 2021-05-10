@@ -141,7 +141,7 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
     @Override
     protected void onKeyPress(boolean ctrlDown, boolean shiftDown, int keyCode) {
         rawValue.append(KeyEvent.getKeyText(keyCode));
-        markBufferAsOldQuietly();
+        markDrawAsOldQuietly();
         super.onKeyPress(ctrlDown, shiftDown, keyCode);
     }
 

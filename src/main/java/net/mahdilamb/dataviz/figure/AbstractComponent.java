@@ -43,7 +43,7 @@ public abstract class AbstractComponent {
 
     protected abstract void markLayoutAsOldQuietly();
 
-    protected abstract <T> void markBufferAsOldQuietly();
+    protected abstract <T> void markDrawAsOldQuietly();
 
     @SuppressWarnings("unchecked")
     protected <T> GraphicsContext<T> getContext() {
@@ -62,7 +62,7 @@ public abstract class AbstractComponent {
     }
 
     protected final <T> void redraw() {
-        markBufferAsOldQuietly();
+        markDrawAsOldQuietly();
         if (context == null) {
             return;
         }
@@ -298,7 +298,7 @@ public abstract class AbstractComponent {
      * @param canvas    the canvas
      * @param <T>       the type of the image in the renderer
      */
-    protected static <T> void drawComponent(AbstractComponent component, Renderer<T> renderer, GraphicsContext<T> canvas) {
+    protected static <T> void drawComponent(AbstractComponent component, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
         component.drawComponent(renderer, canvas);
     }
 
@@ -342,4 +342,11 @@ public abstract class AbstractComponent {
         return renderer.getOutputPath(fileTypes, defaultExtension);
     }
 
+    protected static void markLayoutAsOld(final AbstractComponent component) {
+        component.markLayoutAsOldQuietly();
+    }
+
+    protected static void markDrawAsOld(final AbstractComponent component) {
+        component.markDrawAsOldQuietly();
+    }
 }

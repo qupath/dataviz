@@ -102,7 +102,7 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
                 layout.transformPositionToValue(x, y, (_x, _y) ->
                         shapes.findAll(out,
                                 node2D -> pointIntersectsPaddedNode(node2D, _x, _y, searchX, searchY),
-                                node2D -> node2D.contains(_x, _y, _x, _y)));
+                                node2D -> isVisible(node2D) && node2D.contains(_x, _y, _x, _y)));
             }
         }
         return out;
@@ -151,8 +151,12 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
         canvas.fillRect(getX(), getY(), getWidth(), getHeight());
         drawGrid(layout, layout.xAxis, renderer, canvas);
         drawGrid(layout, layout.yAxis, renderer, canvas);
-        drawGrid(layout, layout.secondaryXAxis, renderer, canvas);
-        drawGrid(layout, layout.secondaryYAxis, renderer, canvas);
+        if (layout.secondaryXAxis != null) {
+            drawGrid(layout, layout.secondaryXAxis, renderer, canvas);
+        }
+        if (layout.secondaryYAxis != null) {
+            drawGrid(layout, layout.secondaryYAxis, renderer, canvas);
+        }
     }
 
     protected <T> void drawSelection(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
@@ -187,25 +191,18 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
                     searchXMax = xMax + getSearchPaddingX(data) / getScale(layout.getXAxis()),
                     searchYMax = yMax + getSearchPaddingY(data) / getScale(layout.getYAxis());
 
-            if (hasSelection(data)) {
-                canvas.setStroke(Color.white);
-                canvas.setStroke(Stroke.SOLID);
-                for (final RTree<PlotShape<XYLayout>> tree : getShapes(data)) {
-                    for (final PlotShape<XYLayout> shape : tree.search(searchXMin, searchYMin, searchXMax, searchYMax)) {
+            canvas.setStroke(Color.white);
+            canvas.setStroke(Stroke.SOLID);
+            for (final RTree<PlotShape<XYLayout>> tree : getShapes(data)) {
+                for (final PlotShape<XYLayout> shape : tree.search(searchXMin, searchYMin, searchXMax, searchYMax)) {
+                    if (isVisible(shape)) {
                         canvas.setFill(getColor(data, shape));
                         draw(layout, shape, renderer, canvas);
                     }
-                }
-            } else {
-                canvas.setStroke(Color.white);
-                canvas.setStroke(Stroke.SOLID);
-                for (final RTree<PlotShape<XYLayout>> tree : getShapes(data)) {
-                    for (final PlotShape<XYLayout> shape : tree.search(searchXMin, searchYMin, searchXMax, searchYMax)) {
-                        canvas.setFill(getColor(data, shape));
-                        draw(layout, shape, renderer, canvas);
-                    }
+
                 }
             }
+
         }
     }
 
@@ -249,7 +246,7 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
     }
 
     @Override
-    protected void onMouseDoubleClicked(boolean ctrlDown, boolean shiftDown, double x, double y) {
+    protected void onMouseDoubleClick(boolean ctrlDown, boolean shiftDown, double x, double y) {
         if (getSelection(layout) != null) {
             ((PlotSelection.Polygon) getSelection(layout)).close();//TODO
             applySelection(layout, getSelection(layout));

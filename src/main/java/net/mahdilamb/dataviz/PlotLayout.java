@@ -2,6 +2,7 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.dataviz.figure.Group;
 import net.mahdilamb.dataviz.graphics.Font;
+import net.mahdilamb.dataviz.layouts.XYAxis;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.ui.Label;
 import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
@@ -32,6 +33,13 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
 
     }
 
+    public abstract PlotArea<PL> getPlotArea();
+
+    public abstract XYAxis.XAxis getXAxis() throws UnsupportedOperationException;
+
+    public abstract XYAxis.YAxis getYAxis() throws UnsupportedOperationException;
+
+
     /**
      * Add data to the plot layout
      *
@@ -41,6 +49,8 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
         this.data.add(data);
         onAdd(data);
     }
+
+    protected abstract void onAdd(PlotData<?, PL> data);
 
     @SuppressWarnings("unchecked")
     protected final void addAxis(PlotAxis<PL> axis) {
@@ -71,19 +81,27 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
         redraw();
     }
 
-    static <PL extends PlotLayout<PL>> void redraw(final PlotLayout<PL> layout) {
-        layout.redraw();
-    }
-
-    protected abstract void onAdd(PlotData<?, PL> data);
-
     protected abstract void panPlotArea(double dx, double dy);
 
     protected abstract void zoomPlotArea(double x, double y, double zoom) throws UnsupportedOperationException;
 
-    public abstract void transformValueToPosition(double x, double y, BiDoubleConsumer xy);
+    public abstract void increaseZoom() throws UnsupportedOperationException;
 
-    public abstract void transformPositionToValue(double x, double y, BiDoubleConsumer xy);
+    public abstract void decreaseZoom() throws UnsupportedOperationException;
+
+    public abstract void transformValueToPosition(double x, double y, BiDoubleConsumer xy) throws UnsupportedOperationException;
+
+    public abstract void transformPositionToValue(double x, double y, BiDoubleConsumer xy) throws UnsupportedOperationException;
+
+    protected abstract void inputModeChanged(InputMode.State state);
+
+    protected void clearCache() {
+        getPlotArea().clearCache();
+    }
+
+    static <PL extends PlotLayout<PL>> void redraw(final PlotLayout<PL> layout) {
+        layout.redraw();
+    }
 
     protected static double getHomeMinX(PlotData<?, XYLayout> data) {
         return ((PlotBounds.XY) data.getBoundPreferences().home).getMinX();
@@ -101,21 +119,12 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
         return ((PlotBounds.XY) data.getBoundPreferences().home).getMaxY();
     }
 
-    public abstract PlotArea<PL> getPlotArea();
-
-    public abstract void increaseZoom() throws UnsupportedOperationException;
-
-    public abstract void decreaseZoom() throws UnsupportedOperationException;
-
-    protected abstract void inputModeChanged(InputMode.State state);
-
-    protected void clearCache() {
-        getPlotArea().clearCache();
-    }
-
     protected static <PL extends PlotLayout<PL>> double getScale(final PlotAxis<PL> plotAxis) {
         return plotAxis.scale;
     }
 
+    protected static <PL extends PlotLayout<PL>> void clearTooltip(PlotArea<PL> plotArea) {
+        plotArea.clearTooltip();
+    }
 
 }

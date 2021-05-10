@@ -137,7 +137,9 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
 
     @Override
     protected double getTextLineHeight(Font font, final String text) {
-        //TODO
+        if (text == null) {
+            return canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)).getHeight();
+        }
         return SwingUtils.getLineHeight(canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)), text, 1);
     }
 
@@ -226,7 +228,7 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
                     SwingRenderer.this.mouseMoved(e.isControlDown(), e.isShiftDown(), e.getX(), e.getY());
                 }
             });
-            panel.addMouseWheelListener(e -> SwingRenderer.this.mouseScrolled(e.isControlDown(), e.isShiftDown(), e.getX(), e.getY(), scaleScroll((e.getPreciseWheelRotation() * e.getScrollAmount()))));
+            panel.addMouseWheelListener(e -> SwingRenderer.this.mouseScrolled(e.isControlDown(), e.isShiftDown(), e.getX(), e.getY(), calculateScrollRotation(e)));
             panel.addKeyListener(new KeyListener() {
                 @Override
                 public void keyTyped(KeyEvent e) {
@@ -279,7 +281,8 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
         return panel;
     }
 
-    private static double scaleScroll(double v) {
+    private static double calculateScrollRotation(MouseWheelEvent e) {
+        double v = e.getPreciseWheelRotation() * e.getScrollAmount();
         v *= .1;
         if (Math.abs(v) > 1) {
             return 1 / v;

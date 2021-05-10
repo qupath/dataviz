@@ -2,7 +2,6 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.dataviz.utils.StringUtils;
 
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +81,7 @@ public final class HoverText<O extends PlotData<O, PL>, PL extends PlotLayout<PL
         segments.remove(seg);
     }
 
-    public void remove(DataStyler seg) {
+    public void remove(PlotDataAttribute seg) {
         remove(seg.defaultSeg);
     }
 

@@ -395,13 +395,13 @@ public abstract class Renderer<IMG> {
     protected void mouseDoubleClicked(boolean ctrlDown, boolean shiftDown, double x, double y) {
         final Component c = getComponentAt(x, y);
         if (c != null && c.isEnabled()) {
-            c.onMouseDoubleClicked(ctrlDown, shiftDown, x, y);
+            c.onMouseDoubleClick(ctrlDown, shiftDown, x, y);
         }
     }
 
     protected void mouseScrolled(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
         if (lastHover != null && lastHover.isEnabled()) {
-            lastHover.onMouseScrolled(controlDown, shiftDown, x, y, rotation);
+            lastHover.onMouseScroll(controlDown, shiftDown, x, y, rotation);
         }
 
     }

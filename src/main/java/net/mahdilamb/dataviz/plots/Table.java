@@ -1,10 +1,9 @@
 package net.mahdilamb.dataviz.plots;
 
 import net.mahdilamb.dataframe.DataFrame;
-import net.mahdilamb.dataviz.PlotBounds;
-import net.mahdilamb.dataviz.PlotOptions;
-import net.mahdilamb.dataviz.PlotShape;
+import net.mahdilamb.dataviz.*;
 import net.mahdilamb.dataviz.data.TabularData;
+import net.mahdilamb.dataviz.layouts.TableLayout;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.utils.ExtendedColormap;
 
@@ -49,16 +48,21 @@ public class Table extends TabularData<Table> {
     }
 
     @Override
-    protected PlotBounds<PlotBounds.XY, XYLayout> getBoundPreferences() {
-        if (bounds == null) {
-            //TODO
-            bounds = new PlotBounds<>(
-                    new PlotBounds.XY(0, 0, Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY),
-                    new PlotBounds.XY(0, 0, cellWidth * numColumns(), cellHeight * numRows())
-            );
-        }
-        return bounds;
+    protected PlotBounds<? extends PlotBounds.Bounds<TableLayout>, TableLayout> getBoundPreferences() {
+        //TODO
+        return null;
     }
+
+    @Override
+    protected final Legend.Glyph getGlyph(PlotDataAttribute.Categorical attribute, int category) {
+        return null;
+    }
+
+    @Override
+    protected final Legend.Glyph getGlyph(PlotDataAttribute.Numeric attribute, double value) {
+        return null;
+    }
+
 
     @Override
     public int size() {
@@ -66,11 +70,11 @@ public class Table extends TabularData<Table> {
     }
 
     void init() {
-        @SuppressWarnings("unchecked") final PlotShape<XYLayout>[] shapes = new PlotShape[numRows() * numColumns()];
+        @SuppressWarnings("unchecked") final PlotShape<TableLayout>[] shapes = new PlotShape[numRows() * numColumns()];
         int i = 0;
         for (int r = 0; r < numRows(); ++r) {
             for (int c = 0; c < numColumns(); ++c) {
-                shapes[i] = createRectangle(this, i++, c * cellWidth, r * cellHeight, cellWidth, cellHeight);
+                //todo  shapes[i] = createRectangle(this, i++, c * cellWidth, r * cellHeight, cellWidth, cellHeight);
             }
         }
         addShapes(shapes, false);

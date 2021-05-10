@@ -8,7 +8,8 @@ import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
  * An XY or "rectangular" layout
  */
 public final class XYLayout extends PlotLayout<XYLayout> {
-    protected final PlotAxis<XYLayout> xAxis, yAxis, secondaryXAxis, secondaryYAxis;
+    protected final XYAxis.XAxis xAxis, secondaryXAxis;
+    protected final XYAxis.YAxis yAxis, secondaryYAxis;
     /**
      * The plot area
      */
@@ -24,17 +25,17 @@ public final class XYLayout extends PlotLayout<XYLayout> {
     double minX = Double.NEGATIVE_INFINITY, minY = Double.NEGATIVE_INFINITY, maxX = Double.POSITIVE_INFINITY, maxY = Double.POSITIVE_INFINITY;
 
 
-    public XYLayout(final PlotAxis<XYLayout> xAxis, final PlotAxis<XYLayout> yAxis) {
+    public XYLayout(final XYAxis.XAxis xAxis, final XYAxis.YAxis yAxis) {
         super();
         this.xAxis = xAxis;
         this.yAxis = yAxis;
-        this.secondaryXAxis = PlotAxis.emptyAxis();
-        this.secondaryYAxis = PlotAxis.emptyAxis();
+        this.secondaryXAxis = null;
+        this.secondaryYAxis = null;
         add(plotArea);
         addAxes(xAxis, yAxis);
     }
 
-    public XYLayout(final PlotAxis<XYLayout> xAxis, final PlotAxis<XYLayout> yAxis, final PlotAxis<XYLayout> xAxis2, final PlotAxis<XYLayout> yAxis2) {
+    public XYLayout(final XYAxis.XAxis xAxis, final XYAxis.YAxis yAxis, final XYAxis.XAxis xAxis2, final XYAxis.YAxis yAxis2) {
         super();
         this.xAxis = xAxis;
         this.yAxis = yAxis;
@@ -44,12 +45,14 @@ public final class XYLayout extends PlotLayout<XYLayout> {
         addAxes(xAxis, yAxis, xAxis2, yAxis2);
     }
 
+    @Override
     public XYAxis.XAxis getXAxis() {
-        return (XYAxis.XAxis) xAxis;
+        return xAxis;
     }
 
+    @Override
     public XYAxis.YAxis getYAxis() {
-        return (XYAxis.YAxis) yAxis;
+        return yAxis;
     }
 
     @Override
@@ -114,7 +117,9 @@ public final class XYLayout extends PlotLayout<XYLayout> {
             maxY = top + py;
         }
         setRange(minX, minY, maxX, maxY);
+        clearTooltip(plotArea);
         clearCache();
+        redraw();
     }
 
     @Override

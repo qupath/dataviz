@@ -1,9 +1,13 @@
 package net.mahdilamb.dataviz.plots;
 
+import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.*;
 import net.mahdilamb.dataviz.data.RelationalData;
+import net.mahdilamb.dataviz.figure.Renderer;
+import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.utils.ColorUtils;
 import net.mahdilamb.dataviz.utils.Numbers;
@@ -16,6 +20,35 @@ import java.util.function.IntFunction;
 
 @PlotOptions(name = "Scatter", supportsZoom = true, supportsManualZoom = true, supportsPan = true, supportsPolygonSelection = true, supportsZoomByWheel = true)
 public class Scatter extends RelationalData<Scatter> {
+    public static final class ScatterGlyph extends Legend.Glyph {
+
+        private final Scatter data;
+        private final Color color;
+
+        ScatterGlyph(final Scatter data, final Color fill) {
+            this.data = data;
+            this.color = data.markerOpacity == 1 ? fill : ColorUtils.applyAlpha(fill, (float) data.markerOpacity);
+
+        }
+
+        @Override
+        protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+            setBoundsFromRect(minX, minY, getSize(), getSize());
+        }
+
+        @Override
+        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+            canvas.setFill(color);
+            canvas.fillOval(getX(), getY(), getWidth(), getHeight());
+
+        }
+
+        @Override
+        protected double getSize() {
+            return 10;
+        }
+    }
+
     /**
      * Default marker size
      */
@@ -70,26 +103,39 @@ public class Scatter extends RelationalData<Scatter> {
         if (markerOpacity == 1.0) {
             return baseColor;
         }
-        return new Color(baseColor.getRed() / 255f, baseColor.getGreen() / 255f, baseColor.getBlue() / 255f, baseColor.getAlpha() / 255f * (float) markerOpacity);
+        return ColorUtils.applyAlpha(baseColor, (float) markerOpacity);
     }
 
     public Scatter setColors(final String seriesName) throws DataFrameOnlyMethodException {
-        setStyler(seriesName, DataStyler.StyleAttribute.COLOR,
+        addAttribute(seriesName, PlotDataAttribute.Type.COLOR,
                 (attr, series) -> {
                     markerOpacity = DEFAULT_MULTICOLOR_OPACITY;
-                    return new DataStyler.Numeric(this, attr, series, 0, 1);
+                    return new PlotDataAttribute.Numeric(this, attr, series, 0, 1);
                 },
                 (attr, series) -> {
                     markerOpacity = DEFAULT_MULTICOLOR_OPACITY;
-                    final DataStyler.Categorical styler = new DataStyler.Categorical(this, attr, series);
+                    final PlotDataAttribute.Categorical styler = new PlotDataAttribute.Categorical(this, attr, series);
                     addToHoverText(styler, "%s = %{color:s}", styler::getName, "color", styler::get);
                     return styler;
                 });
         return this;
     }
 
+    public Scatter setColormap(final Colormap colormap) {
+        if (colormap.isQualitative()) {
+            qualitativeColormap = colormap;
+        } else {
+            sequentialColormap = colormap;
+        }
+        return refresh();
+    }
+
+    public Scatter setColormap(final String colormapName) {
+        return setColormap(Colormaps.get(colormapName));
+    }
+
     public Scatter setColor(final Color color) {
-        clearStyler(DataStyler.StyleAttribute.COLOR);
+        removeAttribute(PlotDataAttribute.Type.COLOR);
         markerColor = color;
         return this;
     }
@@ -118,10 +164,10 @@ public class Scatter extends RelationalData<Scatter> {
     }
 
     public Scatter setSizes(final String seriesName, double minSize, double maxSize) throws DataFrameOnlyMethodException {
-        setStyler(seriesName,
-                DataStyler.StyleAttribute.SIZE,
+        addAttribute(seriesName,
+                PlotDataAttribute.Type.SIZE,
                 (attr, series) -> {
-                    final DataStyler.Numeric styler = new DataStyler.Numeric(this, DataStyler.StyleAttribute.SIZE, series, minSize, maxSize);
+                    final PlotDataAttribute.Numeric styler = new PlotDataAttribute.Numeric(this, PlotDataAttribute.Type.SIZE, series, minSize, maxSize);
                     addToHoverText(styler, "%s = %{size:.1f}", styler::getName, "size", i -> getRaw(styler, i));
                     return styler;
                 },
@@ -139,7 +185,7 @@ public class Scatter extends RelationalData<Scatter> {
 
     public Scatter setSize(final double size) {
         markerSize = Numbers.requireFinitePositive(size);
-        clearStyler(DataStyler.StyleAttribute.SIZE);
+        removeAttribute(PlotDataAttribute.Type.SIZE);
         return this;
     }
 
@@ -162,16 +208,30 @@ public class Scatter extends RelationalData<Scatter> {
     @Override
     protected double getSearchPaddingX() {
         //TODO check
-        final DataStyler styler;
-        if ((styler = getStyler(DataStyler.StyleAttribute.SIZE)) instanceof DataStyler.Numeric) {
-            return ((DataStyler.Numeric) styler).getMax() * .5;
+        final PlotDataAttribute styler;
+        if ((styler = getAttribute(PlotDataAttribute.Type.SIZE)) instanceof PlotDataAttribute.Numeric) {
+            return ((PlotDataAttribute.Numeric) styler).getMax() * .5;
         }
-        return markerSize;//todo
+        return markerSize;
     }
 
     @Override
     protected double getSearchPaddingY() {
         return getSearchPaddingX();
+    }
+
+    @Override
+    protected Legend.Glyph getGlyph(PlotDataAttribute.Categorical attribute, int category) {
+        if (attribute.getType() == PlotDataAttribute.Type.COLOR) {
+            return new ScatterGlyph(this, calculateColor(attribute, qualitativeColormap, category));
+        }
+        return null;
+    }
+
+    @Override
+    protected Legend.Glyph getGlyph(PlotDataAttribute.Numeric attribute, double value) {
+        //TODO
+        return null;
     }
 
 }

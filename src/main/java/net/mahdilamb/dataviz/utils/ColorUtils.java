@@ -186,4 +186,10 @@ public final class ColorUtils {
     public static Color getForegroundFromBackground(final Color background) {
         return Colors.calculateLuminance(background) > 0.1791 ? Color.BLACK : Color.WHITE;
     }
+
+    public static Color applyAlpha(final Color source, float alpha) {
+        return new Color(source.getRed() / 255f, source.getGreen() / 255f, source.getBlue() / 255f, source.getAlpha() / 255f * alpha);
+    }
+
+
 }
