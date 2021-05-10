@@ -6,6 +6,7 @@ import net.mahdilamb.dataframe.Series;
 import net.mahdilamb.dataframe.utils.GroupBy;
 import net.mahdilamb.dataframe.utils.UnsortedDoubleSet;
 import net.mahdilamb.dataviz.utils.Interpolations;
+import net.mahdilamb.dataviz.utils.Numbers;
 import net.mahdilamb.stats.ArrayUtils;
 import net.mahdilamb.stats.StatUtils;
 
@@ -53,7 +54,6 @@ public abstract class PlotDataAttribute {
         String[] categories;
         boolean[] isVisible;
         int[] indices;
-        Legend.Group legendGroup;
 
         Categorical(PlotData<?, ?> data, Type attribute, String name, String[] categories) {
             super(data, attribute);
@@ -226,7 +226,7 @@ public abstract class PlotDataAttribute {
             this.series = this.values = series;
             valMin = scaleMin = StatUtils.min(values::get, values.size());
             valMax = scaleMax = StatUtils.max(values::get, values.size());
-            showInLegend = name != null && name.length() > 1 && attribute != Type.COLOR;
+            showInLegend = getName() != null && getName().length() > 1 && attribute != Type.COLOR;
 
         }
 
@@ -260,7 +260,7 @@ public abstract class PlotDataAttribute {
             return scale(getRaw(index));
         }
 
-        private double scale(double value) {
+        final double scale(double value) {
             double t = ((value - valMin) / (valMax - valMin));
             double min = reversed ? scaleMax : scaleMin;
             double max = reversed ? scaleMin : scaleMax;
@@ -286,8 +286,17 @@ public abstract class PlotDataAttribute {
 
         @Override
         Legend.Group getLegendGroup(Legend legend) {
-            //TODO
-            return null;
+            if (legendGroup == null) {
+                final java.util.List<Legend.Item> items = new ArrayList<>(points().length);
+                for (double v : legendPoints) {
+                    final Legend.Item item = new Legend.Item(legend, data.getGlyph(this, v), Double.toString(Numbers.approximateDouble(v)));
+                 //   item.setOnMouseClick(() -> setVisibility(category, item.toggleVisibility()));
+                    items.add(item);
+                }
+                legendGroup = new Legend.Group(legend, this, items);
+
+            }
+            return legendGroup;
         }
 
         @Override
@@ -344,6 +353,14 @@ public abstract class PlotDataAttribute {
                 return false;
             }
             return values.get(index) >= filterMin && values.get(index) <= filterMax;
+        }
+        @Override
+        public String toString() {
+            final StringBuilder stringBuilder = new StringBuilder("Trace {\"").append(getName()).append("\"}");
+            for (final double d : points()) {
+                stringBuilder.append("\n\t* ").append(Numbers.approximateDouble(d));
+            }
+            return stringBuilder.toString();
         }
     }
 
@@ -408,6 +425,7 @@ public abstract class PlotDataAttribute {
             spacing = 5,
             textWidth = -1;
 
+    Legend.Group legendGroup;
     Legend.Group[] legendGroups;
     boolean showInLegend = true;
     /**

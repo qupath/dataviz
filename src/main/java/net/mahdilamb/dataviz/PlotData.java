@@ -267,9 +267,15 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         return styler.getRaw(i);
     }
 
+    protected static double scale(PlotDataAttribute.Numeric styler, double i) {
+        return styler.scale(i);
+    }
+
+
     protected static Color calculateColor(final PlotDataAttribute.Categorical attribute, final Colormap colormap, int i) {
         return attribute.calculateColor(colormap, i);
     }
+
     protected static Color calculateColorOf(final PlotDataAttribute attribute, final Colormap colormap, int i) {
         return attribute.calculateColorOf(colormap, i);
     }

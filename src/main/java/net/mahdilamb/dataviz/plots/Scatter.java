@@ -20,10 +20,10 @@ import java.util.function.IntFunction;
 
 @PlotOptions(name = "Scatter", supportsZoom = true, supportsManualZoom = true, supportsPan = true, supportsPolygonSelection = true, supportsZoomByWheel = true)
 public class Scatter extends RelationalData<Scatter> {
-    public static final class ScatterGlyph extends Legend.Glyph {
+    public static class ScatterGlyph extends Legend.Glyph {
 
-        private final Scatter data;
-        private final Color color;
+        final Scatter data;
+        final Color color;
 
         ScatterGlyph(final Scatter data, final Color fill) {
             this.data = data;
@@ -40,13 +40,40 @@ public class Scatter extends RelationalData<Scatter> {
         protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
             canvas.setFill(color);
             canvas.fillOval(getX(), getY(), getWidth(), getHeight());
-
         }
 
         @Override
         protected double getSize() {
             return 10;
         }
+    }
+
+    protected static final class SizedScatterGlyph extends ScatterGlyph {
+
+        private final double size, maxSize;
+
+        SizedScatterGlyph(Scatter data, Color fill, double size, double maxSize) {
+            super(data, fill);
+            this.size = size;
+            this.maxSize = maxSize;
+        }
+
+        @Override
+        protected double getSize() {
+            return size;
+        }
+
+        @Override
+        protected double getMaxSize() {
+            return maxSize;
+        }
+
+        @Override
+        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+            canvas.setFill(color);
+            canvas.fillOval(getX() + (maxSize - size) * .5, getY(), size, size);
+        }
+
     }
 
     /**
@@ -230,8 +257,8 @@ public class Scatter extends RelationalData<Scatter> {
 
     @Override
     protected Legend.Glyph getGlyph(PlotDataAttribute.Numeric attribute, double value) {
-        //TODO
-        return null;
+        return new SizedScatterGlyph(this, Color.DARK_GRAY, scale(attribute, value), attribute.getMax());
+
     }
 
 }

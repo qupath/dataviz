@@ -12,6 +12,10 @@ import java.util.Map;
 public class Legend extends KeyArea<Legend> {
     public static abstract class Glyph extends Component {
         protected abstract double getSize();
+
+        protected double getMaxSize() {
+            return getSize();
+        }
     }
 
     /**
@@ -100,16 +104,15 @@ public class Legend extends KeyArea<Legend> {
 
         @Override
         protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
-            if (glyph != null) {//TODO remove null check
-                final double labelHeight = getTextLineHeight(renderer, legend.itemFont, label);
-                if (labelHeight > glyph.getSize()) {
-                    layoutComponent(glyph, renderer, minX + legend.paddingX, minY + (.5 * (labelHeight - glyph.getSize())), maxX, maxY);
-                } else {
-                    layoutComponent(glyph, renderer, minX + legend.paddingX, minY, maxX, maxY);
+            final double labelHeight = getTextLineHeight(renderer, legend.itemFont, label);
+            if (labelHeight > glyph.getMaxSize()) {
+                layoutComponent(glyph, renderer, minX + legend.paddingX, minY + (.5 * (labelHeight - glyph.getMaxSize())), maxX, maxY);
+            } else {
+                layoutComponent(glyph, renderer, minX + legend.paddingX, minY, maxX, maxY);
 
-                }
-                setBoundsFromRect(minX, minY, maxX - minX, Math.max(labelHeight, glyph.getSize()));
             }
+            setBoundsFromRect(minX, minY, maxX - minX, Math.max(labelHeight, glyph.getSize()));
+
         }
 
         @Override
@@ -124,9 +127,13 @@ public class Legend extends KeyArea<Legend> {
             } else {
                 labelOffsetY = 0;
             }
-            canvas.fillText(label, getX() + glyph.getWidth() + legend.paddingX + 2, getY() + labelOffsetY + getTextBaselineOffset(renderer, legend.itemFont));
+            canvas.fillText(label, getX() + ((glyph.getMaxSize() + glyph.getSize()) * .5) + legend.paddingX + 2, getY() + labelOffsetY + getTextBaselineOffset(renderer, legend.itemFont));
         }
 
+        @Override
+        public String toString() {
+            return "LegendItem {'" + label + "'}";
+        }
     }
 
     static final class TogglableItem extends Item {
@@ -166,11 +173,11 @@ public class Legend extends KeyArea<Legend> {
         double height = 0;
         boolean visible = false;
         for (final PlotData<?, ?> data : figure.getLayout().data) {
-            for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> styler : data.attributes.entrySet()) {
-                if (styler.getValue().showInLegend) {
-                    final Group group = styler.getValue().getLegendGroup(this);
+            for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> attrEntry : data.attributes.entrySet()) {
+                if (attrEntry.getValue().showInLegend) {
+                    final Group group = attrEntry.getValue().getLegendGroup(this);
                     group.layoutComponent(renderer, minX, minY + height, maxX, maxY);
-                    height += group.getHeight();
+                    height += group.getHeight() + groupSpacing;
                     visible = true;
                 }
             }
@@ -231,11 +238,9 @@ public class Legend extends KeyArea<Legend> {
             return;
         }
         for (final PlotData<?, ?> data : layout.data) {
-            for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> styler : data.attributes.entrySet()) {
-                if (styler.getValue().getLegendGroup(this) == null) {
-                    continue;//TODO - remove
-                }
-                markLayoutAsOld(styler.getValue().getLegendGroup(this));
+            for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> attributeEntry : data.attributes.entrySet()) {
+                attributeEntry.getValue().getLegendGroup(this);
+                markLayoutAsOld(attributeEntry.getValue().getLegendGroup(this));
             }
         }
     }

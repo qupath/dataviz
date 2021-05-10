@@ -11,8 +11,8 @@ import java.awt.*;
 
 abstract class KeyArea<K extends KeyArea<K>> extends Component {
 
-    double paddingX = 2, paddingY = 2;
-
+    double paddingX = 5, paddingY = 2.5;
+    double groupSpacing =2;
     boolean showBorder = false;
     Stroke border = Stroke.SOLID;
     Color borderColor = Color.BLACK;
