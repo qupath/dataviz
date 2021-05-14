@@ -8,7 +8,6 @@ import net.mahdilamb.dataframe.utils.IntArrayList;
 import net.mahdilamb.dataviz.data.RelationalData;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.plots.DataFrameOnlyMethodException;
-import net.mahdilamb.dataviz.plots.GlyphFactory;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 
 import java.awt.*;
@@ -30,7 +29,7 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
     protected Colormap sequentialColormap = null;
 
     private Figure figure;
-    private PL layout;
+    PL layout;
 
     BooleanArrayList selected = null;
 
@@ -38,7 +37,8 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
     protected Color fillColor;
 
     protected HoverText<PD, PL> hoverFormatter;
-
+    String name;
+    boolean showInLegend = true;
     /**
      * The backing dataframe
      */
@@ -107,14 +107,23 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         addShapes(shapes, true);
     }
 
+    protected final void clear() {
+        shapes.clear();
+    }
+
     protected Color getColor(int i) {
         final PlotDataAttribute styler;
         if ((styler = getAttribute(PlotDataAttribute.Type.COLOR)) != null) {
+            final PlotDataAttribute group;
+            if ((group = getAttribute(PlotDataAttribute.Type.GROUP)) != null) {
+                i = ((PlotDataAttribute.Categorical) group).getRaw(i);
+            }
             return styler.calculateColorOf(styler.getClass() == PlotDataAttribute.Categorical.class ?
                     getQualitativeColormap() :
                     getSequentialColormap(), i);
         }
-        return getQualitativeColormap().get(0);
+
+        return getLayout().getColor(this);
     }
 
     protected double getOpacity(int i) {
@@ -135,6 +144,10 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
             }
         }
         return Double.NaN;
+    }
+
+    protected boolean showEdges() {
+        return true;
     }
 
     protected final void addAttribute(
@@ -180,7 +193,7 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
     protected final PlotDataAttribute addToHoverText(final PlotDataAttribute styler, String formatting, Supplier<?> supplier, String key, IntFunction<?> getter) {
         styler.defaultSeg = hoverFormatter.add(formatting, supplier);
         hoverFormatter.put(key, getter);
-        //Todo clear overrideing
+        //Todo clear overriding
         /*
 
         boolean found = false;
@@ -220,6 +233,11 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
                     .addData(this);
         }
         return figure;
+    }
+
+    public PD setName(final String name) {
+        this.name = name;
+        return refresh();
     }
 
     /**
@@ -287,6 +305,10 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         return styler.getRaw(i);
     }
 
+    protected static int getRaw(PlotDataAttribute.Categorical styler, int i) {
+        return styler.getRaw(i);
+    }
+
     protected static double scale(PlotDataAttribute.Numeric styler, double i) {
         return styler.scale(i);
     }
@@ -303,4 +325,14 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
     protected boolean supportsWheelZoom() {
         return false;
     }
+
+    protected static int getIndex(PlotShape<?> shape) {
+        return shape.i;
+    }
+
+    protected static void setIndex(PlotShape<?> shape, int i) {
+        shape.i = i;
+    }
+
+    public abstract GlyphFactory.Glyph getGlyph(PlotDataAttribute.UncategorizedTrace uncategorizedTrace, int i);
 }

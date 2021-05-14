@@ -1,15 +1,20 @@
 package net.mahdilamb.dataviz;
 
+import net.mahdilamb.dataviz.figure.AbstractComponent;
 import net.mahdilamb.dataviz.figure.Group;
 import net.mahdilamb.dataviz.graphics.Font;
-import net.mahdilamb.dataviz.layouts.XYAxis;
+import net.mahdilamb.dataviz.layouts.XAxis;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.dataviz.layouts.YAxis;
 import net.mahdilamb.dataviz.ui.Label;
 import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
+import net.mahdilamb.dataviz.utils.functions.QuadDoubleConsumer;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
@@ -28,6 +33,8 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
     protected PlotSelection<PL> selection;
     protected boolean supportsWheelZoom = true;
     Color background = new Color(229, 236, 246);
+    Map<PlotData<?, PL>, Color> uncategorizedColors;
+    PlotDataAttribute.UncategorizedTrace uncategorized;
 
     /**
      * Create an empty plot layout only containing the plot area
@@ -38,9 +45,9 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
 
     public abstract PlotArea<PL> getPlotArea();
 
-    public abstract XYAxis.XAxis getXAxis() throws UnsupportedOperationException;
+    public abstract XAxis getXAxis() throws UnsupportedOperationException;
 
-    public abstract XYAxis.YAxis getYAxis() throws UnsupportedOperationException;
+    public abstract YAxis getYAxis() throws UnsupportedOperationException;
 
 
     /**
@@ -48,9 +55,13 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
      *
      * @param data the data to add
      */
+    @SuppressWarnings("unchecked")
     protected final void addData(PlotData<?, PL> data) {
         this.data.add(data);
+        data.layout = (PL) this;
+        uncategorized = null;
         onAdd(data);
+
     }
 
     protected abstract void onAdd(PlotData<?, PL> data);
@@ -111,6 +122,36 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
 
     public abstract void transformPositionToValue(double x, double y, BiDoubleConsumer xy) throws UnsupportedOperationException;
 
+    public abstract void transformValueToPosition(double x0, double y0, double x1, double y1, QuadDoubleConsumer xy) throws UnsupportedOperationException;
+
+    public abstract void transformPositionToValue(double x0, double y0, double x1, double y1, QuadDoubleConsumer xy) throws UnsupportedOperationException;
+
+    PlotDataAttribute.UncategorizedTrace getUncategorized(final Figure figure) {
+        if (uncategorized == null) {
+            int numUncategorized = 0;
+            for (final PlotData<?, ?> data : figure.layout.data) {
+                if (data.attributes.size() == 0) {
+                    if (data.showInLegend && data.name != null && data.name.length() > 0) {
+                        ++numUncategorized;
+                    }
+                }
+            }
+            if (numUncategorized > 0) {
+                final PlotData<?, ?>[] uncategorized = new PlotData[numUncategorized];
+                numUncategorized = 0;
+                for (final PlotData<?, ?> data : figure.layout.data) {
+                    if (data.attributes.size() == 0) {
+                        if (data.showInLegend && data.name != null && data.name.length() > 0) {
+                            uncategorized[numUncategorized++] = data;
+                        }
+                    }
+                }
+                this.uncategorized = new PlotDataAttribute.UncategorizedTrace(figure, uncategorized);
+            }
+        }
+        return uncategorized;
+    }
+
     protected abstract void inputModeChanged(InputMode.State state);
 
     protected void clearCache() {
@@ -149,4 +190,20 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
         return data.supportsWheelZoom();
     }
 
+    protected static <PL extends PlotLayout<PL>> boolean isUncategorized(PlotData<?, PL> data) {
+        return data.dataFrame == null && data.name != null;
+    }
+
+    Color getColor(PlotData<?, PL> data) {
+        if (uncategorizedColors == null) {
+            uncategorizedColors = new HashMap<>();
+        }
+        final Color cached;
+        if ((cached = uncategorizedColors.get(data)) != null) {
+            return cached;
+        }
+        final Color c = data.getQualitativeColormap().get(((float) (uncategorizedColors.size()) % data.getQualitativeColormap().size()) / (data.getQualitativeColormap().size() - 1));
+        uncategorizedColors.put(data, c);
+        return c;
+    }
 }

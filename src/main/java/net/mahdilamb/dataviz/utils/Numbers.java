@@ -1,5 +1,7 @@
 package net.mahdilamb.dataviz.utils;
 
+import java.util.function.DoubleConsumer;
+
 /**
  * Utility methods for working with numbers
  */
@@ -83,7 +85,7 @@ public final class Numbers {
         long significandBits = bits & 0x000FFFFFFFFFFFFFL;
         for (int i = -1; i >= -5; --i) {
             double w = Double.longBitsToDouble(signBit | exponentBits | (significandBits + i));
-            if (!Double.isFinite(w)){
+            if (!Double.isFinite(w)) {
                 continue;
             }
             if ((startLength - Ryu.lengthOfDouble(w)) > minDifference) {
@@ -92,7 +94,7 @@ public final class Numbers {
         }
         for (int i = 1; i <= 5; ++i) {
             double w = Double.longBitsToDouble(signBit | exponentBits | (significandBits + i));
-            if (!Double.isFinite(w)){
+            if (!Double.isFinite(w)) {
                 continue;
             }
             if ((startLength - Ryu.lengthOfDouble(w)) > minDifference) {
@@ -151,4 +153,33 @@ public final class Numbers {
         }
         return x;
     }
+
+    public static void iterateKleinSum(final double start, final double end, double spacing, DoubleConsumer func) {
+        double s = start, c, cc, cs = 0, ccs = 0, t;
+        func.accept(s);
+        while (s <= end) {
+            t = s + spacing;
+            if (Math.abs(s) >= Math.abs(spacing)) {
+                c = (s - t) + spacing;
+            } else {
+                c = (spacing - t) + s;
+            }
+            s = t;
+            t = cs + c;
+            if (Math.abs(cs) >= Math.abs(c)) {
+                cc = (cs - t) + c;
+            } else {
+                cc = (c - t) + cs;
+            }
+            cs = t;
+            ccs = ccs + cc;
+            func.accept(s + cs + ccs);
+        }
+
+    }
+
+    public static void main(String[] args) {
+        iterateKleinSum(0, 2, .2, System.out::println);
+    }
+
 }

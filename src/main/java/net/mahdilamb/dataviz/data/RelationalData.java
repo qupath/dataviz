@@ -3,11 +3,15 @@ package net.mahdilamb.dataviz.data;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataframe.DoubleSeries;
 import net.mahdilamb.dataframe.Series;
+import net.mahdilamb.dataframe.utils.IntArrayList;
 import net.mahdilamb.dataviz.PlotBounds;
 import net.mahdilamb.dataviz.PlotData;
+import net.mahdilamb.dataviz.PlotDataAttribute;
+import net.mahdilamb.dataviz.PlotShape;
 import net.mahdilamb.dataviz.graphics.FillMode;
-import net.mahdilamb.dataviz.layouts.XYAxis;
+import net.mahdilamb.dataviz.layouts.XAxis;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.dataviz.layouts.YAxis;
 import net.mahdilamb.dataviz.plots.ScatterMode;
 import net.mahdilamb.stats.ArrayUtils;
 
@@ -36,11 +40,11 @@ public abstract class RelationalData<PD extends RelationalData<PD>> extends Plot
 
     protected RelationalData(double[] x, double[] y) {
         super();
-        this.x = Series.of(null, x);
-        this.y = Series.of(null, y);
-        if (this.x.size() != this.y.size()) {
+        if (x.length != y.length) {
             throw new IllegalArgumentException("x and y are of different sizes");
         }
+        this.x = Series.of(null, x);
+        this.y = Series.of(null, y);
         init();
 
     }
@@ -49,22 +53,20 @@ public abstract class RelationalData<PD extends RelationalData<PD>> extends Plot
         super();
         this.x = Series.of(null, x);
         this.y = Series.of(null, ArrayUtils.map(x, y));
-        if (this.x.size() != this.y.size()) {
-            throw new IllegalArgumentException("x and y are of different sizes");
-        }
         init();
     }
 
     protected abstract void init();
 
+
     @SuppressWarnings("unchecked")
-    protected PD setXLabel(final String name) {
+    public PD setXLabel(final String name) {
         getLayout().getXAxis().setTitle(name);
         return (PD) this;
     }
 
     @SuppressWarnings("unchecked")
-    protected PD setYLabel(final String name) {
+    public PD setYLabel(final String name) {
         getLayout().getYAxis().setTitle(name);
         return (PD) this;
     }
@@ -72,13 +74,21 @@ public abstract class RelationalData<PD extends RelationalData<PD>> extends Plot
     @Override
     protected final XYLayout createLayout() {
         //todo consider multiple axes
-        return new XYLayout(new XYAxis.XAxis(), new XYAxis.YAxis(true));
+        return new XYLayout(new XAxis(), new YAxis(true));
     }
 
+    /**
+     * @param i the index
+     * @return the x element of the ith element
+     */
     public double getX(int i) {
         return x.get(i);
     }
 
+    /**
+     * @param i the index
+     * @return the y element of the ith element
+     */
     public double getY(int i) {
         return y.get(i);
     }
@@ -92,4 +102,79 @@ public abstract class RelationalData<PD extends RelationalData<PD>> extends Plot
     protected boolean supportsWheelZoom() {
         return true;
     }
+
+    public ScatterMode getMarkerMode() {
+        return markerMode;
+    }
+
+    protected PD setMarkerMode(final String markerMode) {
+        return setMarkerMode(ScatterMode.from(markerMode));
+    }
+
+    protected PD setMarkerMode(final ScatterMode markerMode) {
+        this.markerMode = markerMode;
+        clear();
+        init();
+        return refresh();
+    }
+
+    @SuppressWarnings("unchecked")
+    protected PlotShape<XYLayout>[] createLines() {
+        final PlotDataAttribute group = getAttribute(PlotDataAttribute.Type.GROUP);
+        final PlotDataAttribute colors = getAttribute(PlotDataAttribute.Type.COLOR);
+        if (colors == null || group == null) {
+            if (colors instanceof PlotDataAttribute.Categorical) {
+                final PlotDataAttribute.Categorical c = ((PlotDataAttribute.Categorical) colors);
+                @SuppressWarnings("unchecked") final PlotShape<XYLayout>[] lines = new PlotShape[c.numCategories()];
+                IntArrayList[] idObjects = new IntArrayList[lines.length];
+                for (int i = 0; i < lines.length; ++i) {
+                    final IntArrayList ids = new IntArrayList();
+                    lines[i] = createPolyLine(this, -1, ids);
+                    idObjects[i] = ids;
+                }
+                for (int i = 0; i < x.size(); ++i) {
+                    idObjects[getRaw(c, i)].add(i);
+                    if (getIndex(lines[getRaw(c, i)]) == -1) {
+                        setIndex(lines[getRaw(c, i)], i);
+                    }
+                }
+                return lines;
+            }
+        } else {
+            /*if (group instanceof PlotDataAttribute.Categorical) {
+                final PlotDataAttribute.Categorical g = ((PlotDataAttribute.Categorical) group);
+                final PlotDataAttribute.Categorical c = ((PlotDataAttribute.Categorical) colors);
+
+                final StringPair[][] keyCombinations = new StringPair[g.numCategories()][c.numCategories()];
+
+                for (int i = 0; i < g.numCategories(); ++i) {
+                    for (int j = 0; j < c.numCategories(); ++j) {
+                        keyCombinations[i][j] = new StringPair(c.get(j), g.get(i));
+                        AbstractComponent.print(c.get(j), j);
+                    }
+                }
+
+                //Create group by
+                final StringPair[] keys = new StringPair[size()];
+                for (int i = 0; i < size(); ++i) {
+                    keys[i] = keyCombinations[getRaw(g, i)][getRaw(c, i)];
+
+                }
+                final GroupBy<StringPair> lines = new GroupBy<>(keys);
+                //create lines
+                final PlotShape<XYLayout>[] pLines = new PlotShape[lines.numGroups()];
+                int i = 0;
+                for (final GroupBy.Group<StringPair> h : lines) {
+
+                    pLines[i++] = createPolyLine(this, h.getIndices().get(0), h.getIndices());
+                }
+                return pLines;
+            }*/
+        }
+
+
+        return new PlotShape[]{createPolyLine(this, 0, new IntArrayList(ArrayUtils.intRange(x.size())))};
+    }
+
+
 }

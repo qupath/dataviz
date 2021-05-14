@@ -13,10 +13,25 @@ public class LineDemos {
 
     static void colorBy() {
         new Line(gapminder.query("continent == 'Oceania'"), "year", "lifeExp")
+                .setColors("country")
                 .show();
     }
 
+    static void lifeExpectancy() {
+        new Line(gapminder.query("country=='Canada'"), "year", "lifeExp")
+                .setTitle("Life expectancy in Canada")
+                .show();
+    }
+
+    static void lineGrouping() {
+        new Line(gapminder.query("continent != 'Asia'"), "year", "lifeExp")
+                .setGroups("country")
+                .setColors("continent")
+                .show();
+    }
+
+
     public static void main(String[] args) {
-        basicLine();
+        lineGrouping();
     }
 }

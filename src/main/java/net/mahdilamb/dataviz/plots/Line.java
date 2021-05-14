@@ -2,7 +2,7 @@ package net.mahdilamb.dataviz.plots;
 
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataframe.utils.IntArrayList;
-import net.mahdilamb.dataviz.Legend;
+import net.mahdilamb.dataviz.GlyphFactory;
 import net.mahdilamb.dataviz.PlotBounds;
 import net.mahdilamb.dataviz.PlotDataAttribute;
 import net.mahdilamb.dataviz.PlotShape;
@@ -27,9 +27,8 @@ public class Line extends RelationalData<Line> {
 
     @Override
     protected void init() {
-
-        final PlotShape<XYLayout> line = createPolyLine(this, 0, new IntArrayList(ArrayUtils.intRange(x.size())));
-        addShapes(line);
+        markerMode = ScatterMode.LINE_ONLY;
+        addShapes(createLines());
     }
 
     @Override
@@ -47,8 +46,7 @@ public class Line extends RelationalData<Line> {
 
     @Override
     protected GlyphFactory.Glyph getGlyph(PlotDataAttribute.Categorical attribute, int category) {
-        //TODO
-        return null;
+        return GlyphFactory.createScatterGlyph(this, calculateColor(attribute, getQualitativeColormap(), category));
     }
 
     @Override
@@ -58,13 +56,30 @@ public class Line extends RelationalData<Line> {
     }
 
     @Override
-    public Line setXLabel(String name) {
-        return (Line) super.setXLabel(name);
+    public GlyphFactory.Glyph getGlyph(PlotDataAttribute.UncategorizedTrace uncategorizedTrace, int i) {
+        return GlyphFactory.createScatterGlyph(this, calculateColorOf(uncategorizedTrace, getQualitativeColormap(), i));
     }
 
-    @Override
-    public Line setYLabel(String name) {
-        return (Line) super.setYLabel(name);
+
+    public Line setColors(String seriesName) throws DataFrameOnlyMethodException {
+        addAttribute(seriesName, PlotDataAttribute.Type.COLOR,
+                (attr, series) -> {
+                    throw new UnsupportedOperationException("Series must not be floating point");
+                },
+                (attr, series) -> new PlotDataAttribute.Categorical(this, attr, series));
+        clear();
+        init();
+        return this;
     }
 
+   /* public Line setGroups(String seriesName) throws DataFrameOnlyMethodException {
+        addAttribute(seriesName, PlotDataAttribute.Type.GROUP,
+                (attr, series) -> {
+                    throw new UnsupportedOperationException("Series must not be floating point");
+                },
+                (attr, series) -> new PlotDataAttribute.Categorical(this, attr, series));
+        clear();
+        init();
+        return this;
+    }*/
 }

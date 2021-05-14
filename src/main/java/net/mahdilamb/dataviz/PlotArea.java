@@ -35,7 +35,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         clearTooltip();
         if (getInputMode() == InputMode.State.POLYGON_SELECT) {
             if (getSelection(layout) != null && !getSelection(layout).isClosed()) {
-                layout.transformPositionToValue(x,y,(_x,_y)-> getSelection(layout).applyWith(layout, _x, _y,()->{
+                layout.transformPositionToValue(x, y, (_x, _y) -> getSelection(layout).applyWith(layout, _x, _y, () -> {
                     clearCache();
                     redraw();
                 }));
@@ -79,7 +79,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         } else {
             if (getInputMode() == InputMode.State.POLYGON_SELECT) {
                 if (getSelection(layout) != null && !getSelection(layout).isClosed()) {
-                    layout.transformPositionToValue(x,y,(_x,_y)-> getSelection(layout).applyWith(layout, _x, _y,()->{
+                    layout.transformPositionToValue(x, y, (_x, _y) -> getSelection(layout).applyWith(layout, _x, _y, () -> {
                         clearCache();
                         redraw();
                     }));
@@ -115,7 +115,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
 
     @Override
     protected void onMouseScroll(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
-        if (layout.supportsWheelZoom){
+        if (layout.supportsWheelZoom) {
             layout.zoomPlotArea(x, y, rotation);
 
         }

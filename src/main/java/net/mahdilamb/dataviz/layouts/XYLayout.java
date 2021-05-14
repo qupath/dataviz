@@ -3,14 +3,15 @@ package net.mahdilamb.dataviz.layouts;
 import net.mahdilamb.dataviz.*;
 import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
+import net.mahdilamb.dataviz.utils.functions.QuadDoubleConsumer;
 
 /**
  * An XY or "rectangular" layout
  */
 public final class XYLayout extends PlotLayout<XYLayout> {
 
-    protected final XYAxis.XAxis xAxis, secondaryXAxis;
-    protected final XYAxis.YAxis yAxis, secondaryYAxis;
+    protected final XAxis xAxis, secondaryXAxis;
+    protected final YAxis yAxis, secondaryYAxis;
     /**
      * The plot area
      */
@@ -26,7 +27,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
     double minX = Double.NEGATIVE_INFINITY, minY = Double.NEGATIVE_INFINITY, maxX = Double.POSITIVE_INFINITY, maxY = Double.POSITIVE_INFINITY;
 
 
-    public XYLayout(final XYAxis.XAxis xAxis, final XYAxis.YAxis yAxis) {
+    public XYLayout(final XAxis xAxis, final YAxis yAxis) {
         super();
         this.xAxis = xAxis;
         this.yAxis = yAxis;
@@ -36,7 +37,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
         addAxes(xAxis, yAxis);
     }
 
-    public XYLayout(final XYAxis.XAxis xAxis, final XYAxis.YAxis yAxis, final XYAxis.XAxis xAxis2, final XYAxis.YAxis yAxis2) {
+    public XYLayout(final XAxis xAxis, final YAxis yAxis, final XAxis xAxis2, final YAxis yAxis2) {
         super();
         this.xAxis = xAxis;
         this.yAxis = yAxis;
@@ -47,12 +48,12 @@ public final class XYLayout extends PlotLayout<XYLayout> {
     }
 
     @Override
-    public XYAxis.XAxis getXAxis() {
+    public XAxis getXAxis() {
         return xAxis;
     }
 
     @Override
-    public XYAxis.YAxis getYAxis() {
+    public YAxis getYAxis() {
         return yAxis;
     }
 
@@ -76,6 +77,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
         updateHomeBounds(getHomeMinX(data), getHomeMinY(data), getHomeMaxX(data), getHomeMaxY(data));
         setRange(homeMinX, homeMinY, homeMaxX, homeMaxY);
         supportsWheelZoom &= supportsWheelZoom(data);
+
     }
 
     public void setRange(double minX, double minY, double maxX, double maxY) {
@@ -137,6 +139,26 @@ public final class XYLayout extends PlotLayout<XYLayout> {
         xy.accept(
                 getXAxis().getValueFromPosition(x),
                 getYAxis().getValueFromPosition(y)
+        );
+    }
+
+    @Override
+    public void transformValueToPosition(double x0, double y0, double x1, double y1, QuadDoubleConsumer xy) throws UnsupportedOperationException {
+        xy.accept(
+                getXAxis().getPositionFromValue(x0),
+                getYAxis().getPositionFromValue(y0),
+                getXAxis().getPositionFromValue(x1),
+                getYAxis().getPositionFromValue(y1)
+        );
+    }
+
+    @Override
+    public void transformPositionToValue(double x0, double y0, double x1, double y1, QuadDoubleConsumer xy) throws UnsupportedOperationException {
+        xy.accept(
+                getXAxis().getValueFromPosition(x0),
+                getYAxis().getValueFromPosition(y0),
+                getXAxis().getValueFromPosition(x1),
+                getYAxis().getValueFromPosition(y1)
         );
     }
 

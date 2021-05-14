@@ -110,7 +110,7 @@ public final class SwingRenderer extends Renderer {
 
     @Override
     protected double getTextLineHeight(Font font, final String text) {
-        if (text == null) {
+        if (text == null || text.length() == 0) {
             return canvas.getBuffer().getFontMetrics(FontUtils.convert(font)).getHeight();
         }
         return FontUtils.getLineHeight(canvas.getBuffer().getFontMetrics(FontUtils.convert(font)), text, 1);

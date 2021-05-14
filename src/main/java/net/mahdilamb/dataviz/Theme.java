@@ -3,7 +3,6 @@ package net.mahdilamb.dataviz;
 import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.graphics.VAlign;
-import net.mahdilamb.dataviz.layouts.XYAxis;
 
 import java.awt.*;
 import java.lang.reflect.Field;
@@ -50,13 +49,12 @@ public final class Theme {
                 layout.background = Color.BLACK;
             },
             axis -> {
-                if (axis instanceof XYAxis) {
-                    axis.axisStroke = Stroke.NONE;
-                    axis.majorGridStroke = new Stroke(1);
-                    axis.zeroGridStroke = new Stroke(2);
-                    axis.labelColor = Color.WHITE;
-                    axis.majorLineColor = new Color(1.f, 1.f, 1.f, .2f);
-                }
+                axis.axisStroke = Stroke.NONE;
+                axis.majorGridStroke = new Stroke(1);
+                axis.zeroGridStroke = new Stroke(2);
+                axis.labelColor = Color.WHITE;
+                axis.majorLineColor = new Color(1.f, 1.f, 1.f, .2f);
+
                 axis.title.setColor(Color.WHITE);
             },
             legend -> {

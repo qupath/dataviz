@@ -5,9 +5,8 @@ import net.mahdilamb.dataviz.figure.Component;
 import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 import net.mahdilamb.dataviz.graphics.Side;
-import net.mahdilamb.dataviz.plots.GlyphFactory;
 
-import java.awt.*;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -103,11 +102,13 @@ public class Legend extends KeyArea<Legend> {
         @Override
         protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
             final double labelHeight = getTextLineHeight(renderer, legend.itemFont, label);
+            if (glyph == null) {
+                return;
+            }
             if (labelHeight > glyph.getSize()) {
                 layoutComponent(glyph, renderer, minX + legend.paddingX, minY + (.5 * (labelHeight - glyph.getSize())), maxX, maxY);
             } else {
                 layoutComponent(glyph, renderer, minX + legend.paddingX, minY, maxX, maxY);
-
             }
             setBoundsFromRect(minX, minY, maxX - minX, Math.max(labelHeight, glyph.getSize()));
 
@@ -115,6 +116,9 @@ public class Legend extends KeyArea<Legend> {
 
         @Override
         protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
+            if (glyph == null) {
+                return;
+            }
             drawComponent(glyph, renderer, canvas);
             canvas.setFill(legend.itemColor);
             canvas.setFont(legend.itemFont);
@@ -162,6 +166,7 @@ public class Legend extends KeyArea<Legend> {
 
     @Override
     protected void layoutVertical(Renderer renderer, double minX, double minY, double maxX, double maxY) {
+
         final double width = getItemSize();
         if (side == Side.RIGHT) {
             minX = maxX - width;
@@ -170,6 +175,13 @@ public class Legend extends KeyArea<Legend> {
         }
         double height = 0;
         boolean visible = false;
+        final PlotDataAttribute.UncategorizedTrace uncategorized;
+        if ((uncategorized = figure.layout.getUncategorized(figure)) != null) {
+            final Group group = uncategorized.getLegendGroup(this);
+            group.layoutComponent(renderer, minX, minY + height, maxX, maxY);
+            height += group.getHeight() + groupSpacing;
+            visible = true;
+        }
         for (final PlotData<?, ?> data : figure.getLayout().data) {
             for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> attrEntry : data.attributes.entrySet()) {
                 if (attrEntry.getValue().showInLegend) {
@@ -189,6 +201,7 @@ public class Legend extends KeyArea<Legend> {
 
     @Override
     protected void layoutHorizontal(Renderer renderer, double minX, double minY, double maxX, double maxY) {
+        //TODO uncategorized
         final double height = getItemSize();
         if (side == Side.BOTTOM) {
             minY = maxY - height;
@@ -219,6 +232,12 @@ public class Legend extends KeyArea<Legend> {
 
     @Override
     protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
+        final PlotDataAttribute.UncategorizedTrace uncategorized;
+        if ((uncategorized = figure.layout.getUncategorized(figure)) != null) {
+            if (uncategorized.showInLegend) {
+                uncategorized.getLegendGroup(this).drawComponent(renderer, canvas);
+            }
+        }
         for (final PlotData<?, ?> data : figure.getLayout().data) {
             for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> styler : data.attributes.entrySet()) {
                 if (styler.getValue().showInLegend) {

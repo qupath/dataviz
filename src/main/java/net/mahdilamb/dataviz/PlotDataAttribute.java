@@ -8,6 +8,7 @@ import net.mahdilamb.dataframe.utils.UnsortedDoubleSet;
 import net.mahdilamb.dataviz.figure.AbstractComponent;
 import net.mahdilamb.dataviz.utils.Interpolations;
 import net.mahdilamb.dataviz.utils.Numbers;
+import net.mahdilamb.dataviz.utils.StringUtils;
 import net.mahdilamb.stats.ArrayUtils;
 import net.mahdilamb.stats.StatUtils;
 
@@ -67,6 +68,7 @@ public abstract class PlotDataAttribute {
                 this.categories[g.getID()] = g.get();
                 this.isVisible[g.getID()] = true;
             }
+
             indices = groupBy.toMeltedArray();
         }
 
@@ -80,6 +82,7 @@ public abstract class PlotDataAttribute {
         public Categorical(final PlotData<?, ?> data, final Type attribute, final Series<?> series) {
             this(data, attribute, series.getName(), series.asString().toArray(new String[series.size()]));
             this.series = series;
+            showInLegend = attribute != Type.GROUP;
         }
 
         Categorical(final PlotData<?, ?> data, final Type attribute, String[] categories, int[] indices) {
@@ -97,6 +100,7 @@ public abstract class PlotDataAttribute {
         public String get(int i) {
             return categories[indices[i]];
         }
+
 
         int getRaw(int i) {
             return indices[i];
@@ -164,6 +168,13 @@ public abstract class PlotDataAttribute {
                 stringBuilder.append("\n\t* ").append(category);
             }
             return stringBuilder.toString();
+        }
+
+        /**
+         * @return the number of categories
+         */
+        public int numCategories() {
+            return categories.length;
         }
     }
 
@@ -310,8 +321,8 @@ public abstract class PlotDataAttribute {
 
         @Override
         ColorScales.ColorBar getColorBar(ColorScales colorScales) {
-            if (colorBar==null){
-              colorBar=  new ColorScales.ColorBar(colorScales,this);
+            if (colorBar == null) {
+                colorBar = new ColorScales.ColorBar(colorScales, this);
             }
             return colorBar;
         }
@@ -382,7 +393,7 @@ public abstract class PlotDataAttribute {
         }
     }
 
-    static final class UncategorizedTrace extends PlotDataAttribute {
+    public static final class UncategorizedTrace extends PlotDataAttribute {
         final Figure figure;
         PlotData<?, ?>[] data;
         Legend.Group[] legendGroups;
@@ -396,13 +407,33 @@ public abstract class PlotDataAttribute {
 
         @Override
         Color calculateColorOf(Colormap colormap, int i) {
-            throw new UnsupportedOperationException();
+            return colormap.get(((float) i % colormap.size()) / (colormap.size() - 1));
+        }
+
+        @Override
+        public String getName() {
+            return StringUtils.EMPTY_STRING;
         }
 
         @Override
         Legend.Group getLegendGroup(Legend legend) {
-            //TODO
-            return null;
+            if (this.legendGroup == null) {
+                final java.util.List<Legend.Item> items = new ArrayList<>(data.length);
+                int i = 0;
+                for (PlotData<?, ?> category : data) {
+                    final Legend.TogglableItem item = new Legend.TogglableItem(legend, category.getGlyph(this, i++), category.name);
+                    items.add(item);
+                }
+                legendGroup = new Legend.Group(legend, this, items);
+                legendGroup.setOnMouseClick((x, y) -> {
+                    final Legend.Item item;
+                    if ((item = legendGroup.getItemAt(x, y)) != null) {
+                        setVisibility(item.label, ((Legend.TogglableItem) item).toggleVisibility());
+                    }
+                });
+
+            }
+            return this.legendGroup;
         }
 
         @Override
@@ -472,7 +503,7 @@ public abstract class PlotDataAttribute {
 
     abstract Color calculateColorOf(final Colormap colormap, int i);
 
-    public final String getName() {
+    public String getName() {
         return series == null ?
                 name :
                 series.getName()
@@ -513,7 +544,7 @@ public abstract class PlotDataAttribute {
 
     @Override
     public int hashCode() {
-        return attribute.hashCode();
+        return attribute == null ? 0 : attribute.hashCode();
     }
 
     @Override

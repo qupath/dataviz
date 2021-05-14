@@ -6,8 +6,6 @@ import net.mahdilamb.colormap.Colors;
 import net.mahdilamb.dataframe.DataFrame;
 import net.mahdilamb.dataviz.*;
 import net.mahdilamb.dataviz.data.RelationalData;
-import net.mahdilamb.dataviz.figure.Renderer;
-import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.utils.ColorUtils;
 import net.mahdilamb.dataviz.utils.Numbers;
@@ -52,11 +50,16 @@ public class Scatter extends RelationalData<Scatter> {
 
     @Override
     protected void init() {
-        @SuppressWarnings("unchecked") final PlotShape<XYLayout>[] shapes = new PlotShape[x.size()];
-        for (int i = 0; i < shapes.length; ++i) {
-            shapes[i] = createMarker(this, i, x.getDouble(i), y.getDouble(i));
+        if (markerMode != ScatterMode.LINE_ONLY) {
+            @SuppressWarnings("unchecked") final PlotShape<XYLayout>[] shapes = new PlotShape[x.size()];
+            for (int i = 0; i < shapes.length; ++i) {
+                shapes[i] = createMarker(this, i, x.getDouble(i), y.getDouble(i));
+            }
+            addShapes(shapes, true);
         }
-        addShapes(shapes, true);
+        if (markerMode != ScatterMode.MARKER_ONLY) {
+            addShapes(createLines(), true);
+        }
 
         final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
         formatters.put("x", this.x::get);
@@ -239,4 +242,18 @@ public class Scatter extends RelationalData<Scatter> {
         return GlyphFactory.createSizedScatterGlyph(this, Color.DARK_GRAY, scale(attribute, value), attribute.getMax());
     }
 
+    @Override
+    public GlyphFactory.Glyph getGlyph(PlotDataAttribute.UncategorizedTrace uncategorizedTrace, int i) {
+        return GlyphFactory.createScatterGlyph(this, calculateColorOf(uncategorizedTrace, getQualitativeColormap(), i));
+    }
+
+    @Override
+    public Scatter setMarkerMode(String markerMode) {
+        return super.setMarkerMode(markerMode);
+    }
+
+    @Override
+    public Scatter setMarkerMode(ScatterMode markerMode) {
+        return super.setMarkerMode(markerMode);
+    }
 }

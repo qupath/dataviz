@@ -244,7 +244,9 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
         void draw(XYLayout plotLayout, Renderer renderer, GraphicsBuffer canvas) {
             plotLayout.transformValueToPosition(x, y, (x, y) -> {
                 parent.getShape(i).fill.paint(canvas, x, y, parent.getSize(i));
-                parent.getShape(i).stroke.paint(canvas, x, y, parent.getSize(i));
+                if (parent.showEdges()){
+                    parent.getShape(i).stroke.paint(canvas, x, y, parent.getSize(i));
+                }
             });
 
         }

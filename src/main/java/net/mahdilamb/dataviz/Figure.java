@@ -114,6 +114,36 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
         return this;
     }
 
+    @SafeVarargs
+    @SuppressWarnings("unchecked")
+    public final <PL extends PlotLayout<PL>> Figure addData(final PlotData<?, PL> first, final PlotData<?, PL>... rest) {
+        if (layout != null && layout.getClass() != first.getLayout().getClass()) {
+            System.err.println("Old layout removed while adding data");
+            remove(layout);
+        }
+        remove(colorScales);
+        remove(legend);
+        addAll(layout = first.getLayout(), legend, colorScales);
+        for (final PlotData<?, PL> d : rest) {
+            ((PL) layout).addData(d);
+        }
+        markComponentLayoutAsOld(legend);
+        markComponentLayoutAsOld(colorScales);
+        update();
+        return this;
+    }
+
+
+    public <PD extends PlotData<PD, ?>> Figure updateData(final Class<? extends PD> type, Consumer<PD> func) {
+        for (final PlotData<?, ?> data : layout.data) {
+            if (type.isInstance(data)) {
+                func.accept(type.cast(data));
+            }
+        }
+        update();
+        return this;
+    }
+
     static boolean layoutIfUsing(KeyArea<?> a, KeyArea<?> b, final Side side, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         boolean layedOut = false;
         //TODO simplify
@@ -197,7 +227,8 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
                 default:
                     throw new UnsupportedOperationException();
             }
-        } if (!colorScales.isFloating) {
+        }
+        if (!colorScales.isFloating) {
             switch (colorScales.side) {
                 case RIGHT:
                     maxX -= colorScales.getWidth();
@@ -278,6 +309,7 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
     @Override
     public Figure apply(Theme theme) {
         theme.figure.accept(this);
+        update();
         return this;
     }
 
