@@ -23,7 +23,7 @@ compileJava {
 
 }
 group 'net.mahdilamb'
-version '0.1.312-SNAPSHOT'
+version '0.1.4-SNAPSHOT'
 ext.moduleName = 'net.mahdilamb.dataviz'
 repositories {
     mavenCentral()

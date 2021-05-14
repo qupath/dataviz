@@ -25,7 +25,7 @@ public class LineDemos {
 
     static void lineGrouping() {
         new Line(gapminder.query("continent != 'Asia'"), "year", "lifeExp")
-                .setGroups("country")
+             //   .setGroups("country")
                 .setColors("continent")
                 .show();
     }
