@@ -6,6 +6,7 @@ import net.mahdilamb.dataviz.figure.Tooltip;
 import net.mahdilamb.dataviz.ui.layouts.HBoxLayout;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 /**
  * Toolbar used in the overlay
@@ -18,7 +19,7 @@ public final class Toolbar extends Group {
         super(HBoxLayout.INSTANCE);
     }
 
-    public <IMG> Button addIconButton(IMG icon, final String tooltipText) {
+    public Button addIconButton(BufferedImage icon, final String tooltipText) {
         final Button button = new Button(icon);
         button.setTooltip(Tooltip.create(Color.DARK_GRAY, tooltipText));
         add(button);
@@ -32,7 +33,7 @@ public final class Toolbar extends Group {
         return button;
     }
 
-    public <IMG> ToggleButton addToggleButton(IMG icon, final String tooltipText, boolean defaultSelected) {
+    public ToggleButton addToggleButton(BufferedImage icon, final String tooltipText, boolean defaultSelected) {
         final ToggleButton button = new ToggleButton(icon, null,defaultSelected);
         button.setTooltip(Tooltip.create(Color.DARK_GRAY, tooltipText));
         add(button);
@@ -58,7 +59,7 @@ public final class Toolbar extends Group {
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         minX += paddingX;
         minY += paddingY;
         maxX -= paddingX;

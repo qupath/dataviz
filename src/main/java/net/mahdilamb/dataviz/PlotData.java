@@ -8,6 +8,7 @@ import net.mahdilamb.dataframe.utils.IntArrayList;
 import net.mahdilamb.dataviz.data.RelationalData;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.plots.DataFrameOnlyMethodException;
+import net.mahdilamb.dataviz.plots.GlyphFactory;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 
 import java.awt.*;
@@ -25,14 +26,12 @@ import java.util.function.Supplier;
 public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayout<PL>> implements FigureComponent<PD> {
     private static final Colormap DEFAULT_QUALITATIVE_COLORMAP = Colormaps.get("Plotly");
     private static final Colormap DEFAULT_SEQUENTIAL_COLORMAP = Colormaps.get("Viridis");
-
-    protected Colormap qualitativeColormap = DEFAULT_QUALITATIVE_COLORMAP;
-    protected Colormap sequentialColormap = DEFAULT_SEQUENTIAL_COLORMAP;
+    protected Colormap qualitativeColormap = null;
+    protected Colormap sequentialColormap = null;
 
     private Figure figure;
     private PL layout;
 
-    boolean anySelected = false;
     BooleanArrayList selected = null;
 
     protected Color lineColor;
@@ -89,6 +88,20 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         }
     }
 
+    protected final Colormap getQualitativeColormap() {
+        if (qualitativeColormap == null) {
+            return DEFAULT_QUALITATIVE_COLORMAP;
+        }
+        return qualitativeColormap;
+    }
+
+    protected final Colormap getSequentialColormap() {
+        if (sequentialColormap == null) {
+            return DEFAULT_SEQUENTIAL_COLORMAP;
+        }
+        return sequentialColormap;
+    }
+
     @SafeVarargs
     protected final void addShapes(PlotShape<PL>... shapes) {
         addShapes(shapes, true);
@@ -98,10 +111,18 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         final PlotDataAttribute styler;
         if ((styler = getAttribute(PlotDataAttribute.Type.COLOR)) != null) {
             return styler.calculateColorOf(styler.getClass() == PlotDataAttribute.Categorical.class ?
-                    qualitativeColormap :
-                    sequentialColormap, i);
+                    getQualitativeColormap() :
+                    getSequentialColormap(), i);
         }
-        return qualitativeColormap.get(0);
+        return getQualitativeColormap().get(0);
+    }
+
+    protected double getOpacity(int i) {
+        return 1;
+    }
+
+    protected MarkerShape getShape(int i) {
+        return MarkerShape.get(0);
     }
 
     protected double getSize(int i) {
@@ -114,36 +135,6 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
             }
         }
         return Double.NaN;
-    }
-
-
-    @SuppressWarnings("unchecked")
-    protected final PD refresh() {
-        if (layout != null) {
-            layout.clearCache();
-            PlotLayout.redraw(layout);
-        }
-        return (PD) this;
-    }
-
-    protected final PlotDataAttribute addToHoverText(final PlotDataAttribute styler, String formatting, Supplier<?> supplier, String key, IntFunction<?> getter) {
-        styler.defaultSeg = hoverFormatter.add(formatting, supplier);
-        hoverFormatter.put(key, getter);
-        //Todo clear overrideing
-        /*
-
-        boolean found = false;
-        for (final Map.Entry<Attribute, PlotTrace> t : attributes()) {
-            if (t.getValue() == trace) {
-                found = true;
-                break;
-            }
-        }
-        if (found) {
-            hoverFormatter.remove(trace.defaultSeg);
-        }
-         */
-        return styler;
     }
 
     protected final void addAttribute(
@@ -184,6 +175,35 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
 
     protected boolean hasAttribute(final PlotDataAttribute.Type attribute) {
         return attributes.containsKey(attribute);
+    }
+
+    protected final PlotDataAttribute addToHoverText(final PlotDataAttribute styler, String formatting, Supplier<?> supplier, String key, IntFunction<?> getter) {
+        styler.defaultSeg = hoverFormatter.add(formatting, supplier);
+        hoverFormatter.put(key, getter);
+        //Todo clear overrideing
+        /*
+
+        boolean found = false;
+        for (final Map.Entry<Attribute, PlotTrace> t : attributes()) {
+            if (t.getValue() == trace) {
+                found = true;
+                break;
+            }
+        }
+        if (found) {
+            hoverFormatter.remove(trace.defaultSeg);
+        }
+         */
+        return styler;
+    }
+
+    @SuppressWarnings("unchecked")
+    protected final PD refresh() {
+        if (layout != null) {
+            layout.clearCache();
+            PlotLayout.redraw(layout);
+        }
+        return (PD) this;
     }
 
     /**
@@ -231,9 +251,9 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
         return getClass().getAnnotation(PlotOptions.class);
     }
 
-    protected abstract Legend.Glyph getGlyph(final PlotDataAttribute.Categorical attribute, int category);
+    protected abstract GlyphFactory.Glyph getGlyph(final PlotDataAttribute.Categorical attribute, int category);
 
-    protected abstract Legend.Glyph getGlyph(final PlotDataAttribute.Numeric attribute, double value);
+    protected abstract GlyphFactory.Glyph getGlyph(final PlotDataAttribute.Numeric attribute, double value);
 
     /**
      * @param i      the corresponding index for the rectangle
@@ -278,5 +298,9 @@ public abstract class PlotData<PD extends PlotData<PD, PL>, PL extends PlotLayou
 
     protected static Color calculateColorOf(final PlotDataAttribute attribute, final Colormap colormap, int i) {
         return attribute.calculateColorOf(colormap, i);
+    }
+
+    protected boolean supportsWheelZoom() {
+        return false;
     }
 }

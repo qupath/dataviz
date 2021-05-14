@@ -25,8 +25,8 @@ public final class Overlay extends Group {
         this.figure = figure;
     }
 
-    <T> void draw(final Renderer<T> renderer) {
-        final GraphicsContext<T> canvas = renderer.getOverlayContext();
+    void draw(final Renderer renderer) {
+        final GraphicsContext canvas = renderer.getOverlayContext();
         canvas.reset();
         if (contentVisible) {
             for (final AbstractComponent component : getChildren()) {

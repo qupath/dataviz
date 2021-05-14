@@ -33,7 +33,7 @@ public class Group extends AbstractComponent {
     }
 
     @Override
-    protected final <T> void draw(Renderer<T> renderer, GraphicsBuffer<T> context) {
+    protected final void draw(Renderer renderer, GraphicsBuffer context) {
 
         drawComponent(renderer, context);
     }
@@ -135,7 +135,7 @@ public class Group extends AbstractComponent {
     }
 
     @Override
-    final <T> void setContext(GraphicsContext<T> context) {
+    final void setContext(GraphicsContext context) {
         super.setContext(context);
         if (children != null) {
             for (final AbstractComponent c : children) {
@@ -145,7 +145,7 @@ public class Group extends AbstractComponent {
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         if (children == null) {
             return;
         }
@@ -153,7 +153,7 @@ public class Group extends AbstractComponent {
     }
 
     @Override
-    protected final <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected final void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         if (children == null) {
             return;
         }
@@ -172,7 +172,7 @@ public class Group extends AbstractComponent {
     }
 
     @Override
-    protected final <T> void markDrawAsOldQuietly() {
+    protected final void markDrawAsOldQuietly() {
         if (children != null) {
             for (final AbstractComponent c : children) {
                 c.markDrawAsOldQuietly();

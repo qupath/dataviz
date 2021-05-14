@@ -1,21 +1,22 @@
 package net.mahdilamb.dataviz.figure;
 
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
+import net.mahdilamb.dataviz.swing.BufferedImageExtended;
+import net.mahdilamb.dataviz.swing.SwingPainter;
 
 /**
  * Buffering strategies for drawing components
- *
- * @param <IMG> the type of the image in the buffered context
  */
-public abstract class BufferingStrategy<C extends Component, IMG> {
+public abstract class BufferingStrategy<C extends Component> {
+    static final SwingPainter BUFFERING_PAINTER = new SwingPainter();
     /**
      * A "no buffering strategy" - the content is drawn directly on the canvas
      */
-    public static final BufferingStrategy<Component, ?> NO_BUFFERING = new NoBuffering<>();
+    public static final BufferingStrategy<Component> NO_BUFFERING = new NoBuffering();
     /**
      * Simple double buffering - the content is drawn to a buffer and the buffer is displayed
      */
-    public static final BufferingStrategy<Component, ?> BASIC_BUFFERING = new SimpleBuffering<>();
+    public static final BufferingStrategy<Component> BASIC_BUFFERING = new SimpleBuffering();
 
     BufferingStrategy() {
 
@@ -28,18 +29,17 @@ public abstract class BufferingStrategy<C extends Component, IMG> {
      * @param renderer  the renderer
      * @param context   the context
      */
-    abstract void draw(final AbstractComponent component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context);
+    abstract void draw(final AbstractComponent component, Renderer renderer, GraphicsBuffer context);
 
-    protected abstract void clearBuffer(Renderer<IMG> renderer, final C component);
+    protected abstract void clearBuffer(Renderer renderer, final C component);
 
 
     /**
      * Abstract buffered strategy
      *
-     * @param <IMG>   the type of the image
      * @param <STORE> the type of the store
      */
-    private static abstract class BufferedStrategyImpl<C extends Component, IMG, STORE> extends BufferingStrategy<C, IMG> {
+    private static abstract class BufferedStrategyImpl<C extends Component, STORE> extends BufferingStrategy<C> {
         @SuppressWarnings("unchecked")
         protected STORE getBufferStore(final C component) {
             return (STORE) component.bufferStore;
@@ -55,7 +55,7 @@ public abstract class BufferingStrategy<C extends Component, IMG> {
         }
 
         @Override
-        final void draw(AbstractComponent component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context) {
+        final void draw(AbstractComponent component, Renderer renderer, GraphicsBuffer context) {
             if (context == null) {
                 return;
             }
@@ -75,7 +75,7 @@ public abstract class BufferingStrategy<C extends Component, IMG> {
             }
         }
 
-        protected final void drawUnbuffered(C component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context) {
+        protected final void drawUnbuffered(C component, Renderer renderer, GraphicsBuffer context) {
             component.drawComponent(renderer, context);
         }
 
@@ -86,17 +86,16 @@ public abstract class BufferingStrategy<C extends Component, IMG> {
          * @param renderer  the renderer
          * @param context   the buffer
          */
-        protected abstract void drawBuffered(C component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context);
+        protected abstract void drawBuffered(C component, Renderer renderer, GraphicsBuffer context);
     }
 
     /**
      * Create a custom buffering strategy
      *
      * @param <C>     the type of the component
-     * @param <IMG>   the type of the image in the renderer
      * @param <STORE> the type of the store
      */
-    public static abstract class CustomBufferedStrategy<C extends Component, IMG, STORE> extends BufferedStrategyImpl<C, IMG, STORE> {
+    public static abstract class CustomBufferedStrategy<C extends Component, STORE> extends BufferedStrategyImpl<C, STORE> {
 
         /**
          * Create a custom buffered strategy
@@ -105,26 +104,18 @@ public abstract class BufferingStrategy<C extends Component, IMG> {
         }
 
         @Override
-        protected abstract void drawBuffered(final C component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context);
+        protected abstract void drawBuffered(final C component, Renderer renderer, GraphicsBuffer context);
 
-        protected GraphicsBuffer<IMG> createBuffer(Renderer<IMG> renderer, double width, double height, double translateX, double translateY, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
-            return renderer.createBuffer(width, height, translateX, translateY, overflowTop, overflowLeft, overflowBottom, overflowRight);
-        }
-
-        protected GraphicsBuffer<IMG> createBuffer(Renderer<IMG> renderer, final C component) {
-            return renderer.createBuffer(component.sizeX, component.sizeY, component.posX, component.posY, component.overflowTop, component.overflowLeft, component.overflowBottom, component.overflowRight);
-        }
-
-        protected void drawBuffer(Renderer<IMG> renderer, GraphicsBuffer<IMG> context, GraphicsBuffer<IMG> buffer, double x, double y) {
-            renderer.drawBuffer(context, buffer, x, y);
-        }
 
     }
 
-    private static final class NoBuffering<IMG> extends BufferingStrategy<Component, IMG> {
+    /**
+     * A "none" buffering strategy
+     */
+    private static final class NoBuffering extends BufferingStrategy<Component> {
 
         @Override
-        void draw(AbstractComponent component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context) {
+        void draw(AbstractComponent component, Renderer renderer, GraphicsBuffer context) {
             if (context == null) {
                 return;
             }
@@ -133,18 +124,22 @@ public abstract class BufferingStrategy<C extends Component, IMG> {
         }
 
         @Override
-        protected void clearBuffer(Renderer<IMG> renderer, Component component) {
+        protected void clearBuffer(Renderer renderer, Component component) {
             //ignored
         }
     }
 
-    private static final class SimpleBuffering<IMG> extends BufferedStrategyImpl<Component, IMG, GraphicsBuffer<IMG>> {
+    /**
+     * A double-buffer whereby the component is drawn to a buffered image and the buffered image is drawn until the
+     * component has changed
+     */
+    private static final class SimpleBuffering extends BufferedStrategyImpl<Component, GraphicsBuffer> {
 
         @Override
-        protected void drawBuffered(Component component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context) {
-            GraphicsBuffer<IMG> buffer = getBufferStore(component);
+        protected void drawBuffered(Component component, Renderer renderer, GraphicsBuffer context) {
+            GraphicsBuffer buffer = getBufferStore(component);
             if (buffer == null) {
-                buffer = renderer.createBuffer(
+                buffer = createBuffer(
                         component.getWidth(), component.getHeight(),
                         component.getX(), component.getY(),
                         component.overflowTop, component.overflowLeft, component.overflowBottom, component.overflowRight
@@ -156,17 +151,91 @@ public abstract class BufferingStrategy<C extends Component, IMG> {
                 component.drawComponent(renderer, buffer);
             }
             if ((buffer = getBufferStore(component)) != null) {
-                renderer.drawBuffer(context, buffer, component.getX(), component.getY());
+                drawBuffer(context, buffer, component.getX(), component.getY());
             }
         }
 
         @Override
-        protected void clearBuffer(Renderer<IMG> renderer, Component component) {
-            if (renderer.bufferSizeChanged(getBufferStore(component), component.getX(), component.getY(), component.getWidth(), component.getHeight())) {
+        protected void clearBuffer(Renderer renderer, Component component) {
+            if (bufferSizeChanged(getBufferStore(component), component.getX(), component.getY(), component.getWidth(), component.getHeight())) {
                 component.bufferStore = null;
             } else {
                 getBufferStore(component).reset();
             }
         }
+    }
+
+    /**
+     * Create a buffer
+     *
+     * @param width          the width of the buffer
+     * @param height         the height of the
+     * @param translateX     the x position
+     * @param translateY     the y position
+     * @param overflowTop    the overflow on the top
+     * @param overflowLeft   the overflow on the left
+     * @param overflowBottom the overflow on the bottom
+     * @param overflowRight  the overflow on the right
+     * @return a new buffer
+     */
+    protected static GraphicsBuffer createBuffer(double width, double height, double translateX, double translateY, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
+        return new BufferedImageExtended(width, height, translateX, translateY, overflowTop, overflowLeft, overflowBottom, overflowRight);
+    }
+
+    /**
+     * Create a buffer off the main thread
+     *
+     * @param width          the width of the buffer
+     * @param height         the height of the
+     * @param translateX     the x position
+     * @param translateY     the y position
+     * @param overflowTop    the overflow on the top
+     * @param overflowLeft   the overflow on the left
+     * @param overflowBottom the overflow on the bottom
+     * @param overflowRight  the overflow on the right
+     * @return a new buffer
+     */
+    protected static GraphicsBuffer createBufferNonMain(double width, double height, double translateX, double translateY, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
+        return new BufferedImageExtended(BUFFERING_PAINTER, width, height, translateX, translateY, overflowTop, overflowLeft, overflowBottom, overflowRight);
+
+    }
+
+    /**
+     * Create a buffer for a component
+     *
+     * @param component the component
+     * @param <C>       the type of the component
+     * @return the new buffer
+     */
+    protected static <C extends Component> GraphicsBuffer createBuffer(final C component) {
+        return createBuffer(component.sizeX, component.sizeY, component.posX, component.posY, component.overflowTop, component.overflowLeft, component.overflowBottom, component.overflowRight);
+    }
+
+    /**
+     * Draw the buffer to a source context
+     *
+     * @param context the source context
+     * @param buffer  the buffer
+     * @param x       the x position
+     * @param y       the y position
+     */
+    protected static void drawBuffer(GraphicsBuffer context, GraphicsBuffer buffer, double x, double y) {
+        final BufferedImageExtended bufferedImageExtended = (BufferedImageExtended) buffer;
+        context.drawImage(bufferedImageExtended, x - bufferedImageExtended.overflowLeft, y - bufferedImageExtended.overflowTop);
+    }
+
+    /**
+     * Utility method to check if the buffer size has been changed and therefore should be removed
+     *
+     * @param buffer the source buffer
+     * @param x      the new x
+     * @param y      the new y
+     * @param width  the new width
+     * @param height the new height
+     * @return whether the buffer size has changed
+     */
+    protected static boolean bufferSizeChanged(GraphicsBuffer buffer, double x, double y, double width, double height) {
+        final BufferedImageExtended graphicsBuffer = (BufferedImageExtended) buffer;//TODO full size changed
+        return (graphicsBuffer.width) != width || (graphicsBuffer.height) != height;
     }
 }

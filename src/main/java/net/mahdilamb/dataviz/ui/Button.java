@@ -7,6 +7,7 @@ import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 import net.mahdilamb.dataviz.graphics.Stroke;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 /**
  * Button component
@@ -17,7 +18,7 @@ public class Button extends Component {
     private static final Color HOVER = new Color(.8f, .8f, .8f, .5f);
     private static final Color PRESSED = new Color(.8f, .8f, .8f, .75f);
     private final String text;
-    private final Object icon;
+    private final BufferedImage icon;
     double padding = 2;
     double spacing = 5;
     ButtonGroup<?> group;
@@ -30,7 +31,7 @@ public class Button extends Component {
      * @param icon the icon
      * @param text the text
      */
-    public <IMG> Button(final IMG icon, final String text) {
+    public Button(final BufferedImage icon, final String text) {
         this.text = text;
         this.icon = icon;
     }
@@ -40,7 +41,7 @@ public class Button extends Component {
      *
      * @param icon the icon
      */
-    public <IMG> Button(final IMG icon) {
+    public Button(final BufferedImage icon) {
         this.icon = icon;
         this.text = null;
     }
@@ -56,12 +57,12 @@ public class Button extends Component {
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         double width = 0;
         double height = 0;
         if (icon != null) {
-            width = getMaterialIconWidth(renderer);
-            height = getMaterialIconHeight(renderer);
+            width = getMaterialIconWidth();
+            height = getMaterialIconHeight();
         }
         if (text != null && text.length() > 0) {
             if (icon != null) {
@@ -106,22 +107,21 @@ public class Button extends Component {
         redraw();
     }
 
-    @SuppressWarnings("unchecked")
-    private <T> void drawButton(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    private void drawButton(Renderer renderer, GraphicsBuffer canvas) {
         if (alpha != 1) {
             canvas.setGlobalAlpha(alpha);
         }
         if (icon != null) {
-            canvas.drawImage((T) icon, getX() + padding, getY() + padding);
+            canvas.drawImage( icon, getX() + padding, getY() + padding);
         }
         if (text != null) {
             double left = 0;
             if (icon != null) {
-                left += spacing + getMaterialIconWidth(renderer);
+                left += spacing + getMaterialIconWidth();
             }
             canvas.setFont(Font.DEFAULT_FONT);
             canvas.setFill(Color.BLACK);
-            final double vAlign = (getMaterialIconHeight(renderer) - getTextLineHeight(renderer, Font.DEFAULT_FONT, text)) / 2;
+            final double vAlign = (getMaterialIconHeight() - getTextLineHeight(renderer, Font.DEFAULT_FONT, text)) / 2;
             canvas.fillText(text, getX() + left, getY() + padding + getTextBaselineOffset(renderer, Font.DEFAULT_FONT) + vAlign);
         }
         if (alpha != 1) {
@@ -135,7 +135,7 @@ public class Button extends Component {
     }
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         alpha = isEnabled() ? 1 : .2;
         if (color != null) {
             canvas.setFill(color);

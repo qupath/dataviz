@@ -34,7 +34,7 @@ public class WrappedLabel extends Label {
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             setBoundsFromRect(minX, minY, 0, 0);
             return;
@@ -86,7 +86,7 @@ public class WrappedLabel extends Label {
     }
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         if (!isVisible()) {
             return;
         }

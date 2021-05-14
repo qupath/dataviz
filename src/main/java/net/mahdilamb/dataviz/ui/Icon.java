@@ -46,12 +46,12 @@ public final class Icon extends Component {
     }
 
     @Override
-    protected <T>void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
-        setBoundsFromRect(minX + x, minY + y, getMaterialIconWidth(renderer), getMaterialIconHeight(renderer));
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
+        setBoundsFromRect(minX + x, minY + y, getMaterialIconWidth(), getMaterialIconHeight());
     }
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         canvas.drawImage(getMaterialIcon(renderer, iconKey, backgroundColor), getX(), getY());
     }
 

@@ -37,6 +37,7 @@ public class LRUPlayground extends JPanel {
         g.setTransform(AffineTransform.getTranslateInstance(padX - viewportX, padY - viewportX));
         spatialCache = new SpatialCache<>(-1, tileWidth, tileHeight,
                 this::createTile,
+                this::createTile,
                 this::drawTile
         );
         update();

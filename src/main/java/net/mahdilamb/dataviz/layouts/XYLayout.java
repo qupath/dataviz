@@ -8,6 +8,7 @@ import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
  * An XY or "rectangular" layout
  */
 public final class XYLayout extends PlotLayout<XYLayout> {
+
     protected final XYAxis.XAxis xAxis, secondaryXAxis;
     protected final XYAxis.YAxis yAxis, secondaryYAxis;
     /**
@@ -56,7 +57,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         setBoundsFromExtent(minX, minY, maxX, maxY);
 
         if (title != null) {
@@ -74,6 +75,7 @@ public final class XYLayout extends PlotLayout<XYLayout> {
     protected void onAdd(PlotData<?, XYLayout> data) {
         updateHomeBounds(getHomeMinX(data), getHomeMinY(data), getHomeMaxX(data), getHomeMaxY(data));
         setRange(homeMinX, homeMinY, homeMaxX, homeMaxY);
+        supportsWheelZoom &= supportsWheelZoom(data);
     }
 
     public void setRange(double minX, double minY, double maxX, double maxY) {

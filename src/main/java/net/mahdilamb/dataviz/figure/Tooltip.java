@@ -34,17 +34,22 @@ public final class Tooltip extends AbstractPopout<String> {
     }
 
     @Override
-    protected <IMG> double getContentWidth(Renderer<IMG> renderer) {
+    protected final void layoutContent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
+
+    }
+
+    @Override
+    protected double getContentWidth(Renderer renderer) {
         return getTextWidth(renderer, font, content);
     }
 
     @Override
-    protected <IMG> double getContentHeight(Renderer<IMG> renderer) {
+    protected double getContentHeight(Renderer renderer) {
         return getTextLineHeight(renderer, font, content);
     }
 
     @Override
-    protected <IMG> void drawContent(Renderer<IMG> renderer, GraphicsBuffer<IMG> canvas, double x, double y) {
+    protected void drawContent(Renderer renderer, GraphicsBuffer canvas, double x, double y) {
         canvas.setFill(getForeground());
         canvas.setFont(font);
         canvas.fillText(content, x, y + getTextBaselineOffset(renderer, font));
@@ -81,7 +86,9 @@ public final class Tooltip extends AbstractPopout<String> {
     public static Tooltip create(Color background, String content) {
         return new Tooltip(DEFAULT_SIDE, DEFAULT_RELATIVE_POSITION, DEFAULT_VALIGN, DEFAULT_HALIGN, DEFAULT_TOOLTIP_RADIUS, background, DEFAULT_OUTLINE, content, Font.DEFAULT_FONT, DEFAULT_SHOW_ARROW);
     }
-
+    public static Tooltip create(Color background, String content,boolean showArrow) {
+        return new Tooltip(DEFAULT_SIDE, DEFAULT_RELATIVE_POSITION, DEFAULT_VALIGN, DEFAULT_HALIGN, DEFAULT_TOOLTIP_RADIUS, background, DEFAULT_OUTLINE, content, Font.DEFAULT_FONT, showArrow);
+    }
     public static Tooltip create(double x, double y, Side side, Color background, String content) {
         return new Tooltip(x, y, DEFAULT_TOOLTIP_RADIUS, background, DEFAULT_OUTLINE, side, content, Font.DEFAULT_FONT, DEFAULT_SHOW_ARROW);
     }

@@ -16,7 +16,7 @@ public abstract class LayoutManager {
      * @param maxX     the maximum x position
      * @param maxY     the maximum y position
      */
-    protected abstract <T> void layoutChildren(Group node, Renderer<T> renderer, double minX, double minY, double maxX, double maxY);
+    protected abstract <T> void layoutChildren(Group node, Renderer renderer, double minX, double minY, double maxX, double maxY);
 
     /**
      * Layout a component using the given renderer on a canvas
@@ -28,7 +28,7 @@ public abstract class LayoutManager {
      * @param maxX      the requested maxX
      * @param maxY      the requested maxY
      */
-    protected static <T> void layoutComponent(AbstractComponent component, Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected static <T> void layoutComponent(AbstractComponent component, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         component.layoutComponent(renderer, minX, minY, maxX, maxY);
     }
 
@@ -42,7 +42,7 @@ public abstract class LayoutManager {
      * @param maxX      the requested maxX
      * @param maxY      the requested maxY
      */
-    protected static <T> void layout(AbstractComponent component, Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected static <T> void layout(AbstractComponent component, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         component.layout(renderer, minX, minY, maxX, maxY);
     }
 

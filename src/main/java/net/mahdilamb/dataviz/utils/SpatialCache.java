@@ -1,5 +1,6 @@
 package net.mahdilamb.dataviz.utils;
 
+import net.mahdilamb.dataviz.figure.AbstractComponent;
 import net.mahdilamb.dataviz.utils.functions.BiDoubleBiIntFunction;
 import net.mahdilamb.dataviz.utils.functions.BiDoubleObjConsumer;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
@@ -20,6 +21,7 @@ public final class SpatialCache<E> {
 
     private final List<RectangularNode<E>> lru = new LinkedList<>();
     private final RTree<RectangularNode<E>> cache = new RTree<>();
+    private final BiDoubleBiIntFunction<E> backgroundCacheFunction;
 
     private double viewportWidth = -1, viewportHeight = -1;
     private final int tileWidth, tileHeight;
@@ -32,16 +34,18 @@ public final class SpatialCache<E> {
     /**
      * Create a spatial cache
      *
-     * @param maxTiles     the maximum suggested number of tiles (will differ depending on viewport dimensions)
-     * @param tileWidth    the width of the tile
-     * @param tileHeight   the height of the tile
-     * @param tileCreator  the function used to create a tile (method args: x (double), y (double), width (int), height (int); returns a tile (E))
-     * @param tileConsumer the function used to consume a tile (method args: x (double), y (double), tile (E))
+     * @param maxTiles              the maximum suggested number of tiles (will differ depending on viewport dimensions)
+     * @param tileWidth             the width of the tile
+     * @param tileHeight            the height of the tile
+     * @param tileCreator           the function used to create a tile (method args: x (double), y (double), width (int), height (int); returns a tile (E))
+     * @param backgroundTileCreator the function used to create a tile in a background thread (method args: x (double), y (double), width (int), height (int); returns a tile (E))
+     * @param tileConsumer          the function used to consume a tile (method args: x (double), y (double), tile (E))
      */
-    public SpatialCache(int maxTiles, int tileWidth, int tileHeight, BiDoubleBiIntFunction<E> tileCreator, BiDoubleObjConsumer<E> tileConsumer) {
+    public SpatialCache(int maxTiles, int tileWidth, int tileHeight, BiDoubleBiIntFunction<E> tileCreator, BiDoubleBiIntFunction<E> backgroundTileCreator, BiDoubleObjConsumer<E> tileConsumer) {
         this.tileWidth = tileWidth;
         this.tileHeight = tileHeight;
         this.cacheFunction = Objects.requireNonNull(tileCreator);
+        this.backgroundCacheFunction = Objects.requireNonNull(backgroundTileCreator);
         this.useFunction = Objects.requireNonNull(tileConsumer);
         this.suggestedMaxTiles = maxTiles;
     }
@@ -49,28 +53,17 @@ public final class SpatialCache<E> {
     /**
      * Create a spatial cache using the minimum number of tiles that supports the given viewport and 128x128 tiles
      *
-     * @param tileCreator  the function used to create a tile (method args: x (double), y (double), width (int), height (int); returns a tile (E))
-     * @param tileConsumer the function used to consume a tile (method args: x (double), y (double), tile (E))
+     * @param tileCreator           the function used to create a tile (method args: x (double), y (double), width (int), height (int); returns a tile (E))
+     * @param tileConsumer          the function used to consume a tile (method args: x (double), y (double), tile (E))
+     * @param backgroundTileCreator the function used to create a tile in a background thread (method args: x (double), y (double), width (int), height (int); returns a tile (E))
      */
-    public SpatialCache(BiDoubleBiIntFunction<E> tileCreator, BiDoubleObjConsumer<E> tileConsumer) {
-        this(-1, 128, 128, tileCreator, tileConsumer);
+    public SpatialCache(BiDoubleBiIntFunction<E> tileCreator, BiDoubleBiIntFunction<E> backgroundTileCreator, BiDoubleObjConsumer<E> tileConsumer) {
+        this(-1, 128, 128, tileCreator, backgroundTileCreator, tileConsumer);
     }
 
-    /**
-     * Draw using the spatial cache
-     *
-     * @param viewportWidth  the width of the viewport
-     * @param viewportHeight the height of the viewport
-     * @param xReversed      whether the x axis is reversed
-     * @param yReversed      whether the y axis is reversed
-     * @param minX           the minimum x of the world area in view
-     * @param minY           the minimum y of the world area in view
-     * @param maxX           the maximum x of the world area in view
-     * @param maxY           the maximum y of the world area in view
-     */
-    public void draw(double viewportWidth, double viewportHeight,
+    private void use(double viewportWidth, double viewportHeight,
                      boolean xReversed, boolean yReversed,
-                     double minX, double minY, double maxX, double maxY) {
+                     double minX, double minY, double maxX, double maxY, BiDoubleBiIntFunction<E> cacheFunction, boolean draw, int padX, int padY) {
         if (hasViewportChanged(viewportWidth, viewportHeight)) {
             final double width = maxX - minX;
             final double height = maxY - minY;
@@ -84,10 +77,10 @@ public final class SpatialCache<E> {
         //store size to check if changes have been made to cache
         final int oldSize = cache.size();
         //get the start and end positions in viewport space, aligned to grid
-        final double startX = floorX(minX * xScale),
-                endX = ceilX(maxX * xScale);
-        final double startY = floorY(minY * yScale),
-                endY = ceilY(maxY * yScale);
+        final double startX = floorX(minX * xScale)-(padX*tileWidth),
+                endX = ceilX(maxX * xScale)+(padX*tileWidth);
+        final double startY = floorY(minY * yScale)-(padY*tileHeight),
+                endY = ceilY(maxY * yScale)+(padY*tileHeight);
         //note the movement from the grid
         final double offsetX = (minX * xScale) - startX,
                 offsetY = (minY * yScale) - startY;
@@ -140,7 +133,7 @@ public final class SpatialCache<E> {
                         lru.add(cacheTile);
                     }
                 }
-                if (cacheTile.data != null) {
+                if (draw && cacheTile.data != null) {
                     useFunction.accept(_x, _y, cacheTile.data);
                 }
             }
@@ -148,6 +141,44 @@ public final class SpatialCache<E> {
         if (cache.size() != oldSize) {
             trimToSize();
         }
+    }
+
+    /**
+     * Draw using the spatial cache
+     *
+     * @param viewportWidth  the width of the viewport
+     * @param viewportHeight the height of the viewport
+     * @param xReversed      whether the x axis is reversed
+     * @param yReversed      whether the y axis is reversed
+     * @param minX           the minimum x of the world area in view
+     * @param minY           the minimum y of the world area in view
+     * @param maxX           the maximum x of the world area in view
+     * @param maxY           the maximum y of the world area in view
+     */
+    public void draw(double viewportWidth, double viewportHeight,
+                     boolean xReversed, boolean yReversed,
+                     double minX, double minY, double maxX, double maxY) {
+        use(viewportWidth, viewportHeight, xReversed, yReversed, minX, minY, maxX, maxY, cacheFunction, true,0,0);
+    }
+
+    /**
+     * Draw using the spatial cache with the background task
+     *
+     * @param viewportWidth  the width of the viewport
+     * @param viewportHeight the height of the viewport
+     * @param xReversed      whether the x axis is reversed
+     * @param yReversed      whether the y axis is reversed
+     * @param minX           the minimum x of the world area in view
+     * @param minY           the minimum y of the world area in view
+     * @param maxX           the maximum x of the world area in view
+     * @param maxY           the maximum y of the world area in view
+     * @param padX           the number of tiles to pad in the x direction
+     * @param padY           the number of tiles to pad ing the y direction
+     */
+    public void backgroundCreate(double viewportWidth, double viewportHeight,
+                                 boolean xReversed, boolean yReversed,
+                                 double minX, double minY, double maxX, double maxY, int padX, int padY) {
+        use(viewportWidth, viewportHeight, xReversed, yReversed, minX, minY, maxX, maxY, backgroundCacheFunction, false,padX,padY);
     }
 
     /**

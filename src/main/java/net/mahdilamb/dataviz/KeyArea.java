@@ -9,7 +9,7 @@ import net.mahdilamb.dataviz.utils.Numbers;
 
 import java.awt.*;
 
-abstract class KeyArea<K extends KeyArea<K>> extends Component {
+abstract class KeyArea<K extends KeyArea<K>> extends Component implements Themeable<K> {
 
     double paddingX = 5, paddingY = 2.5;
     double groupSpacing = 2;
@@ -64,12 +64,12 @@ abstract class KeyArea<K extends KeyArea<K>> extends Component {
         return orientation;
     }
 
-    protected abstract <IMG> void layoutVertical(Renderer<IMG> renderer, double minX, double minY, double maxX, double maxY);
+    protected abstract void layoutVertical(Renderer renderer, double minX, double minY, double maxX, double maxY);
 
-    protected abstract <IMG> void layoutHorizontal(Renderer<IMG> renderer, double minX, double minY, double maxX, double maxY);
+    protected abstract void layoutHorizontal(Renderer renderer, double minX, double minY, double maxX, double maxY);
 
     @Override
-    protected final <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected final void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
 
         if (side.isVertical()) {
             layoutVertical(renderer, minX, minY, maxX, maxY);

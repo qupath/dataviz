@@ -5,6 +5,7 @@ import net.mahdilamb.dataframe.DoubleSeries;
 import net.mahdilamb.dataframe.Series;
 import net.mahdilamb.dataframe.utils.GroupBy;
 import net.mahdilamb.dataframe.utils.UnsortedDoubleSet;
+import net.mahdilamb.dataviz.figure.AbstractComponent;
 import net.mahdilamb.dataviz.utils.Interpolations;
 import net.mahdilamb.dataviz.utils.Numbers;
 import net.mahdilamb.stats.ArrayUtils;
@@ -20,6 +21,7 @@ import static net.mahdilamb.dataviz.utils.Interpolations.lerp;
  * A plot trace - containing the information used to style shapes
  */
 public abstract class PlotDataAttribute {
+
 
     /**
      * The possible attributes for a plot trace to have ownership over
@@ -107,7 +109,6 @@ public abstract class PlotDataAttribute {
 
         Color calculateColor(Colormap colormap, int i) {
             return colormap.get(((float) i % colormap.size()) / (colormap.size() - 1));
-
         }
 
         @Override
@@ -128,6 +129,11 @@ public abstract class PlotDataAttribute {
                 });
             }
             return legendGroup;
+        }
+
+        @Override
+        ColorScales.ColorBar getColorBar(ColorScales colorScales) {
+            throw new UnsupportedOperationException();
         }
 
         @Override
@@ -159,7 +165,6 @@ public abstract class PlotDataAttribute {
             }
             return stringBuilder.toString();
         }
-
     }
 
     /**
@@ -231,7 +236,7 @@ public abstract class PlotDataAttribute {
             valMin = scaleMin = StatUtils.min(values::get, values.size());
             valMax = scaleMax = StatUtils.max(values::get, values.size());
             showInLegend = getName() != null && getName().length() > 1 && attribute != Type.COLOR;
-
+            showColorBar = attribute == Type.COLOR;
         }
 
         /**
@@ -298,14 +303,17 @@ public abstract class PlotDataAttribute {
                     items.add(item);
                 }
                 legendGroup = new Legend.Group(legend, this, items);
-                legendGroup.setOnMouseEnter(() -> {
-                    System.out.println("enter");
-                });
-                legendGroup.setOnMouseExit(() -> {
-                    System.out.println("out");
-                });
+
             }
             return legendGroup;
+        }
+
+        @Override
+        ColorScales.ColorBar getColorBar(ColorScales colorScales) {
+            if (colorBar==null){
+              colorBar=  new ColorScales.ColorBar(colorScales,this);
+            }
+            return colorBar;
         }
 
         @Override
@@ -398,6 +406,11 @@ public abstract class PlotDataAttribute {
         }
 
         @Override
+        ColorScales.ColorBar getColorBar(ColorScales colorScales) {
+            throw new UnsupportedOperationException();
+        }
+
+        @Override
         public PlotDataAttribute setVisibility(String category, boolean visibility) throws UnsupportedOperationException {
             /*todo
                int i = 0;
@@ -438,6 +451,8 @@ public abstract class PlotDataAttribute {
     Legend.Group legendGroup;
     Legend.Group[] legendGroups;
     boolean showInLegend = true;
+    boolean showColorBar = false;
+
     /**
      * The name of the trace
      */
@@ -472,6 +487,9 @@ public abstract class PlotDataAttribute {
     }
 
     abstract Legend.Group getLegendGroup(Legend legend);
+
+    abstract ColorScales.ColorBar getColorBar(ColorScales colorScales);
+
 
     /**
      * Set the visibility of a category (ignored by numerical traces)

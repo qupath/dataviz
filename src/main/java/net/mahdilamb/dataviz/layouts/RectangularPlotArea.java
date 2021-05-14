@@ -14,21 +14,21 @@ import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
 import java.awt.*;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class RectangularPlotArea extends PlotArea<XYLayout> {
     /**
      * LRU based buffer for the plot area
-     *
-     * @param <IMG> the type of the image in the renderer
      */
-    static final class RectangularPlotAreaBufferStrategy<IMG> extends BufferingStrategy.CustomBufferedStrategy<RectangularPlotArea, IMG, SpatialCache<GraphicsBuffer<IMG>>> {
-        static final RectangularPlotAreaBufferStrategy<?> INSTANCE = new RectangularPlotAreaBufferStrategy<>();
-
+    static final class RectangularPlotAreaBufferStrategy extends BufferingStrategy.CustomBufferedStrategy<RectangularPlotArea, SpatialCache<GraphicsBuffer>> {
+        static final RectangularPlotAreaBufferStrategy INSTANCE = new RectangularPlotAreaBufferStrategy();
+        private volatile ExecutorService background;
         private RectangularPlotAreaBufferStrategy() {
             super();
         }
 
-        protected GraphicsBuffer<IMG> createTile(final RectangularPlotArea component, Renderer<IMG> renderer, GraphicsBuffer<IMG> context, double minX, double minY, long width, long height) {
+        protected GraphicsBuffer createTile(final RectangularPlotArea component, Renderer renderer, GraphicsBuffer context, double minX, double minY, long width, long height) {
             final double xMin = component.layout.getXAxis().getValueFromPosition(minX + component.getX() + (component.layout.getXAxis().reversed ? width : 0)),
                     yMin = component.layout.getYAxis().getValueFromPosition(minY + component.getY() + (component.layout.getYAxis().reversed ? height : 0)),
                     xMax = component.layout.getXAxis().getValueFromPosition(minX + component.getX() + (component.layout.getXAxis().reversed ? 0 : width)),
@@ -36,52 +36,77 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
             if (!component.containsShapes(xMin, yMin, xMax, yMax)) {
                 return null;
             }
-            final GraphicsBuffer<IMG> tile = createBuffer(renderer, width, height, minX + component.getX(), minY + component.getY(), 0, 0, 0, 0);
+            final GraphicsBuffer tile = createBuffer(width, height, minX + component.getX(), minY + component.getY(), 0, 0, 0, 0);
             component.drawShapes(renderer, tile, xMin, yMin, xMax, yMax);
-            // tile.setStroke(Color.black);
-            // tile.strokeRect(minX + component.getX(), minY + component.getY(),width,height);
             return tile;
         }
-
+        protected GraphicsBuffer createBackgroundTile(final RectangularPlotArea component, Renderer renderer, GraphicsBuffer context, double minX, double minY, long width, long height) {
+            final double xMin = component.layout.getXAxis().getValueFromPosition(minX + component.getX() + (component.layout.getXAxis().reversed ? width : 0)),
+                    yMin = component.layout.getYAxis().getValueFromPosition(minY + component.getY() + (component.layout.getYAxis().reversed ? height : 0)),
+                    xMax = component.layout.getXAxis().getValueFromPosition(minX + component.getX() + (component.layout.getXAxis().reversed ? 0 : width)),
+                    yMax = component.layout.getYAxis().getValueFromPosition(minY + component.getY() + (component.layout.getYAxis().reversed ? 0 : height));
+            if (!component.containsShapes(xMin, yMin, xMax, yMax)) {
+                return null;
+            }
+            final GraphicsBuffer tile = createBufferNonMain(width, height, minX + component.getX(), minY + component.getY(), 0, 0, 0, 0);
+            component.drawShapes(renderer, tile, xMin, yMin, xMax, yMax);
+            return tile;
+        }
         @Override
-        protected void drawBuffered(final RectangularPlotArea plotArea, Renderer<IMG> renderer, GraphicsBuffer<IMG> context) {
+        protected void drawBuffered(final RectangularPlotArea plotArea, Renderer renderer, GraphicsBuffer context) {
             context.setClip(ClipShape.RECTANGLE, plotArea.getX(), plotArea.getY(), plotArea.getWidth(), plotArea.getHeight());
             plotArea.drawGrid(renderer, context);
-            SpatialCache<GraphicsBuffer<IMG>> cache;
+            SpatialCache<GraphicsBuffer> cache;
             if ((cache = getBufferStore(plotArea)) == null) {
                 final int tileSize = isSelection(plotArea.getInputMode()) ? 48 : 256;
                 cache = setBufferStore(plotArea, new SpatialCache<>(128, tileSize, tileSize,
                         (a, b, c, d) -> createTile(plotArea, renderer, context, a, b, c, d),
-                        (x, y, tile) -> drawBuffer(renderer, context, tile, plotArea.getX() + x, plotArea.getY() + y)
+                        (a, b, c, d) -> createBackgroundTile(plotArea, renderer, context, a, b, c, d),
+                        (x, y, tile) -> drawBuffer(context, tile, plotArea.getX() + x, plotArea.getY() + y)
                 ));
             }
             cache.draw(
                     plotArea.getWidth(), plotArea.getHeight(),
                     plotArea.layout.getXAxis().reversed, plotArea.layout.getYAxis().reversed,
-                    plotArea.layout.getXAxis().lower, plotArea.layout.getYAxis().lower, plotArea.layout.getXAxis().upper, plotArea.layout.getYAxis().upper);
+                    plotArea.layout.getXAxis().lower, plotArea.layout.getYAxis().lower, plotArea.layout.getXAxis().upper, plotArea.layout.getYAxis().upper
+            );
+            if (background!=null){
+                background.shutdown();
+                background=null;
+            }
+            background= Executors.newSingleThreadExecutor();
+            SpatialCache<GraphicsBuffer> finalCache = cache;
+            background.submit(()->{
 
+                finalCache.backgroundCreate(
+                        plotArea.getWidth(), plotArea.getHeight(),
+                        plotArea.layout.getXAxis().reversed, plotArea.layout.getYAxis().reversed,
+                        plotArea.layout.getXAxis().lower, plotArea.layout.getYAxis().lower,
+                        plotArea.layout.getXAxis().upper, plotArea.layout.getYAxis().upper,
+                        1,1
+                );
+            });
             plotArea.drawSelection(renderer, context);
             context.clearClip();
 
         }
 
         @Override
-        protected void clearBuffer(Renderer<IMG> renderer, RectangularPlotArea component) {
+        protected void clearBuffer(Renderer renderer, RectangularPlotArea component) {
             //TODO check if the change requires buffer change
         }
 
         @Override
-        public SpatialCache<GraphicsBuffer<IMG>> getBufferStore(RectangularPlotArea component) {
+        public SpatialCache<GraphicsBuffer> getBufferStore(RectangularPlotArea component) {
             return super.getBufferStore(component);
         }
 
         @Override
-        public SpatialCache<GraphicsBuffer<IMG>> setBufferStore(RectangularPlotArea component, SpatialCache<GraphicsBuffer<IMG>> graphicsBufferSpatialCache) {
+        public SpatialCache<GraphicsBuffer> setBufferStore(RectangularPlotArea component, SpatialCache<GraphicsBuffer> graphicsBufferSpatialCache) {
             return super.setBufferStore(component, graphicsBufferSpatialCache);
         }
     }
 
-    Color background = new Color(229, 236, 246);
 
     public RectangularPlotArea(XYLayout layout) {
         super(layout, RectangularPlotAreaBufferStrategy.INSTANCE);
@@ -135,19 +160,18 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
         RectangularPlotAreaBufferStrategy.INSTANCE.setBufferStore(this, null);
     }
 
-    @SuppressWarnings("unchecked")
-    final <IMG> SpatialCache<GraphicsBuffer<IMG>> getCache() {
-        return ((RectangularPlotAreaBufferStrategy<IMG>) RectangularPlotAreaBufferStrategy.INSTANCE).getBufferStore(this);
+    final SpatialCache<GraphicsBuffer> getCache() {
+        return (RectangularPlotAreaBufferStrategy.INSTANCE).getBufferStore(this);
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         setBoundsFromExtent(minX, minY, maxX, maxY);
 
     }
 
-    <T> void drawGrid(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-        canvas.setFill(background);
+    void drawGrid(Renderer renderer, GraphicsBuffer canvas) {
+        canvas.setFill(layout.getBackgroundColor());
         canvas.fillRect(getX(), getY(), getWidth(), getHeight());
         drawGrid(layout, layout.xAxis, renderer, canvas);
         drawGrid(layout, layout.yAxis, renderer, canvas);
@@ -159,7 +183,7 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
         }
     }
 
-    protected <T> void drawSelection(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawSelection(Renderer renderer, GraphicsBuffer canvas) {
         final PlotSelection.Polygon selection;
         if (getInputMode() == InputMode.State.POLYGON_SELECT && getSelection(layout) != null && (selection = (PlotSelection.Polygon) getSelection(layout)).size() != 0) {
             canvas.setStroke(isSelectionClosed(layout) ? Stroke.SOLID : Stroke.DASHED);
@@ -184,7 +208,7 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
 
     }
 
-    protected <T> void drawShapes(Renderer<T> renderer, GraphicsBuffer<T> canvas, double xMin, double yMin, double xMax, double yMax) {
+    protected void drawShapes(Renderer renderer, GraphicsBuffer canvas, double xMin, double yMin, double xMax, double yMax) {
         for (final PlotData<?, XYLayout> data : getData(layout)) {
             final double searchXMin = xMin - getSearchPaddingX(data) / getScale(layout.getXAxis()),
                     searchYMin = yMin - getSearchPaddingY(data) / getScale(layout.getYAxis()),
@@ -199,7 +223,6 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
                         canvas.setFill(getColor(data, shape));
                         draw(layout, shape, renderer, canvas);
                     }
-
                 }
             }
 
@@ -222,14 +245,13 @@ public class RectangularPlotArea extends PlotArea<XYLayout> {
     }
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         canvas.setClip(ClipShape.RECTANGLE, getX(), getY(), getWidth(), getHeight());
         drawGrid(renderer, canvas);
         drawShapes(renderer, canvas, layout.getXAxis().lower, layout.getYAxis().lower, layout.getXAxis().upper, layout.getYAxis().upper);
         drawSelection(renderer, canvas);
         canvas.clearClip();
     }
-
 
     @Override
     protected void onMouseClick(boolean ctrlDown, boolean shiftDown, double x, double y) {

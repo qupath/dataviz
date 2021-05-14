@@ -28,8 +28,8 @@ public interface FigureExporter {
         }
 
         @Override
-        public <T> void export(File file, Renderer<T> renderer) {
-            new net.mahdilamb.dataviz.io.SVGExporter.SVGWriter<>(file, renderer);
+        public void export(File file, Renderer renderer) {
+            new net.mahdilamb.dataviz.io.SVGExporter.SVGWriter(file, renderer);
         }
     }
 
@@ -45,8 +45,8 @@ public interface FigureExporter {
         }
 
         @Override
-        public <T> void export(File file, Renderer<T> renderer) {
-            new net.mahdilamb.dataviz.io.SVGExporter.SVGWriter<>(file, renderer, true);
+        public void export(File file, Renderer renderer) {
+            new net.mahdilamb.dataviz.io.SVGExporter.SVGWriter(file, renderer, true);
         }
     }
 
@@ -62,7 +62,7 @@ public interface FigureExporter {
         }
 
         @Override
-        public <T> void export(File file, Renderer<T> renderer) {
+        public void export(File file, Renderer renderer) {
             try {
                 ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, renderer), "png", file);
             } catch (IOException e) {
@@ -83,7 +83,7 @@ public interface FigureExporter {
         }
 
         @Override
-        public <T> void export(File file, Renderer<T> renderer) {
+        public void export(File file, Renderer renderer) {
             try {
                 ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, renderer), "tiff", file);
             } catch (IOException e) {
@@ -105,9 +105,9 @@ public interface FigureExporter {
         }
 
         @Override
-        public <T> void export(File file, Renderer<T> renderer) {
+        public void export(File file, Renderer renderer) {
             try {
-                ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, renderer), "jpeg", file);
+                ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_RGB, renderer), "jpeg", file);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -126,7 +126,7 @@ public interface FigureExporter {
         }
 
         @Override
-        public <T> void export(File file, Renderer<T> renderer) {
+        public void export(File file, Renderer renderer) {
             try {
                 ImageIO.write(toBufferedImage(BufferedImage.TYPE_INT_ARGB, renderer), "bmp", file);
             } catch (IOException e) {
@@ -153,7 +153,7 @@ public interface FigureExporter {
      * @param file     the file to save
      * @param renderer the renderer used to draw the figure
      */
-    <T> void export(File file, Renderer<T> renderer);
+    void export(File file, Renderer renderer);
 
     /**
      * Export a figure
@@ -161,7 +161,7 @@ public interface FigureExporter {
      * @param file     the output path
      * @param renderer the renderer of the figure
      */
-    static <T> void exportFigure(File file, Renderer<T> renderer) {
+    static void exportFigure(File file, Renderer renderer) {
         final String filePath = file.toString();
         final String fileExt = StringUtils.getLastCharactersToLowerCase(new char[filePath.length() - filePath.lastIndexOf('.')], file.toString());
         for (FigureExporter exporter : ServiceLoader.load(FigureExporter.class)) {

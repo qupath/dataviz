@@ -18,12 +18,12 @@ public final class HorizontalSpacing extends Component {
     }
 
     @Override
-    protected <T>void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         setBoundsFromRect(minX, minY, size, 1e-13);
     }
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
 
     }
 }

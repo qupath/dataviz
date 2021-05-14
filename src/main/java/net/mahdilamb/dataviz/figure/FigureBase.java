@@ -55,7 +55,7 @@ public abstract class FigureBase<C extends FigureBase<C>> extends Group {
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         for (final AbstractComponent c : getChildren()) {
             layoutComponent(c, renderer, minX, minY, maxX, maxY);
         }
@@ -135,7 +135,7 @@ public abstract class FigureBase<C extends FigureBase<C>> extends Group {
      * terminal operation
      */
     public void saveAs(final File file) {
-        (context = (context != null ? context : ((Renderer<?>) new SwingRenderer(this, true)).getFigureContext())).getRenderer().saveAs(file);
+        (context = (context != null ? context : ((Renderer) new SwingRenderer(this, true)).getFigureContext())).getRenderer().saveAs(file);
     }
 
     /**
@@ -185,8 +185,8 @@ public abstract class FigureBase<C extends FigureBase<C>> extends Group {
         update(context, false);
     }
 
-    final <IMG> void update(final GraphicsContext<IMG> canvas, boolean drawDirect) {
-        final GraphicsContext<IMG> context = getContext();
+    final void update(final GraphicsContext canvas, boolean drawDirect) {
+        final GraphicsContext context = getContext();
         if (context != null) {
             final boolean oldDrawDirect = this.drawDirect;
             this.drawDirect = drawDirect;

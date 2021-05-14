@@ -6,6 +6,7 @@ import net.mahdilamb.dataviz.ui.ToggleButton;
 import net.mahdilamb.dataviz.ui.ToggleButtonGroup;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -56,7 +57,7 @@ public class InputMode extends ToggleButtonGroup {
 
     }
 
-    protected <T> ToggleButton createButton(T image, String tooltipText, State state) {
+    protected ToggleButton createButton(BufferedImage image, String tooltipText, State state) {
         final ToggleButton tb = new ToggleButton(image, null);
         tb.setTooltip(Tooltip.create(Color.DARK_GRAY, tooltipText));
         if (this.state == null) {

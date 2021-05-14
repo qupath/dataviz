@@ -76,8 +76,10 @@ abstract class AbstractPopout<T> extends Component {
         return ColorUtils.getForegroundFromBackground(background);
     }
 
+    protected abstract void layoutContent(Renderer renderer, double minX, double minY, double maxX, double maxY);
+
     @Override
-    protected final <S> void layoutComponent(Renderer<S> renderer, double minX, double minY, double maxX, double maxY) {
+    protected final void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         width = getContentWidth(renderer) + paddingX + paddingX;
         height = getContentHeight(renderer) + paddingY + paddingY;
         double triWidth = 10;
@@ -114,11 +116,12 @@ abstract class AbstractPopout<T> extends Component {
 
         contentX = clipX(renderer, contentX, width + triHeight);
         contentY = clipY(renderer, contentY, height + triHeight);
+        layoutContent(renderer, contentX + paddingX, contentY + paddingY, contentX + getContentWidth(renderer), contentY + getContentHeight(renderer));
         setBoundsFromExtent(contentX - triHeight, contentY - triHeight, contentX + width + (side == Side.RIGHT ? triHeight : 0), contentY + height + (side == Side.BOTTOM ? triHeight : 0));
     }
 
     @Override
-    protected final <IMG> void drawComponent(Renderer<IMG> renderer, GraphicsBuffer<IMG> canvas) {
+    protected final void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         if (content == null) {
             return;
         }
@@ -171,13 +174,13 @@ abstract class AbstractPopout<T> extends Component {
      * @param renderer the renderer
      * @return the width of the content
      */
-    protected abstract <IMG> double getContentWidth(Renderer<IMG> renderer);
+    protected abstract double getContentWidth(Renderer renderer);
 
     /**
      * @param renderer the renderer
      * @return the height of the content
      */
-    protected abstract <IMG> double getContentHeight(Renderer<IMG> renderer);
+    protected abstract double getContentHeight(Renderer renderer);
 
     /**
      * Draw the content
@@ -186,8 +189,7 @@ abstract class AbstractPopout<T> extends Component {
      * @param canvas   the canvas to draw to
      * @param x        the min x position
      * @param y        the min y position
-     * @param <IMG>    the type of the image in the renderer
      */
-    protected abstract <IMG> void drawContent(Renderer<IMG> renderer, GraphicsBuffer<IMG> canvas, double x, double y);
+    protected abstract void drawContent(Renderer renderer, GraphicsBuffer canvas, double x, double y);
 
 }

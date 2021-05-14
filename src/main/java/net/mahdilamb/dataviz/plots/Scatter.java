@@ -20,76 +20,23 @@ import java.util.function.IntFunction;
 
 @PlotOptions(name = "Scatter", supportsZoom = true, supportsManualZoom = true, supportsPan = true, supportsPolygonSelection = true, supportsZoomByWheel = true)
 public class Scatter extends RelationalData<Scatter> {
-    public static class ScatterGlyph extends Legend.Glyph {
 
-        final Scatter data;
-        final Color color;
-
-        ScatterGlyph(final Scatter data, final Color fill) {
-            this.data = data;
-            this.color = data.markerOpacity == 1 ? fill : ColorUtils.applyAlpha(fill, (float) data.markerOpacity);
-
-        }
-
-        @Override
-        protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
-            setBoundsFromRect(minX, minY, getSize(), getSize());
-        }
-
-        @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-            canvas.setFill(color);
-            canvas.fillOval(getX(), getY(), getWidth(), getHeight());
-        }
-
-        @Override
-        protected double getSize() {
-            return 10;
-        }
-    }
-
-    protected static final class SizedScatterGlyph extends ScatterGlyph {
-
-        private final double size, maxSize;
-
-        SizedScatterGlyph(Scatter data, Color fill, double size, double maxSize) {
-            super(data, fill);
-            this.size = size;
-            this.maxSize = maxSize;
-        }
-
-        @Override
-        protected double getSize() {
-            return size;
-        }
-
-        @Override
-        protected double getMaxSize() {
-            return maxSize;
-        }
-
-        @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-            canvas.setFill(color);
-            canvas.fillOval(getX() + (maxSize - size) * .5, getY(), size, size);
-        }
-
-    }
 
     /**
      * Default marker size
      */
-    public final static double DEFAULT_MARKER_SIZE = 10;
+    private final static double DEFAULT_MARKER_SIZE = 10;
     /**
      * Default largest marker size (for numerical traces)
      */
-    public final static double DEFAULT_MAX_MARKER_SIZE = 30;
+    private final static double DEFAULT_MAX_MARKER_SIZE = 30;
 
-    public final static double DEFAULT_MULTICOLOR_OPACITY = 0.8;
+    private final static double DEFAULT_MULTICOLOR_OPACITY = 0.8;
 
     double markerSize = DEFAULT_MARKER_SIZE;
     Color markerColor = Colors.deepskyblue;
     double markerOpacity = 1.0;
+    MarkerShape shape = null;
 
     public Scatter(DataFrame dataFrame, String xAxis, String yAxis) {
         super(dataFrame, xAxis, yAxis);
@@ -110,6 +57,7 @@ public class Scatter extends RelationalData<Scatter> {
             shapes[i] = createMarker(this, i, x.getDouble(i), y.getDouble(i));
         }
         addShapes(shapes, true);
+
         final Map<String, IntFunction<?>> formatters = new HashMap<>(2);
         formatters.put("x", this.x::get);
         formatters.put("y", this.y::get);
@@ -130,7 +78,46 @@ public class Scatter extends RelationalData<Scatter> {
         if (markerOpacity == 1.0) {
             return baseColor;
         }
-        return ColorUtils.applyAlpha(baseColor, (float) markerOpacity);
+        return ColorUtils.applyAlpha(baseColor, (float) getOpacity(i));
+    }
+
+    @Override
+    protected MarkerShape getShape(int i) {
+        final PlotDataAttribute attribute;
+        if ((attribute = getAttribute(PlotDataAttribute.Type.SHAPE)) != null) {
+            //TODO
+        }
+        if (shape != null) {
+            return shape;
+        }
+        return super.getShape(i);
+    }
+
+    public Scatter setShape(MarkerShape shape) {
+        removeAttribute(PlotDataAttribute.Type.SHAPE);
+        this.shape = shape;
+        return refresh();
+    }
+
+    public Scatter setShape(final String shape) {
+        return setShape(MarkerShape.get(shape));
+    }
+
+    @Override
+    protected double getOpacity(int i) {
+        return markerOpacity;
+    }
+
+    public Scatter setOpacity(double opacity) {
+        if (!Double.isFinite(opacity)) {
+            throw new IllegalArgumentException("Opacity must be finite");
+        }
+        if (opacity < 0 || opacity > 1) {
+            throw new IllegalArgumentException("Opacity must be between 0 and 1");
+        }
+        removeAttribute(PlotDataAttribute.Type.OPACITY);
+        this.markerOpacity = opacity;
+        return refresh();
     }
 
     public Scatter setColors(final String seriesName) throws DataFrameOnlyMethodException {
@@ -149,6 +136,7 @@ public class Scatter extends RelationalData<Scatter> {
     }
 
     public Scatter setColormap(final Colormap colormap) {
+        //TODO if color is already set
         if (colormap.isQualitative()) {
             qualitativeColormap = colormap;
         } else {
@@ -169,16 +157,6 @@ public class Scatter extends RelationalData<Scatter> {
 
     public Scatter setColor(final String colorName) {
         return setColor(ColorUtils.convertToColor(colorName));
-    }
-
-    @Override
-    public Scatter setXLabel(String name) {
-        return (Scatter) super.setXLabel(name);
-    }
-
-    @Override
-    public Scatter setYLabel(String name) {
-        return (Scatter) super.setYLabel(name);
     }
 
     @Override
@@ -248,17 +226,17 @@ public class Scatter extends RelationalData<Scatter> {
     }
 
     @Override
-    protected Legend.Glyph getGlyph(PlotDataAttribute.Categorical attribute, int category) {
+    protected GlyphFactory.Glyph getGlyph(PlotDataAttribute.Categorical attribute, int category) {
         if (attribute.getType() == PlotDataAttribute.Type.COLOR) {
-            return new ScatterGlyph(this, calculateColor(attribute, qualitativeColormap, category));
+            return GlyphFactory.createScatterGlyph(this, calculateColor(attribute, getQualitativeColormap(), category));
         }
         return null;
     }
 
     @Override
-    protected Legend.Glyph getGlyph(PlotDataAttribute.Numeric attribute, double value) {
-        return new SizedScatterGlyph(this, Color.DARK_GRAY, scale(attribute, value), attribute.getMax());
-
+    protected GlyphFactory.Glyph getGlyph(PlotDataAttribute.Numeric attribute, double value) {
+        //TODO for other types
+        return GlyphFactory.createSizedScatterGlyph(this, Color.DARK_GRAY, scale(attribute, value), attribute.getMax());
     }
 
 }

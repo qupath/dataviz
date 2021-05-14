@@ -21,7 +21,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         }
 
         @Override
-        protected final <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+        protected final void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
             double sizeY = 0;
             if (title.isVisible()) {
                 sizeY += getTextLineHeight(renderer, title.getFont(), title.getText()) + titlePadding;
@@ -38,7 +38,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         }
 
         @Override
-        protected final <T> void drawGrid(XYLayout layout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected final void drawGrid(XYLayout layout, Renderer renderer, GraphicsBuffer canvas) {
             double y = layout.plotArea.getY() + layout.plotArea.getHeight();
 
             if (showMajorLine) {
@@ -67,7 +67,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         }
 
         @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
             final double posX = layout.plotArea.getX(),
                     posY = layout.plotArea.getY(),
                     sizeX = layout.plotArea.getWidth(),
@@ -156,7 +156,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         }
 
         @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
             final double posX = layout.plotArea.getX(),
                     posY = layout.plotArea.getY(),
                     sizeX = layout.plotArea.getWidth(),
@@ -193,6 +193,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
                 double yOff = (vLabelAlignment == VAlign.TOP ? 0 : ((vLabelAlignment == VAlign.MIDDLE ? 0.5 : 1) * getTextLineHeight(renderer, labelFont, title.getText()))) - getTextBaselineOffset(renderer, labelFont);
                 for (double d = getIterStart(lower, majorTickSpacing); d <= upper; d += majorTickSpacing) {
                     double dRev = ((upper - d) / range);
+
                     double e = posY + (dRev * sizeY);
                     final String label = getLabel(d);
                     double width = getTextWidth(renderer, labelFont, label);
@@ -226,7 +227,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
         }
 
         @Override
-        protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+        protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
             double sizeX = 0;
             if (title.isVisible()) {
                 sizeX += getTextLineHeight(renderer, title.getFont(), title.getText()) + titlePadding;
@@ -250,7 +251,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
 
 
         @Override
-        protected <T> void drawGrid(XYLayout layout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected void drawGrid(XYLayout layout, Renderer renderer, GraphicsBuffer canvas) {
             double x0 = layout.plotArea.getX();
             double x1 = x0 + layout.plotArea.getWidth();
 
@@ -320,7 +321,6 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
     boolean showMajorTicks = true,
             showMinorTicks = false,
             showZeroTick = true;
-    String[] labels;
     boolean reversed = false;
     double lower = Double.POSITIVE_INFINITY, upper = Double.NEGATIVE_INFINITY;
 
@@ -328,19 +328,7 @@ public abstract class XYAxis extends PlotAxis<XYLayout> {
 
     double titlePadding = 5;
 
-    Stroke majorGridStroke = new Stroke(1.5),
-            minorGridStroke = new Stroke(.75),
-            zeroGridStroke = new Stroke(2.5);
 
-    Stroke majorLineStroke = majorGridStroke,
-            minorLineStroke = minorGridStroke,
-            axisStroke = majorGridStroke;
-    Color majorLineColor = Color.white,
-            minorLineColor = Color.white,
-            zeroLineColor = Color.white,
-            axisColor = Color.black;
-    Font labelFont = Font.DEFAULT_FONT;
-    Color labelColor = Color.BLACK;
     double labelPadding = 2;
     double labelRotation = 0;
     Boundary labelPosition;

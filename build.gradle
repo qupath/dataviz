@@ -23,7 +23,7 @@ compileJava {
 
 }
 group 'net.mahdilamb'
-version '0.1.311-SNAPSHOT'
+version '0.1.312-SNAPSHOT'
 ext.moduleName = 'net.mahdilamb.dataviz'
 repositories {
     mavenCentral()
@@ -33,7 +33,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.7.0'
 
     implementation 'net.mahdilamb:colormap:0.9.6'
-    implementation 'net.mahdilamb:dataframe:0.2.2'
+    implementation 'net.mahdilamb:dataframe:0.2.3'
 }
 
 test {
@@ -49,6 +49,10 @@ task lruPlaygroundTest(type: JavaExec, dependsOn: ['testClasses']) {
     classpath sourceSets.test.runtimeClasspath
     main = "net.mahdilamb.dataviz.lru.LRUPlayground"
 }
+task scatterTest(type: JavaExec, dependsOn: ['testClasses']) {
+    classpath sourceSets.test.runtimeClasspath
+    main = "net.mahdilamb.dataviz.demos.ScatterDemos"
+}
 javadoc {
     options.tags = ["apiNote", "implNote", "implSpec"]
 }
@@ -62,9 +66,8 @@ modifyPom {
 
         licenses {
             license {
-                name = "MIT License"
-                url = "http://www.opensource.org/licenses/mit-license.php"
-                distribution = "repo"
+                name = 'The Apache License, Version 2.0'
+                url = 'https://www.apache.org/licenses/LICENSE-2.0.txt'
             }
         }
         developers {

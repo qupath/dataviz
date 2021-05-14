@@ -1,5 +1,7 @@
 package net.mahdilamb.dataviz;
 
+import net.mahdilamb.colormap.Colormap;
+import net.mahdilamb.colormap.Colormaps;
 import net.mahdilamb.dataviz.figure.Component;
 import net.mahdilamb.dataviz.figure.FigureBase;
 import net.mahdilamb.dataviz.figure.Renderer;
@@ -10,9 +12,10 @@ import net.mahdilamb.dataviz.ui.ToggleButton;
 import net.mahdilamb.dataviz.ui.Toolbar;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.function.Consumer;
 
-public final class Figure extends FigureBase<Figure> implements FigureComponent<Figure> {
+public final class Figure extends FigureBase<Figure> implements FigureComponent<Figure>, Themeable<Figure> {
 
     double paddingLeft = 5, paddingRight = 5, paddingTop = 5, paddingBottom = 5;
 
@@ -111,7 +114,7 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
         return this;
     }
 
-    static boolean layoutIfUsing(KeyArea<?> a, KeyArea<?> b, final Side side, Renderer<?> renderer, double minX, double minY, double maxX, double maxY) {
+    static boolean layoutIfUsing(KeyArea<?> a, KeyArea<?> b, final Side side, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         boolean layedOut = false;
         //TODO simplify
         //draw legend closest to the plot
@@ -135,6 +138,23 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
         if (!a.isFloating && a.side == side) {
             layout(a, renderer, minX, minY, maxX, maxY);
             layedOut = true;
+            if (!a.isFloating) {
+                switch (a.side) {
+                    case RIGHT:
+                        maxX -= a.getWidth();
+                        break;
+                    case LEFT:
+                        minX += a.getWidth();
+                        break;
+                    case TOP:
+                        minY += a.getHeight();
+                        break;
+                    case BOTTOM:
+                        break;
+                    default:
+                        throw new UnsupportedOperationException();
+                }
+            }
         }
         if (!b.isFloating && b.side == side) {
             layout(b, renderer, minX, minY, maxX, maxY);
@@ -144,7 +164,7 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         boolean titleDrawn = false;
         setBoundsFromExtent(minX, minY, maxX, maxY);
         minX += paddingLeft;
@@ -177,8 +197,7 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
                 default:
                     throw new UnsupportedOperationException();
             }
-        }
-       /*todo if (!colorScales.isFloating) {
+        } if (!colorScales.isFloating) {
             switch (colorScales.side) {
                 case RIGHT:
                     maxX -= colorScales.getWidth();
@@ -195,7 +214,7 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
                 default:
                     throw new UnsupportedOperationException();
             }
-        }*/
+        }
 
         if (layoutIfUsing(legend, colorScales, Side.BOTTOM, renderer, minX, minY, maxX, maxY)) {
             maxY -= legend.getHeight();
@@ -212,19 +231,17 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
 
         }
         if (colorScales.isFloating) {
-            //todo
+            layout(colorScales, renderer, minX, minY, maxX, maxY);
         }
 
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T getMaterialIcon(IconStore.MaterialIconKey key, Color backgroundColor) {
-        return Component.getMaterialIcon(((Renderer<T>) getContext().getRenderer()), key, backgroundColor);
+    protected BufferedImage getMaterialIcon(IconStore.MaterialIconKey key, Color backgroundColor) {
+        return Component.getMaterialIcon(getContext().getRenderer(), key, backgroundColor);
     }
 
-    @SuppressWarnings("unchecked")
-    protected <T> T getDataVizIcon(IconStore.DataVizIconKey key, Color backgroundColor) {
-        return Component.getDataVizIcon(((Renderer<T>) getContext().getRenderer()), key, backgroundColor);
+    protected BufferedImage getDataVizIcon(IconStore.DataVizIconKey key, Color backgroundColor) {
+        return Component.getDataVizIcon(getContext().getRenderer(), key, backgroundColor);
     }
 
     @Override
@@ -258,4 +275,25 @@ public final class Figure extends FigureBase<Figure> implements FigureComponent<
         return toolbar;
     }
 
+    @Override
+    public Figure apply(Theme theme) {
+        theme.figure.accept(this);
+        return this;
+    }
+
+    void setDefaultQualitativeColormap(final Colormap colormap) {
+        for (final PlotData<?, ?> data : layout.data) {
+            if (data.qualitativeColormap == null) {
+                data.qualitativeColormap = colormap;
+            }
+        }
+    }
+
+    void setDefaultSequentialColormap(final Colormap colormap) {
+        for (final PlotData<?, ?> data : layout.data) {
+            if (data.sequentialColormap == null) {
+                data.sequentialColormap = colormap;
+            }
+        }
+    }
 }

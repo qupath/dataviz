@@ -5,7 +5,6 @@ import net.mahdilamb.dataviz.data.RelationalData;
 import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.figure.Tooltip;
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
-import net.mahdilamb.dataviz.graphics.Side;
 import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.utils.rtree.Node2D;
 import net.mahdilamb.dataviz.utils.rtree.RectangularNode;
@@ -137,7 +136,7 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
 
 
         @Override
-        <T> void draw(XYLayout plotLayout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        void draw(XYLayout plotLayout, Renderer renderer, GraphicsBuffer canvas) {
             canvas.setStroke(getColor());
             if (getSegments().length == 1) {
                 canvas.strokeLine(plotLayout.getXAxis().getPositionFromValue(getSegments()[0].startX), plotLayout.getYAxis().getPositionFromValue(getSegments()[0].startY), plotLayout.getXAxis().getPositionFromValue(getSegments()[0].endX), plotLayout.getYAxis().getPositionFromValue(getSegments()[0].endY));
@@ -151,7 +150,7 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
             canvas.stroke();
         }
 
-        <IMG> Tooltip createTooltip(Renderer<IMG> renderer) {
+        Tooltip createTooltip(Renderer renderer) {
             //TODO
             return null;
         }
@@ -191,7 +190,7 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
         }
 
         @Override
-        <T> void draw(XYLayout plotLayout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        void draw(XYLayout plotLayout, Renderer renderer, GraphicsBuffer canvas) {
             canvas.setStroke(Color.DARK_GRAY);
             //canvas.strokeRect(plotLayout.plotArea.getX() + x, plotLayout.plotArea.getY() + y, w, h);
             //TODO
@@ -199,7 +198,7 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
         }
 
         @Override
-        <IMG> Tooltip createTooltip(Renderer<IMG> renderer) {
+        Tooltip createTooltip(Renderer renderer) {
             //TODO
             return null;
         }
@@ -242,16 +241,16 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
         }
 
         @Override
-        <T> void draw(XYLayout plotLayout, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
-
-            plotLayout.transformValueToPosition(x, y, (x, y) -> MarkerShape.CIRCLE.fill.paint(canvas, x, y, parent.getSize(i)));
-            //todo
-            plotLayout.transformValueToPosition(x, y, (x, y) -> MarkerShape.CIRCLE.stroke.paint(canvas, x, y, parent.getSize(i)));
+        void draw(XYLayout plotLayout, Renderer renderer, GraphicsBuffer canvas) {
+            plotLayout.transformValueToPosition(x, y, (x, y) -> {
+                parent.getShape(i).fill.paint(canvas, x, y, parent.getSize(i));
+                parent.getShape(i).stroke.paint(canvas, x, y, parent.getSize(i));
+            });
 
         }
 
         @Override
-        <IMG> Tooltip createTooltip(final Renderer<IMG> renderer) {
+        Tooltip createTooltip(final Renderer renderer) {
             Color color = parent.getColor(i);
             if (color.getAlpha() != 255) {
                 color = new Color(color.getRGB());
@@ -299,8 +298,8 @@ public abstract class PlotShape<PL extends PlotLayout<PL>> extends Node2D {
         this.i = i;
     }
 
-    abstract <T> void draw(PL plotLayout, Renderer<T> renderer, GraphicsBuffer<T> canvas);
+    abstract void draw(PL plotLayout, Renderer renderer, GraphicsBuffer canvas);
 
-    abstract <IMG> Tooltip createTooltip(final Renderer<IMG> renderer);
+    abstract Tooltip createTooltip(final Renderer renderer);
 
 }

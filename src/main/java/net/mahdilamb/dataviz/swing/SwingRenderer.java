@@ -21,12 +21,10 @@ import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 
-import static net.mahdilamb.dataviz.swing.SwingUtils.convert;
-
 /**
  * Default Swing renderer
  */
-public final class SwingRenderer extends Renderer<BufferedImage> {
+public final class SwingRenderer extends Renderer {
     private static final JFileChooser fileChooser = new JFileChooser();
 
     FigurePanel panel;
@@ -87,80 +85,35 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
     }
 
     @Override
-    protected void done() {
+    protected synchronized void done() {
         if (panel != null) {
             panel.repaint();
         }
     }
 
-    @Override
-    protected BufferedImage loadImage(InputStream stream) {
-        try {
-            return ImageIO.read(stream);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return null;
-    }
-
-    @Override
-    protected BufferedImageExtended createBuffer(double width, double height, double translateX, double translateY, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
-        return new BufferedImageExtended(width, height, translateX, translateY, overflowTop, overflowLeft, overflowBottom, overflowRight);
-    }
-
-    @Override
-    protected void drawBuffer(GraphicsBuffer<BufferedImage> context, GraphicsBuffer<BufferedImage> buffer, double x, double y) {
-        final BufferedImageExtended bufferedImageExtended = (BufferedImageExtended) buffer;
-        context.drawImage(bufferedImageExtended, x - bufferedImageExtended.overflowLeft, y - bufferedImageExtended.overflowTop);
-    }
-
-    @Override
-    protected BufferedImage cropImage(BufferedImage source, int x, int y, int width, int height) {
-        return source.getSubimage(x, y, width, height);
-    }
 
     @Override
     protected double getTextBaselineOffset(Font font) {
-        final FontMetrics fontMetrics = canvas.getBuffer().getFontMetrics(SwingUtils.convert(font));
+        final FontMetrics fontMetrics = canvas.getBuffer().getFontMetrics(FontUtils.convert(font));
         return fontMetrics.getAscent();
     }
 
     @Override
     protected double getTextWidth(Font font, String text) {
-        return SwingUtils.getTextWidth(canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)), text);
+        return FontUtils.getTextWidth(canvas.getBuffer().getFontMetrics(FontUtils.convert(font)), text);
     }
 
     @Override
     protected double getCharWidth(Font font, char character) {
-        return canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)).charWidth(character);
+        return canvas.getBuffer().getFontMetrics(FontUtils.convert(font)).charWidth(character);
     }
 
     @Override
     protected double getTextLineHeight(Font font, final String text) {
         if (text == null) {
-            return canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)).getHeight();
+            return canvas.getBuffer().getFontMetrics(FontUtils.convert(font)).getHeight();
         }
-        return SwingUtils.getLineHeight(canvas.getBuffer().getFontMetrics(SwingUtils.convert(font)), text, 1);
-    }
-
-    @Override
-    protected double getImageWidth(BufferedImage image) {
-        return image.getWidth();
-    }
-
-    @Override
-    protected double getImageHeight(BufferedImage image) {
-        return image.getHeight();
-    }
-
-    @Override
-    protected byte[] bytesFromImage(BufferedImage image) {
-        return SwingUtils.convertToByteArray(image);
-    }
-
-    @Override
-    protected int argbFromImage(BufferedImage image, int x, int y) {
-        return image.getRGB(x, y);
+        return FontUtils.getLineHeight(canvas.getBuffer().getFontMetrics(FontUtils.convert(font)), text, 1);
     }
 
     @Override
@@ -180,20 +133,16 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
     }
 
     @Override
-    protected boolean bufferSizeChanged(GraphicsBuffer<BufferedImage> buffer, double x, double y, double width, double height) {
-        final BufferedImageExtended graphicsBuffer = (BufferedImageExtended) buffer;//TODO full size changed
-        return (graphicsBuffer.width) != width || (graphicsBuffer.height) != height;
-    }
-
-    @Override
     protected String getFromClipboard() {
         try {
-            return (String) Toolkit.getDefaultToolkit()
-                    .getSystemClipboard().getData(DataFlavor.stringFlavor);
-        } catch (UnsupportedFlavorException | IOException e) {
-            //e.printStackTrace();
-            return null;
+            if (Toolkit.getDefaultToolkit()
+                    .getSystemClipboard().isDataFlavorAvailable(DataFlavor.stringFlavor)) {
+                return (String) Toolkit.getDefaultToolkit()
+                        .getSystemClipboard().getContents(null).getTransferData(DataFlavor.stringFlavor);
+            }
+        } catch (UnsupportedFlavorException | IOException ignored) {
         }
+        return null;
     }
 
     @Override
@@ -232,17 +181,17 @@ public final class SwingRenderer extends Renderer<BufferedImage> {
             panel.addKeyListener(new KeyListener() {
                 @Override
                 public void keyTyped(KeyEvent e) {
-                    SwingRenderer.this.keyTyped(e.isControlDown(), e.isShiftDown(), e.getKeyCode());
+                    SwingRenderer.this.keyTyped(e.isControlDown(), e.isShiftDown(), e.getKeyCode(), e.getKeyChar());
                 }
 
                 @Override
                 public void keyPressed(KeyEvent e) {
-                    SwingRenderer.this.keyPressed(e.isControlDown(), e.isShiftDown(), e.getKeyCode());
+                    SwingRenderer.this.keyPressed(e.isControlDown(), e.isShiftDown(), e.getKeyCode(), e.getKeyChar());
                 }
 
                 @Override
                 public void keyReleased(KeyEvent e) {
-                    SwingRenderer.this.keyReleased(e.isControlDown(), e.isShiftDown(), e.getKeyCode());
+                    SwingRenderer.this.keyReleased(e.isControlDown(), e.isShiftDown(), e.getKeyCode(), e.getKeyChar());
 
                 }
             });

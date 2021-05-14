@@ -16,7 +16,7 @@ public abstract class AbstractComponent {
     /**
      * The root of the component
      */
-    GraphicsContext<?> context;
+    GraphicsContext context;
 
     /**
      * The layout fields
@@ -35,19 +35,17 @@ public abstract class AbstractComponent {
     /**
      * Draw the component if it needs drawn
      *
-     * @param <T>      the type of the image in the renderer
      * @param renderer the source of the draw request
      * @param context  the canvas to draw on
      */
-    protected abstract <T> void draw(Renderer<T> renderer, GraphicsBuffer<T> context);
+    protected abstract void draw(Renderer renderer, GraphicsBuffer context);
 
     protected abstract void markLayoutAsOldQuietly();
 
-    protected abstract <T> void markDrawAsOldQuietly();
+    protected abstract void markDrawAsOldQuietly();
 
-    @SuppressWarnings("unchecked")
-    protected <T> GraphicsContext<T> getContext() {
-        return (GraphicsContext<T>) context;
+    protected GraphicsContext getContext() {
+        return  context;
     }
 
     /**
@@ -61,12 +59,12 @@ public abstract class AbstractComponent {
         redraw();
     }
 
-    protected final <T> void redraw() {
+    protected final void redraw() {
         markDrawAsOldQuietly();
         if (context == null) {
             return;
         }
-        final GraphicsContext<T> context = getContext();
+        final GraphicsContext context = getContext();
         if (context == context.getRenderer().getFigureContext()) {
             context.getRenderer().getFigure().update();
         }
@@ -83,16 +81,15 @@ public abstract class AbstractComponent {
      * @param maxX     the requested maxX
      * @param maxY     the requested maxY
      */
-    protected abstract <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY);
+    protected abstract void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY);
 
     /**
      * Draw the elements
      *
-     * @param <T>      the type of the image in the renderer
      * @param renderer the source of the draw request
      * @param canvas   the canvas to draw on
      */
-    protected abstract <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas);
+    protected abstract void drawComponent(Renderer renderer, GraphicsBuffer canvas);
 
     abstract boolean hasChildren();
 
@@ -105,7 +102,7 @@ public abstract class AbstractComponent {
      * @param maxX     the requested maxX
      * @param maxY     the requested maxY
      */
-    protected final <T> void layout(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected final void layout(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         if (context == null) {
             return;
         }
@@ -115,7 +112,7 @@ public abstract class AbstractComponent {
         layoutNeedsRefresh = false;
     }
 
-    <T> void setContext(GraphicsContext<T> context) {
+    void setContext(GraphicsContext context) {
         this.context = context;
 
     }
@@ -155,7 +152,7 @@ public abstract class AbstractComponent {
      *
      * @param canvas the canvas to draw on
      */
-    void drawBounds(final GraphicsContext<?> canvas) {
+    void drawBounds(final GraphicsContext canvas) {
         drawBounds(canvas, this);
     }
 
@@ -174,11 +171,11 @@ public abstract class AbstractComponent {
      * @param canvas    the canvas
      * @param component the component
      */
-    static void drawBounds(final GraphicsContext<?> canvas, final AbstractComponent component) {
+    static void drawBounds(final GraphicsContext canvas, final AbstractComponent component) {
         drawBounds(canvas, component, Color.black, Colors.violet);
     }
 
-    static void drawBounds(final GraphicsContext<?> canvas, final AbstractComponent component, Color stroke, Color fill) {
+    static void drawBounds(final GraphicsContext canvas, final AbstractComponent component, Color stroke, Color fill) {
         canvas.setFill(fill);
         canvas.fillRect(component.posX, component.posY, component.sizeX, component.sizeY);
         canvas.setStroke(stroke);
@@ -244,36 +241,36 @@ public abstract class AbstractComponent {
      */
 
     /**
-     * @param source the renderer
-     * @param font   the font
-     * @param text   the text
+     * @param renderer the renderer
+     * @param font     the font
+     * @param text     the text
      * @return the line height using a renderer
      */
-    protected static double getTextLineHeight(Renderer<?> source, final Font font, final String text) {
-        return source.getTextLineHeight(font, text);
+    protected static double getTextLineHeight(Renderer renderer, final Font font, final String text) {
+        return renderer.getTextLineHeight(font, text);
     }
 
     /**
-     * @param source the renderer
-     * @param font   the font
+     * @param renderer the renderer
+     * @param font     the font
      * @return the baseline offset using a renderer
      */
-    protected static double getTextBaselineOffset(Renderer<?> source, final Font font) {
-        return source.getTextBaselineOffset(font);
+    protected static double getTextBaselineOffset(Renderer renderer, final Font font) {
+        return renderer.getTextBaselineOffset(font);
     }
 
     /**
-     * @param source    the renderer
+     * @param renderer  the renderer
      * @param font      the font
      * @param character the character
      * @return the width of a character using a renderer
      */
-    protected static double getTextCharWidth(Renderer<?> source, final Font font, char character) {
-        return source.getCharWidth(font, character);
+    protected static double getTextCharWidth(Renderer renderer, final Font font, char character) {
+        return renderer.getCharWidth(font, character);
     }
 
-    protected static double getTextWidth(Renderer<?> source, final Font font, String text) {
-        return source.getTextWidth(font, text);
+    protected static double getTextWidth(Renderer renderer, final Font font, String text) {
+        return renderer.getTextWidth(font, text);
     }
 
     /**
@@ -286,7 +283,7 @@ public abstract class AbstractComponent {
      * @param maxX      the requested maxX
      * @param maxY      the requested maxY
      */
-    protected static <T> void layoutComponent(AbstractComponent component, Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected static void layoutComponent(AbstractComponent component, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         component.layoutComponent(renderer, minX, minY, maxX, maxY);
     }
 
@@ -296,9 +293,8 @@ public abstract class AbstractComponent {
      * @param component the component
      * @param renderer  the renderer
      * @param canvas    the canvas
-     * @param <T>       the type of the image in the renderer
      */
-    protected static <T> void drawComponent(AbstractComponent component, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected static void drawComponent(AbstractComponent component, Renderer renderer, GraphicsBuffer canvas) {
         component.drawComponent(renderer, canvas);
     }
 
@@ -312,7 +308,7 @@ public abstract class AbstractComponent {
      * @param maxX      the requested maxX
      * @param maxY      the requested maxY
      */
-    protected static <T> void layout(AbstractComponent component, Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected static void layout(AbstractComponent component, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         component.layout(renderer, minX, minY, maxX, maxY);
     }
 
@@ -322,23 +318,28 @@ public abstract class AbstractComponent {
      * @param component the component
      * @param renderer  the renderer
      * @param canvas    the canvas
-     * @param <T>       the type of the image in the renderer
      */
-    protected static <T> void draw(AbstractComponent component, Renderer<T> renderer, GraphicsContext<T> canvas) {
+    protected static void draw(AbstractComponent component, Renderer renderer, GraphicsContext canvas) {
         component.draw(renderer, canvas);
     }
 
-    protected static double clipX(final Renderer<?> renderer, double x, double width) {
+    protected static String getFromClipboard(final Renderer renderer) {
+        return renderer.getFromClipboard();
+    }
+    protected static void addToClipboard(final Renderer renderer, final String content) {
+         renderer.addToClipboard(content);
+    }
+    protected static double clipX(final Renderer renderer, double x, double width) {
         return Math.min(Math.max(0, x), renderer.getFigure().width - width);
 
     }
 
-    protected static double clipY(final Renderer<?> renderer, double y, double height) {
+    protected static double clipY(final Renderer renderer, double y, double height) {
         return Math.min(Math.max(0, y), renderer.getFigure().height - height);
 
     }
 
-    protected static File getOutputPath(final Renderer<?> renderer, List<String> fileTypes, String defaultExtension) {
+    protected static File getOutputPath(final Renderer renderer, List<String> fileTypes, String defaultExtension) {
         return renderer.getOutputPath(fileTypes, defaultExtension);
     }
 
@@ -348,5 +349,22 @@ public abstract class AbstractComponent {
 
     protected static void markDrawAsOld(final AbstractComponent component) {
         component.markDrawAsOldQuietly();
+    }
+
+    protected static  void addToOverlay(final AbstractComponent component) {
+        final GraphicsContext context;
+        if ((context = component.getContext()) == null) {
+            return;
+        }
+        context.getRenderer().addToOverlay(component);
+
+    }
+
+    protected static void removeFromOverlay(final AbstractComponent component) {
+        final GraphicsContext context;
+        if ((context = component.getContext()) == null) {
+            return;
+        }
+        context.getRenderer().removeFromOverlay(component);
     }
 }

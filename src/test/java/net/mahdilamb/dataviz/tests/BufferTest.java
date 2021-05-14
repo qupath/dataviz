@@ -14,7 +14,7 @@ public class BufferTest {
         private final double x0, y0, x1, y1;
         private final Color color;
 
-        private Line(BufferingStrategy<? extends Component, ?> bufferingStrategy, final Color color, double x0, double y0, double x1, double y1) {
+        private Line(BufferingStrategy<? extends Component> bufferingStrategy, final Color color, double x0, double y0, double x1, double y1) {
             super(bufferingStrategy);
             this.x0 = x0;
             this.y0 = y0;
@@ -25,12 +25,12 @@ public class BufferTest {
 
 
         @Override
-        protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+        protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
             setBoundsFromExtent(Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1));
         }
 
         @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
             canvas.setStroke(color);
             canvas.strokeLine(x0, y0, x1, y1);
         }

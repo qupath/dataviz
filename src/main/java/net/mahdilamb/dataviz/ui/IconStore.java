@@ -1,20 +1,23 @@
 package net.mahdilamb.dataviz.ui;
 
-import net.mahdilamb.dataviz.utils.functions.Cropper;
-
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Objects;
 
 /**
  * Icon store
- *
- * @param <IMG> the type of the image
  */
-public final class IconStore<IMG> {
+public final class IconStore {
+    private static final Map<InputStream, IconStore> icons = new HashMap<>();
+
     /**
      * Location of the icons file
      */
-    public static final InputStream MATERIAL_ICONS =Objects.requireNonNull(IconStore.class.getClassLoader().getResourceAsStream("material_icons.png"));
+    public static final InputStream MATERIAL_ICONS = Objects.requireNonNull(IconStore.class.getClassLoader().getResourceAsStream("material_icons.png"));
     public static final InputStream DATAVIZ_ICONS = Objects.requireNonNull(IconStore.class.getClassLoader().getResourceAsStream("dataviz_icons.png"));
 
     /**
@@ -89,37 +92,58 @@ public final class IconStore<IMG> {
         }
     }
 
-    private final IMG source;
-    private final Cropper<IMG> cropper;
-    private final IMG[] darkIcons;
-    private final IMG[] lightIcons;
+    private final BufferedImage source;
+    private final BufferedImage[] darkIcons;
+    private final BufferedImage[] lightIcons;
     private final int iconWidth, iconHeight;
 
     /**
      * Create an icon store from an image. It is assumed that the top row is dark and the bottom row is light
      *
-     * @param source  the source image
-     * @param cols    the number of images
-     * @param width   the width of the image
-     * @param height  the height of the image
-     * @param cropper the function that crops the image
+     * @param source the source image
+     * @param cols   the number of images
+     * @param width  the width of the image
+     * @param height the height of the image
      */
-    @SuppressWarnings("unchecked")
-    public IconStore(Class<? extends Enum<?>> key, IMG source, int cols, int width, int height, Cropper<IMG> cropper) {
+    public IconStore(Class<? extends Enum<?>> key, BufferedImage source, int cols, int width, int height) {
         this.source = source;
-        this.cropper = cropper;
         iconWidth = width / cols;
         iconHeight = height / 2;
-        darkIcons = (IMG[]) new Object[key.getEnumConstants().length];
-        lightIcons = (IMG[]) new Object[key.getEnumConstants().length];
+        darkIcons = new BufferedImage[key.getEnumConstants().length];
+        lightIcons = new BufferedImage[key.getEnumConstants().length];
 
+    }
+
+    private static BufferedImage loadImage(final InputStream stream) {
+        try {
+            return ImageIO.read(stream);
+        } catch (IOException e) {
+            e.printStackTrace();
+
+        }
+        System.err.println("could not load stream " + stream);
+        return null;
+    }
+
+    public static IconStore get(final InputStream source, final Class<? extends Enum<?>> keys) {
+        final IconStore icons = IconStore.icons.get(source);
+        if (icons == null) {
+            final BufferedImage img = loadImage(source);
+            int width = img.getWidth();
+            int height = img.getHeight();
+            int cols = width / (height / 2);
+            IconStore i = new IconStore(keys, img, cols, width, height);
+            IconStore.icons.put(source, i);
+            return i;
+        }
+        return icons;
     }
 
     /**
      * @param key the key
      * @return the dark of the image from the given column
      */
-    public IMG getDark(int key) {
+    public BufferedImage getDark(int key) {
         return getImage(key, true);
     }
 
@@ -127,7 +151,7 @@ public final class IconStore<IMG> {
      * @param key the key
      * @return the light of the image from the given column
      */
-    public IMG getLight(int key) {
+    public BufferedImage getLight(int key) {
         return getImage(key, false);
     }
 
@@ -145,12 +169,12 @@ public final class IconStore<IMG> {
         return iconHeight;
     }
 
-    private IMG getImage(final int key, boolean dark) {
-        final IMG[] store = dark ? darkIcons : lightIcons;
+    private BufferedImage getImage(final int key, boolean dark) {
+        final BufferedImage[] store = dark ? darkIcons : lightIcons;
         if (store[key] != null) {
             return store[key];
         }
-        final IMG cropped = cropper.crop(this.source, key * iconWidth, dark ? 0 : iconHeight, iconWidth, iconHeight);
+        final BufferedImage cropped = source.getSubimage(key * iconWidth, dark ? 0 : iconHeight, iconWidth, iconHeight);
         return store[key] = cropped;
     }
 }

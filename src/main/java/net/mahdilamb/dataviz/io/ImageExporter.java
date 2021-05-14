@@ -20,10 +20,10 @@ import static net.mahdilamb.dataviz.swing.SwingUtils.convert;
  */
 class ImageExporter extends FigureExporter {
 
-    private static final class ImageExporterCanvas<T> extends Component implements GraphicsContext<T> {
+    private static final class ImageExporterCanvas extends Component implements GraphicsContext {
 
         private final Graphics2D g;
-        private final Renderer<T> chart;
+        private final Renderer chart;
         private final Path2D path = new Path2D.Double();
         private final Rectangle2D rect = new Rectangle2D.Double();
         private final RoundRectangle2D roundedRect = new RoundRectangle2D.Double();
@@ -37,7 +37,7 @@ class ImageExporter extends FigureExporter {
         boolean usingFill = true;
         private final AffineTransform affineTransform = new AffineTransform();
 
-        ImageExporterCanvas(boolean fillWhite, Renderer<T> chart, Graphics2D graphics) {
+        ImageExporterCanvas(boolean fillWhite, Renderer chart, Graphics2D graphics) {
             this.g = graphics;
             this.chart = chart;
             this.fillWhite = fillWhite;
@@ -45,7 +45,7 @@ class ImageExporter extends FigureExporter {
 
 
         @Override
-        public Renderer<T> getRenderer() {
+        public Renderer getRenderer() {
             return chart;
         }
 
@@ -224,7 +224,7 @@ class ImageExporter extends FigureExporter {
         @Override
         public void fillText(String text, double x, double y) {
             switchToFilled();
-            SwingUtils.drawMultilineTextLeft(g, text, x, y, 1, SwingUtils.getTextWidth(g.getFontMetrics(), text));
+            FontUtils.drawMultilineTextLeft(g, text, x, y, 1, FontUtils.getTextWidth(g.getFontMetrics(), text));
         }
 
         @Override
@@ -239,7 +239,7 @@ class ImageExporter extends FigureExporter {
 
         @Override
         public void setFont(Font font) {
-            g.setFont(SwingUtils.convert(font));
+            g.setFont(FontUtils.convert(font));
         }
 
 
@@ -265,8 +265,8 @@ class ImageExporter extends FigureExporter {
         }
 
         @Override
-        public void drawImage(T bufferedImage, double x, double y) {
-            g.drawImage((Image) bufferedImage, convert(x), convert(y), null);
+        public void drawImage(BufferedImage bufferedImage, double x, double y) {
+            g.drawImage(bufferedImage, convert(x), convert(y), null);
         }
 
         @Override
@@ -276,9 +276,9 @@ class ImageExporter extends FigureExporter {
 
     }
 
-    static <T> BufferedImage toBufferedImage(int encoding, final Renderer<T> renderer) {
+    static <T> BufferedImage toBufferedImage(int encoding, final Renderer renderer) {
         final BufferedImage image = new BufferedImage((int) renderer.getFigure().getWidth(), (int) renderer.getFigure().getHeight(), encoding);
-        drawContent(new ImageExporterCanvas<>(encoding != BufferedImage.TYPE_INT_ARGB, renderer, (Graphics2D) image.getGraphics()), renderer);
+        drawContent(new ImageExporterCanvas(encoding != BufferedImage.TYPE_INT_ARGB, renderer, (Graphics2D) image.getGraphics()), renderer);
         return image;
     }
 

@@ -17,7 +17,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
     double startX, startY;
     PlotShape<PL> lastHover;
 
-    protected PlotArea(PL layout, BufferingStrategy<? extends PlotArea<PL>, ?> bufferingStrategy) {
+    protected PlotArea(PL layout, BufferingStrategy<? extends PlotArea<PL>> bufferingStrategy) {
         super(bufferingStrategy);
         this.layout = layout;
     }
@@ -33,6 +33,14 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         startY = y;
         mouseDown = true;
         clearTooltip();
+        if (getInputMode() == InputMode.State.POLYGON_SELECT) {
+            if (getSelection(layout) != null && !getSelection(layout).isClosed()) {
+                layout.transformPositionToValue(x,y,(_x,_y)-> getSelection(layout).applyWith(layout, _x, _y,()->{
+                    clearCache();
+                    redraw();
+                }));
+            }
+        }
         super.onMouseDown(ctrlDown, shiftDown, x, y);
     }
 
@@ -71,7 +79,10 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         } else {
             if (getInputMode() == InputMode.State.POLYGON_SELECT) {
                 if (getSelection(layout) != null && !getSelection(layout).isClosed()) {
-                    //todo
+                    layout.transformPositionToValue(x,y,(_x,_y)-> getSelection(layout).applyWith(layout, _x, _y,()->{
+                        clearCache();
+                        redraw();
+                    }));
                 }
             } else {
                 if (((Figure) getContext().getRenderer().getFigure()).toggleHover.getValue()) {
@@ -104,8 +115,10 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
 
     @Override
     protected void onMouseScroll(boolean controlDown, boolean shiftDown, double x, double y, double rotation) {
-        //todo if allowed
-        layout.zoomPlotArea(x, y, rotation);
+        if (layout.supportsWheelZoom){
+            layout.zoomPlotArea(x, y, rotation);
+
+        }
 
     }
 
@@ -117,7 +130,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         return layout.data;
     }
 
-    protected static <PL extends PlotLayout<PL>, T> void draw(PL layout, PlotShape<PL> shape, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected static <PL extends PlotLayout<PL>, T> void draw(PL layout, PlotShape<PL> shape, Renderer renderer, GraphicsBuffer canvas) {
         shape.draw(layout, renderer, canvas);
     }
 
@@ -125,7 +138,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
         return layout.title;
     }
 
-    protected static <PL extends PlotLayout<PL>, T> void drawGrid(final PL layout, final PlotAxis<PL> axis, Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected static <PL extends PlotLayout<PL>, T> void drawGrid(final PL layout, final PlotAxis<PL> axis, Renderer renderer, GraphicsBuffer canvas) {
         axis.drawGrid(layout, renderer, canvas);
     }
 
@@ -140,7 +153,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
     protected static <PL extends PlotLayout<PL>> Color getColor(PlotData<?, PL> data, PlotShape<PL> shape) {
         final int i = shape == null ? 0 : shape.i;//TODO
         final Color color = data.getColor(i);
-        if (data.anySelected && !data.selected.get(i)) {
+        if (data.selected != null && !data.selected.get(i)) {
             return new Color(color.getRed() / 255f, color.getGreen() / 255f, color.getBlue() / 255f, color.getAlpha() * .25f / 255f);
         }
         return color;
@@ -173,7 +186,7 @@ public abstract class PlotArea<PL extends PlotLayout<PL>> extends Component {
     }
 
     protected static <PL extends PlotLayout<PL>> boolean hasSelection(PlotData<?, PL> layout) {
-        return layout.anySelected;
+        return layout.selected != null;
     }
 
     protected abstract void clearCache();

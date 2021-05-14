@@ -18,7 +18,7 @@ public class NoLayout extends LayoutManager {
     }
 
     @Override
-    protected <T>void layoutChildren(Group node, Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected <T>void layoutChildren(Group node, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         for (final AbstractComponent c : getChildren(node)) {
             layout(c, renderer, minX, minY, maxX, maxY);
         }

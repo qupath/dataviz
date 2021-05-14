@@ -11,7 +11,6 @@ import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.plots.ScatterMode;
 import net.mahdilamb.stats.ArrayUtils;
 
-import java.util.Arrays;
 import java.util.function.DoubleUnaryOperator;
 
 /**
@@ -58,14 +57,16 @@ public abstract class RelationalData<PD extends RelationalData<PD>> extends Plot
 
     protected abstract void init();
 
-    protected RelationalData setXLabel(final String name) {
+    @SuppressWarnings("unchecked")
+    protected PD setXLabel(final String name) {
         getLayout().getXAxis().setTitle(name);
-        return this;
+        return (PD) this;
     }
 
-    protected RelationalData setYLabel(final String name) {
+    @SuppressWarnings("unchecked")
+    protected PD setYLabel(final String name) {
         getLayout().getYAxis().setTitle(name);
-        return this;
+        return (PD) this;
     }
 
     @Override
@@ -85,5 +86,10 @@ public abstract class RelationalData<PD extends RelationalData<PD>> extends Plot
     @Override
     public int size() {
         return x.size();
+    }
+
+    @Override
+    protected boolean supportsWheelZoom() {
+        return true;
     }
 }

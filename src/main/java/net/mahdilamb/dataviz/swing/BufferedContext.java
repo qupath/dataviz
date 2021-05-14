@@ -8,7 +8,7 @@ import net.mahdilamb.dataviz.graphics.Stroke;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 
-public class BufferedContext implements GraphicsContext<BufferedImage> {
+public class BufferedContext implements GraphicsContext {
     final SwingRenderer renderer;
     private BufferedImageExtended buffer;
 
@@ -22,10 +22,8 @@ public class BufferedContext implements GraphicsContext<BufferedImage> {
         }
         //if dimensions have changed, then copy the buffer over to a bigger buffer
         if (buffer.getWidth() < getWidth() || buffer.getHeight() < getHeight()) {
-            if (buffer.g != null) {
-                //dispose old buffer
-                buffer.dispose();
-            }
+            //dispose old buffer
+            buffer.done();
             final BufferedImageExtended newBufferedImage = new BufferedImageExtended(getWidth(), getHeight());
             buffer.g = newBufferedImage.getGraphics();
             buffer.g.drawImage(buffer, 0, 0, null);

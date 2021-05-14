@@ -13,7 +13,6 @@ import java.awt.*;
  */
 public class Label extends Component {
     double paddingX = 5, paddingY = 5;
-    private boolean isVisible = true;
 
     HAlign textAlign = HAlign.CENTER;
     String text;
@@ -37,7 +36,7 @@ public class Label extends Component {
      * @return whether the text is visible (i.e. should take up space in the layout)
      */
     public boolean isVisible() {
-        return isVisible && text != null && text.length() > 0;
+        return super.isVisible() && text != null && text.length() > 0;
     }
 
     /**
@@ -71,16 +70,6 @@ public class Label extends Component {
      */
     public void setFont(final Font font) {
         this.font = font;
-        relayout();
-    }
-
-    /**
-     * Set the visibility of this title
-     *
-     * @param visible whether this title should be visible
-     */
-    public void setVisible(boolean visible) {
-        this.isVisible = visible;
         relayout();
     }
 
@@ -142,7 +131,7 @@ public class Label extends Component {
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         if (!isVisible()) {
             setBoundsFromRect(minX, minY, 0, 0);
             return;
@@ -162,7 +151,7 @@ public class Label extends Component {
     }
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         if (!isVisible()) {
             return;
         }

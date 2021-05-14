@@ -6,34 +6,41 @@ import net.mahdilamb.dataviz.graphics.Stroke;
 import net.mahdilamb.dataviz.ui.IconStore;
 import net.mahdilamb.dataviz.utils.ColorUtils;
 import net.mahdilamb.dataviz.utils.functions.BiBooleanBiDoubleConsumer;
-import net.mahdilamb.dataviz.utils.functions.BiBooleanIntConsumer;
+import net.mahdilamb.dataviz.utils.functions.BiBooleanIntCharConsumer;
 import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
+import net.mahdilamb.dataviz.utils.functions.Runnables;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.InputStream;
 import java.util.Objects;
 
 public abstract class Component extends AbstractComponent {
 
-    private static final BufferingStrategy<? extends Component, ?> DEFAULT_BUFFERING_STRATEGY = BufferingStrategy.BASIC_BUFFERING;
+
+    private static final BufferingStrategy<? extends Component> DEFAULT_BUFFERING_STRATEGY = BufferingStrategy.BASIC_BUFFERING;
     protected static final Color FOCUS_COLOR = new Color(.8f, 0f, .8f, .2f);
 
     /* Interaction fields */
     boolean hasFocus = false;
     boolean enabled = true;
+    boolean visible = true;
     BiBooleanBiDoubleConsumer onMouseEnter = BiBooleanBiDoubleConsumer.IDENTITY;
     BiBooleanBiDoubleConsumer onMouseExit = BiBooleanBiDoubleConsumer.IDENTITY;
     BiBooleanBiDoubleConsumer onMouseUp = BiBooleanBiDoubleConsumer.IDENTITY;
     BiBooleanBiDoubleConsumer onMouseDown = BiBooleanBiDoubleConsumer.IDENTITY;
     BiBooleanBiDoubleConsumer onMouseClick = BiBooleanBiDoubleConsumer.IDENTITY;
-    BiBooleanIntConsumer onKeyPress = BiBooleanIntConsumer.IDENTITY;
-    BiBooleanIntConsumer onKeyRelease = BiBooleanIntConsumer.IDENTITY;
-    BiBooleanIntConsumer onKeyType = BiBooleanIntConsumer.IDENTITY;
+    BiBooleanBiDoubleConsumer onMouseDblClick = BiBooleanBiDoubleConsumer.IDENTITY;
+    BiBooleanIntCharConsumer onKeyPress = BiBooleanIntCharConsumer.IDENTITY;
+    BiBooleanIntCharConsumer onKeyRelease = BiBooleanIntCharConsumer.IDENTITY;
+    BiBooleanIntCharConsumer onKeyType = BiBooleanIntCharConsumer.IDENTITY;
+    Runnable onBlur = Runnables.EMPTY_RUNNABLE;
+    Runnable onFocus = Runnables.EMPTY_RUNNABLE;
 
     /* Buffer fields */
     boolean bufferNeedsRefresh = true;
     boolean drawDirect = false;
-    private final BufferingStrategy<? extends Component, ?> bufferingStrategy;
+    private final BufferingStrategy<? extends Component> bufferingStrategy;
     Object bufferStore;
     int overflowTop = 5, overflowLeft = 5, overflowBottom = 5, overflowRight = 5;
 
@@ -53,7 +60,7 @@ public abstract class Component extends AbstractComponent {
      *
      * @param bufferingStrategy the buffering strategy
      */
-    protected Component(BufferingStrategy<? extends Component, ?> bufferingStrategy) {
+    protected Component(BufferingStrategy<? extends Component> bufferingStrategy) {
         this.bufferingStrategy = (bufferingStrategy == null ? BufferingStrategy.NO_BUFFERING : bufferingStrategy);
     }
 
@@ -66,7 +73,7 @@ public abstract class Component extends AbstractComponent {
      * @param overflowBottom    the amount of overflow on the bottom
      * @param overflowRight     the amount of overflow on the right
      */
-    protected Component(BufferingStrategy<? extends Component, ?> bufferingStrategy, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
+    protected Component(BufferingStrategy<? extends Component> bufferingStrategy, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
         this.bufferingStrategy = bufferingStrategy;
         setOverflow(overflowTop, overflowLeft, overflowBottom, overflowRight);
     }
@@ -100,12 +107,11 @@ public abstract class Component extends AbstractComponent {
     }
 
     /**
-     * @param <T> the type of the buffer
      * @return the buffering strategy
      */
     @SuppressWarnings("unchecked")
-    protected <T> BufferingStrategy<Component, T> getBufferingStrategy() {
-        return (BufferingStrategy<Component, T>) bufferingStrategy;
+    protected BufferingStrategy<Component> getBufferingStrategy() {
+        return (BufferingStrategy<Component>) bufferingStrategy;
     }
 
     /**
@@ -155,19 +161,21 @@ public abstract class Component extends AbstractComponent {
         layoutNeedsRefresh = true;
     }
 
-    @SuppressWarnings("unchecked")
     @Override
-    protected final <T> void markDrawAsOldQuietly() {
+    protected final void markDrawAsOldQuietly() {
         bufferNeedsRefresh = true;
         if (context != null && bufferStore != null) {
-            final BufferingStrategy<Component, T> bufferingStrategy = getBufferingStrategy();
-            bufferingStrategy.clearBuffer((Renderer<T>) context.getRenderer(), this);
+            final BufferingStrategy<Component> bufferingStrategy = getBufferingStrategy();
+            bufferingStrategy.clearBuffer(context.getRenderer(), this);
         }
     }
 
     @Override
-    protected final <T> void draw(Renderer<T> renderer, GraphicsBuffer<T> context) {
-        final BufferingStrategy<Component, T> bufferingStrategy = getBufferingStrategy();
+    protected final void draw(Renderer renderer, GraphicsBuffer context) {
+        if (!visible) {
+            return;
+        }
+        final BufferingStrategy<Component> bufferingStrategy = getBufferingStrategy();
         bufferingStrategy.draw(this, renderer, context);
     }
 
@@ -177,7 +185,7 @@ public abstract class Component extends AbstractComponent {
     }
 
     @Override
-    <T> void setContext(GraphicsContext<T> context) {
+    void setContext(GraphicsContext context) {
         super.setContext(context);
         if (tooltip != null) {
             tooltip.setContext(context);
@@ -218,13 +226,19 @@ public abstract class Component extends AbstractComponent {
         }
     }
 
+    public void setVisible(boolean visible) {
+        if (this.visible != (this.visible = visible)) {
+            redraw();
+        }
+    }
+
     /**
      * Draw a focus ring around this component
      *
      * @param canvas the canvas to draw to
      * @param <T>    the type of the image in the buffer
      */
-    protected <T> void drawFocusRing(GraphicsBuffer<T> canvas) {
+    protected <T> void drawFocusRing(GraphicsBuffer canvas) {
         if (!hasFocus) {
             return;
         }
@@ -252,15 +266,6 @@ public abstract class Component extends AbstractComponent {
     }
 
     /**
-     * Set the hover action
-     *
-     * @param consumer the hover action
-     */
-    public final void setOnMouseExit(BiBooleanBiDoubleConsumer consumer) {
-        Objects.requireNonNull(this.onMouseExit = consumer);
-    }
-
-    /**
      * Set the click action
      *
      * @param consumer the click action
@@ -268,6 +273,25 @@ public abstract class Component extends AbstractComponent {
     public final void setOnMouseClick(BiDoubleConsumer consumer) {
         Objects.requireNonNull(consumer);
         this.onMouseClick = (ctrl, shirt, x, y) -> consumer.accept(x, y);
+    }
+
+    /**
+     * Set the double-click action
+     *
+     * @param consumer the double click action
+     */
+    public final void setOnMouseDoubleClick(BiDoubleConsumer consumer) {
+        Objects.requireNonNull(consumer);
+        this.onMouseDblClick = (ctrl, shirt, x, y) -> consumer.accept(x, y);
+    }
+
+    /**
+     * Set the hover action
+     *
+     * @param consumer the hover action
+     */
+    public final void setOnMouseExit(BiBooleanBiDoubleConsumer consumer) {
+        Objects.requireNonNull(this.onMouseExit = consumer);
     }
 
     /**
@@ -299,6 +323,7 @@ public abstract class Component extends AbstractComponent {
         Objects.requireNonNull(consumer);
         this.onMouseEnter = (ctrl, shirt, x, y) -> consumer.run();
     }
+
     /**
      * Set the mouse out action
      *
@@ -308,6 +333,9 @@ public abstract class Component extends AbstractComponent {
         Objects.requireNonNull(consumer);
         this.onMouseExit = (ctrl, shirt, x, y) -> consumer.run();
     }
+
+
+
     /**
      * Method called on single click
      *
@@ -329,7 +357,7 @@ public abstract class Component extends AbstractComponent {
      * @param y         the absolution y position of the mouse in respect to the panel
      */
     protected void onMouseDoubleClick(boolean ctrlDown, boolean shiftDown, double x, double y) {
-
+        onMouseDblClick.accept(ctrlDown, shiftDown, x, y);
     }
 
     /**
@@ -381,10 +409,19 @@ public abstract class Component extends AbstractComponent {
         onMouseExit.accept(ctrlDown, shiftDown, x, y);
     }
 
+    public final void setOnFocus(final Runnable runnable) {
+        onFocus = runnable == null ? Runnables.EMPTY_RUNNABLE : runnable;
+    }
+
+    public final void setOnBlur(final Runnable runnable) {
+        onBlur = runnable == null ? Runnables.EMPTY_RUNNABLE : runnable;
+    }
+
     /**
      * Method called when this component receives focus
      */
     protected void onFocus() {
+        onFocus.run();
         redraw();
     }
 
@@ -392,6 +429,7 @@ public abstract class Component extends AbstractComponent {
      * Method called when this component loses focus
      */
     protected void onBlur() {
+        onBlur.run();
         redraw();
     }
 
@@ -420,16 +458,16 @@ public abstract class Component extends AbstractComponent {
     }
 
 
-    protected void onKeyPress(boolean ctrlDown, boolean shiftDown, int keyCode) {
-        onKeyPress.accept(ctrlDown, shiftDown, keyCode);
+    protected void onKeyPress(boolean ctrlDown, boolean shiftDown, int keyCode, char character) {
+        onKeyPress.accept(ctrlDown, shiftDown, keyCode, character);
     }
 
-    protected void onKeyRelease(boolean ctrlDown, boolean shiftDown, int keyCode) {
-        onKeyRelease.accept(ctrlDown, shiftDown, keyCode);
+    protected void onKeyRelease(boolean ctrlDown, boolean shiftDown, int keyCode, char character) {
+        onKeyRelease.accept(ctrlDown, shiftDown, keyCode, character);
     }
 
-    protected void onKeyType(boolean ctrlDown, boolean shiftDown, int keyCode) {
-        onKeyType.accept(ctrlDown, shiftDown, keyCode);
+    protected void onKeyType(boolean ctrlDown, boolean shiftDown, int keyCode, char character) {
+        onKeyType.accept(ctrlDown, shiftDown, keyCode, character);
     }
 
     /**
@@ -446,51 +484,58 @@ public abstract class Component extends AbstractComponent {
         return hasFocus;
     }
 
-
-    protected static <T> T getIcon(final InputStream source, final Class<? extends Enum<?>> keys, Renderer<T> renderer, int key, final Color backgroundColor) {
-        if (ColorUtils.getForegroundFromBackground((backgroundColor == null ? renderer.getFigure().getBackgroundColor() : backgroundColor)) == Color.BLACK) {
-            return renderer.getIcons(source, keys).getDark(key);
-        }
-        return renderer.getIcons(source, keys).getLight(key);
+    /**
+     * @return whether the component is visible
+     */
+    public boolean isVisible() {
+        return visible;
     }
 
-    public static <T> T getIcon(final InputStream source, final Class<? extends Enum<?>> keys, Renderer<T> renderer, int key) {
+    protected static BufferedImage getIcon(final InputStream source, final Class<? extends Enum<?>> keys, Renderer renderer, int key, final Color backgroundColor) {
+        if (ColorUtils.getForegroundFromBackground((backgroundColor == null ? renderer.getFigure().getBackgroundColor() : backgroundColor)) == Color.BLACK) {
+            return IconStore.get(source, keys).getDark(key);
+        }
+        return IconStore.get(source, keys).getLight(key);
+    }
+
+    public static BufferedImage getIcon(final InputStream source, final Class<? extends Enum<?>> keys, Renderer renderer, int key) {
         return getIcon(source, keys, renderer, key, null);
     }
 
-    protected static double getIconWidth(final InputStream source, final Class<? extends Enum<?>> keys, Renderer<?> renderer) {
-        return renderer.getIcons(source, keys).getIconWidth();
-    }
-
-    protected static double getIconHeight(final InputStream source, final Class<? extends Enum<?>> keys, Renderer<?> renderer) {
-        return renderer.getIcons(source, keys).getIconHeight();
-    }
-
-    public static <T> T getMaterialIcon(Renderer<T> renderer, IconStore.MaterialIconKey key, final Color backgroundColor) {
+    public static BufferedImage getMaterialIcon(Renderer renderer, IconStore.MaterialIconKey key, final Color backgroundColor) {
         return getIcon(IconStore.MATERIAL_ICONS, IconStore.MaterialIconKey.class, renderer, key.getIndex(), backgroundColor);
     }
 
-    protected static double getMaterialIconWidth(Renderer<?> renderer) {
-        return renderer.getIcons(IconStore.MATERIAL_ICONS, IconStore.MaterialIconKey.class).getIconWidth();
+    protected static double getMaterialIconWidth() {
+        return IconStore.get(IconStore.MATERIAL_ICONS, IconStore.MaterialIconKey.class).getIconWidth();
     }
 
-    protected static double getMaterialIconHeight(Renderer<?> renderer) {
-        return renderer.getIcons(IconStore.MATERIAL_ICONS, IconStore.MaterialIconKey.class).getIconHeight();
+    protected static double getMaterialIconHeight() {
+        return IconStore.get(IconStore.MATERIAL_ICONS, IconStore.MaterialIconKey.class).getIconHeight();
     }
 
-    public static <T> T getDataVizIcon(Renderer<T> renderer, IconStore.DataVizIconKey key, final Color backgroundColor) {
+    public static BufferedImage getDataVizIcon(Renderer renderer, IconStore.DataVizIconKey key, final Color backgroundColor) {
         return getIcon(IconStore.DATAVIZ_ICONS, IconStore.DataVizIconKey.class, renderer, key.getIndex(), backgroundColor);
     }
 
-    protected static double getDataVizIconWidth(Renderer<?> renderer) {
-        return renderer.getIcons(IconStore.DATAVIZ_ICONS, IconStore.DataVizIconKey.class).getIconWidth();
+    protected static double getDataVizIconWidth() {
+        return IconStore.get(IconStore.DATAVIZ_ICONS, IconStore.DataVizIconKey.class).getIconWidth();
     }
 
-    protected static double getDataVizIconHeight(Renderer<?> renderer) {
-        return renderer.getIcons(IconStore.DATAVIZ_ICONS, IconStore.DataVizIconKey.class).getIconHeight();
+    protected static double getDataVizIconHeight() {
+        return IconStore.get(IconStore.DATAVIZ_ICONS, IconStore.DataVizIconKey.class).getIconHeight();
     }
 
     protected static void mirrorContext(final Component a, final Component b) {
         b.setContext(a.context);
+    }
+
+    protected static void assignParent(final Component a, final Component b) {
+        b.setContext(a.context);
+        b.setParent(a);
+    }
+
+    public void requestFocus() {
+        setFocused(true);
     }
 }

@@ -9,19 +9,36 @@ import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 
 import static java.awt.RenderingHints.VALUE_ANTIALIAS_ON;
-import static net.mahdilamb.dataviz.figure.AbstractComponent.print;
 
-public final class BufferedImageExtended extends BufferedImage implements GraphicsBuffer<BufferedImage> {
-
+/**
+ * An extended version of buffered image which supports drawing floating precision geometries using a painter
+ */
+public final class BufferedImageExtended extends BufferedImage implements GraphicsBuffer {
+    /**
+     * An instance of the swing painter which is not thread-safe as it contains geometries that are reused
+     */
     protected static final SwingPainter DEFAULT_PAINTER = new SwingPainter();
 
     static final AffineTransform IDENTITY = new AffineTransform();
     transient Graphics2D g;
-    public final double width, height;
     final AffineTransform transform;
+    /**
+     * Get the top and left overflow
+     */
     public final int overflowTop, overflowLeft;
+    /**
+     * The width and height of the buffered image
+     */
+    public final double width, height;
+
     private final SwingPainter painter;
 
+    /**
+     * Create a simple buffered image
+     *
+     * @param width  the width of the image
+     * @param height the height of the image
+     */
     public BufferedImageExtended(double width, double height) {
         super((int) Math.ceil(width), (int) Math.ceil(height), BufferedImage.TYPE_INT_ARGB);
         painter = DEFAULT_PAINTER;
@@ -33,6 +50,19 @@ public final class BufferedImageExtended extends BufferedImage implements Graphi
         this.overflowTop = 0;
     }
 
+    /**
+     * Create an extended buffered image with the given painter
+     *
+     * @param painter        the painter
+     * @param width          the width of the image
+     * @param height         the height of the image
+     * @param x              the x position
+     * @param y              the y position
+     * @param overflowTop    the overflow at the top
+     * @param overflowLeft   the overflow at the left
+     * @param overflowBottom the overflow at the bottom
+     * @param overflowRight  the overflow to the right
+     */
     public BufferedImageExtended(final SwingPainter painter, double width, double height, double x, double y, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
         super((int) Math.ceil(width + overflowLeft + overflowRight), (int) Math.ceil(height + overflowTop + overflowBottom), BufferedImage.TYPE_INT_ARGB);
         this.width = width;
@@ -45,10 +75,23 @@ public final class BufferedImageExtended extends BufferedImage implements Graphi
         this.overflowTop = overflowTop;
     }
 
+    /**
+     * Create an extended buffered image using the default swing painter
+     *
+     * @param width          the width of the image
+     * @param height         the height of the image
+     * @param x              the x position
+     * @param y              the y position
+     * @param overflowTop    the overflow at the top
+     * @param overflowLeft   the overflow at the left
+     * @param overflowBottom the overflow at the bottom
+     * @param overflowRight  the overflow to the right
+     */
     public BufferedImageExtended(double width, double height, double x, double y, int overflowTop, int overflowLeft, int overflowBottom, int overflowRight) {
         this(DEFAULT_PAINTER, width, height, x, y, overflowTop, overflowLeft, overflowBottom, overflowRight);
     }
 
+    @Override
     public Graphics2D getGraphics() {
         if (g == null) {
             g = super.createGraphics();
@@ -60,17 +103,16 @@ public final class BufferedImageExtended extends BufferedImage implements Graphi
         return g;
     }
 
+    /**
+     * @param font the font to get the metrics of
+     * @return the font metrics of this image
+     */
     public FontMetrics getFontMetrics(final java.awt.Font font) {
         return getGraphics().getFontMetrics(font);
     }
 
-    void dispose() {
-
-    }
-
     @Override
     public void reset() {
-
         painter.reset(getGraphics(), transform, getWidth(), getHeight());
     }
 

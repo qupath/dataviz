@@ -2,7 +2,9 @@ package net.mahdilamb.dataviz;
 
 import net.mahdilamb.dataframe.utils.BooleanArrayList;
 import net.mahdilamb.dataframe.utils.DoubleArrayList;
+import net.mahdilamb.dataviz.figure.AbstractComponent;
 import net.mahdilamb.dataviz.layouts.XYLayout;
+import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
 import net.mahdilamb.dataviz.utils.rtree.RTree;
 
 public abstract class PlotSelection<PL extends PlotLayout<PL>> {
@@ -98,20 +100,17 @@ public abstract class PlotSelection<PL extends PlotLayout<PL>> {
                 for (final PlotData<?, XYLayout> t : layout.data) {
                     t.selected = (t.selected == null) ? new BooleanArrayList(t.size()) : t.selected;
                     t.selected.fill(false, t.size());
-                    t.anySelected = false;
                 }
                 return;
             }
             for (final PlotData<?, XYLayout> t : layout.data) {
                 t.selected = (t.selected == null) ? new BooleanArrayList(t.size()) : t.selected;
                 t.selected.fill(false, t.size());
-                t.anySelected = false;
                 for (final RTree<PlotShape<XYLayout>> shapes : t.shapes) {
                     for (final PlotShape<XYLayout> m : shapes.search(layout.getXAxis().getMin(), layout.getYAxis().getMin(), layout.getXAxis().getMax(), layout.getYAxis().getMax())) {
                         if (m instanceof PlotShape.PlotMarker) {
                             final int windingNumber = windingNumber(x, y, m.getMidX(), m.getMidY(), isClosed);
                             if (useNonZero ? (windingNumber != 0) : ((windingNumber & 1) == 1)) {
-                                t.anySelected = true;
                                 t.selected.set(m.i, true);
                             }
                         }
@@ -120,10 +119,38 @@ public abstract class PlotSelection<PL extends PlotLayout<PL>> {
             }
         }
 
+        @Override
+        protected void applyWith(XYLayout layout, double x, double y, Runnable refresh) {
+            //todo
+            final int size = size();
+            final double minX = this.minX;
+            final double minY = this.minY;
+            final double maxX = this.maxX;
+            final double maxY = this.maxY;
+
+            add(x, y);
+            apply(layout);
+            refresh.run();
+            this.x.remove(size);
+            this.y.remove(size);
+            this.minX = minX;
+            this.minY = minY;
+            this.maxX = maxX;
+            this.maxY = maxY;
+
+        }
+
 
         @Override
         protected boolean isClosed() {
             return isClosed;
+        }
+
+        @Override
+        public void forEach(BiDoubleConsumer consumer) {
+            for (int i = 0; i < size(); ++i) {
+                consumer.accept(x.get(i), y.get(i));
+            }
         }
 
         /**
@@ -201,13 +228,32 @@ public abstract class PlotSelection<PL extends PlotLayout<PL>> {
         }
     }
 
+    /**
+     * Apply the selection to the given layout
+     *
+     * @param layout the layout
+     */
     protected abstract void apply(PL layout);
 
-    protected final void clear(PL layout) {
-        for (final PlotData<?, PL> data : layout.data) {
-            data.anySelected = false;
-        }
-    }
+    /**
+     * Apply the selection to the given layout
+     *
+     * @param layout  the layout
+     * @param x       the preview x
+     * @param y       the preview y
+     * @param refresh the runnable for refreshing
+     */
+    protected abstract void applyWith(PL layout, double x, double y, Runnable refresh);
 
+    /**
+     * @return whether the selection is closed
+     */
     protected abstract boolean isClosed();
+
+    /**
+     * Iterate through the selection
+     *
+     * @param consumer the consumer for each [x,y] point
+     */
+    public abstract void forEach(final BiDoubleConsumer consumer);
 }

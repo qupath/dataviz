@@ -7,7 +7,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.DoubleConsumer;
 import java.util.function.DoubleUnaryOperator;
 
-import static net.mahdilamb.dataviz.utils.functions.Functions.EMPTY_RUNNABLE;
+import static net.mahdilamb.dataviz.utils.functions.Runnables.EMPTY_RUNNABLE;
 
 /**
  * Main animation class

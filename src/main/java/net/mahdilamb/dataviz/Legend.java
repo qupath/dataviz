@@ -5,33 +5,27 @@ import net.mahdilamb.dataviz.figure.Component;
 import net.mahdilamb.dataviz.figure.Renderer;
 import net.mahdilamb.dataviz.graphics.GraphicsBuffer;
 import net.mahdilamb.dataviz.graphics.Side;
+import net.mahdilamb.dataviz.plots.GlyphFactory;
 
+import java.awt.*;
 import java.util.List;
 import java.util.Map;
 
 public class Legend extends KeyArea<Legend> {
-    public static abstract class Glyph extends Component {
-        protected abstract double getSize();
-
-        protected double getMaxSize() {
-            return getSize();
-        }
-    }
 
     /**
      * A block of legend items
      */
-    static final class Group extends Component {
-        private final PlotDataAttribute styler;
-        private final Legend legend;
-        private final List<Item> items;
+    static class Group extends Component {
+        final PlotDataAttribute styler;
+        final Legend legend;
+        final List<Item> items;
 
         Group(final Legend legend, PlotDataAttribute styler, List<Item> items) {
             super(BufferingStrategy.NO_BUFFERING);
             this.styler = styler;
             this.legend = legend;
             this.items = items;
-
 
         }
 
@@ -45,7 +39,7 @@ public class Legend extends KeyArea<Legend> {
         }
 
         @Override
-        protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+        protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
             if (items.isEmpty()) {
                 return;
             }
@@ -61,7 +55,7 @@ public class Legend extends KeyArea<Legend> {
         }
 
         @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
             //TODO vertical or horizontal
             if (legend.showBorder) {
                 canvas.setStroke(legend.borderColor);
@@ -88,6 +82,7 @@ public class Legend extends KeyArea<Legend> {
             }
             return null;
         }
+
         @Override
         protected Component getComponentAt(double x, double y) {
             return super.getComponentAt(x, y);
@@ -95,18 +90,18 @@ public class Legend extends KeyArea<Legend> {
     }
 
     static class Item extends Component {
-        private final Glyph glyph;
+        private final GlyphFactory.Glyph glyph;
         final String label;
         final Legend legend;
 
-        Item(final Legend legend, final Glyph glyph, final String label) {
+        Item(final Legend legend, final GlyphFactory.Glyph glyph, final String label) {
             this.glyph = glyph;
             this.label = label;
             this.legend = legend;
         }
 
         @Override
-        protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+        protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
             final double labelHeight = getTextLineHeight(renderer, legend.itemFont, label);
             if (labelHeight > glyph.getSize()) {
                 layoutComponent(glyph, renderer, minX + legend.paddingX, minY + (.5 * (labelHeight - glyph.getSize())), maxX, maxY);
@@ -119,7 +114,7 @@ public class Legend extends KeyArea<Legend> {
         }
 
         @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
             drawComponent(glyph, renderer, canvas);
             canvas.setFill(legend.itemColor);
             canvas.setFont(legend.itemFont);
@@ -142,7 +137,7 @@ public class Legend extends KeyArea<Legend> {
     static final class TogglableItem extends Item {
         private boolean isVisible = true;
 
-        TogglableItem(Legend legend, Glyph glyph, String label) {
+        TogglableItem(Legend legend, GlyphFactory.Glyph glyph, String label) {
             super(legend, glyph, label);
         }
 
@@ -154,7 +149,7 @@ public class Legend extends KeyArea<Legend> {
 
 
         @Override
-        protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+        protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
             canvas.setGlobalAlpha(isVisible ? 1 : 0.5);
             super.drawComponent(renderer, canvas);
             canvas.resetGlobalAlpha();
@@ -162,11 +157,11 @@ public class Legend extends KeyArea<Legend> {
     }
 
     Legend(Figure figure) {
-        super(figure, false, 140);
+        super(figure, false, 120);
     }
 
     @Override
-    protected <IMG> void layoutVertical(Renderer<IMG> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutVertical(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         final double width = getItemSize();
         if (side == Side.RIGHT) {
             minX = maxX - width;
@@ -193,9 +188,8 @@ public class Legend extends KeyArea<Legend> {
     }
 
     @Override
-    protected <IMG> void layoutHorizontal(Renderer<IMG> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutHorizontal(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         final double height = getItemSize();
-
         if (side == Side.BOTTOM) {
             minY = maxY - height;
         } else {
@@ -224,7 +218,7 @@ public class Legend extends KeyArea<Legend> {
 
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         for (final PlotData<?, ?> data : figure.getLayout().data) {
             for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> styler : data.attributes.entrySet()) {
                 if (styler.getValue().showInLegend) {
@@ -242,7 +236,9 @@ public class Legend extends KeyArea<Legend> {
         }
         for (final PlotData<?, ?> data : layout.data) {
             for (final Map.Entry<PlotDataAttribute.Type, PlotDataAttribute> attributeEntry : data.attributes.entrySet()) {
-                attributeEntry.getValue().getLegendGroup(this);
+                if (!attributeEntry.getValue().showInLegend) {
+                    continue;
+                }
                 markLayoutAsOld(attributeEntry.getValue().getLegendGroup(this));
             }
         }
@@ -262,4 +258,12 @@ public class Legend extends KeyArea<Legend> {
         }
         return super.getComponentAt(x, y);
     }
+
+
+    @Override
+    public Legend apply(Theme theme) {
+        theme.legend.accept(this);
+        return this;
+    }
+
 }

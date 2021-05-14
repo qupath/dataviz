@@ -160,4 +160,24 @@ public final class StringUtils {
         return file.lastIndexOf('.') > file.lastIndexOf(File.separator);
     }
 
+    public static int getWordStart(final String text, int from) {
+        while (from > 0) {
+            if (Character.isWhitespace(text.charAt(from))) {
+                return from + 1;
+            }
+            --from;
+        }
+        return 0;
+    }
+
+    public static int getWordEnd(final String text, int from) {
+        while (from < text.length()) {
+            if (Character.isWhitespace(text.charAt(from))) {
+                return from;
+            }
+            ++from;
+        }
+        return text.length();
+    }
+
 }

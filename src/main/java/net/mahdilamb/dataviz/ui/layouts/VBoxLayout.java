@@ -15,7 +15,7 @@ public class VBoxLayout extends LayoutManager {
     public static final LayoutManager INSTANCE = new VBoxLayout();
 
     @Override
-    protected <T>void layoutChildren(Group node, Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected <T>void layoutChildren(Group node, Renderer renderer, double minX, double minY, double maxX, double maxY) {
         double start = minY;
         double width = 0;
         for (final AbstractComponent c : getChildren(node)) {

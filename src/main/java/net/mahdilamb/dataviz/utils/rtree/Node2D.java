@@ -1,6 +1,7 @@
 package net.mahdilamb.dataviz.utils.rtree;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 
@@ -41,9 +42,7 @@ public abstract class Node2D {
 
     Node2D(Node2D... nodes) {
         this.children = new ArrayList<>(nodes.length);
-        for (final Node2D n : nodes) {
-            children.add(n);
-        }
+        children.addAll(Arrays.asList(nodes));
         leaf = false;
     }
 

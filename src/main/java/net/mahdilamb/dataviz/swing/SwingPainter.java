@@ -1,6 +1,7 @@
 package net.mahdilamb.dataviz.swing;
 
 import net.mahdilamb.dataviz.graphics.ClipShape;
+import net.mahdilamb.dataviz.graphics.FontUtils;
 import net.mahdilamb.dataviz.graphics.Gradient;
 import net.mahdilamb.dataviz.utils.Variant;
 
@@ -167,7 +168,7 @@ public final class SwingPainter {
 
     void fillText(final Graphics2D g, String text, double x, double y) {
         switchToFilled(g);
-        SwingUtils.drawMultilineTextLeft(g, text, x, y, 1, SwingUtils.getTextWidth(g.getFontMetrics(), text));
+        FontUtils.drawMultilineTextLeft(g, text, x, y, 1, FontUtils.getTextWidth(g.getFontMetrics(), text));
     }
 
     void fillText(final Graphics2D g, String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
@@ -183,7 +184,7 @@ public final class SwingPainter {
     }
 
     void setFont(final Graphics2D g, net.mahdilamb.dataviz.graphics.Font font) {
-        g.setFont(SwingUtils.convert(font));
+        g.setFont(FontUtils.convert(font));
     }
 
     void setClip(final Graphics2D g, ClipShape shape, double x, double y, double width, double height) {

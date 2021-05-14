@@ -7,6 +7,7 @@ import net.mahdilamb.dataviz.layouts.XYLayout;
 import net.mahdilamb.dataviz.ui.Label;
 import net.mahdilamb.dataviz.utils.functions.BiDoubleConsumer;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +26,8 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
     protected final List<PlotData<?, PL>> data = new ArrayList<>();
     protected Label title = new Label(EMPTY_STRING, Font.DEFAULT_FONT);
     protected PlotSelection<PL> selection;
+    protected boolean supportsWheelZoom = true;
+    Color background = new Color(229, 236, 246);
 
     /**
      * Create an empty plot layout only containing the plot area
@@ -74,11 +77,26 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
         redraw();
     }
 
-    @SuppressWarnings("unchecked")
     protected void clearSelection() {
-        this.selection.clear((PL) this);
+        for (final PlotData<?, PL> data : data) {
+            data.selected = null;
+        }
         this.selection = null;
         redraw();
+    }
+
+    /**
+     * @return the selection in the layout. May be {@code null}
+     */
+    public PlotSelection<PL> getSelection() {
+        return selection;
+    }
+
+    /**
+     * @return the background color of the plot area
+     */
+    public Color getBackgroundColor() {
+        return background;
     }
 
     protected abstract void panPlotArea(double dx, double dy);
@@ -125,6 +143,10 @@ public abstract class PlotLayout<PL extends PlotLayout<PL>> extends Group {
 
     protected static <PL extends PlotLayout<PL>> void clearTooltip(PlotArea<PL> plotArea) {
         plotArea.clearTooltip();
+    }
+
+    protected static <PL extends PlotLayout<PL>> boolean supportsWheelZoom(PlotData<?, PL> data) {
+        return data.supportsWheelZoom();
     }
 
 }

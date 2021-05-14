@@ -3,11 +3,12 @@ package net.mahdilamb.dataviz.graphics;
 import net.mahdilamb.colormap.Colors;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 
 /**
  * Interface for the canvas element in a chart
  */
-public interface GraphicsBuffer<IMAGE> {
+public interface GraphicsBuffer {
 
     /**
      * Called before the canvas is laid out. I.e. clears everything
@@ -294,7 +295,7 @@ public interface GraphicsBuffer<IMAGE> {
      * @param x     the top-left x
      * @param y     the top-left y
      */
-    void drawImage(IMAGE image, double x, double y);
+    void drawImage(BufferedImage image, double x, double y);
 
     /**
      * Set the global canvas alpha

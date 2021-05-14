@@ -11,8 +11,7 @@ import net.mahdilamb.dataviz.utils.StringUtils;
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
-public class TextInput<E> extends Component implements InputComponent<E>, ValidatableInputComponent<String, E> {
-    private static final Stroke THIN_LINE = new Stroke(.5);
+public class TextInput<E> extends Component implements ValidatableInputComponent<String, E> {
     final String label;
     final StringBuilder rawValue = new StringBuilder();
     private final Validation<String, E> validation;
@@ -25,8 +24,7 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
     double width = 120;
     double paddingX = 4, paddingY = 4;
 
-
-    private Stroke stroke = THIN_LINE;
+    private Stroke stroke = Stroke.SOLID_THIN;
     private Color strokeColor = Color.BLACK;
 
     public TextInput(final String label, Validation<String, E> validation) {
@@ -88,7 +86,7 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
     }
 
     @Override
-    protected <T> void layoutComponent(Renderer<T> renderer, double minX, double minY, double maxX, double maxY) {
+    protected void layoutComponent(Renderer renderer, double minX, double minY, double maxX, double maxY) {
         setBoundsFromRect(minX, minY, paddingX * 2 + width, getTextLineHeight(renderer, font, rawValue.toString()) + paddingY * 2);
     }
 
@@ -101,7 +99,7 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
     @Override
     protected void onMouseExit(boolean ctrlDown, boolean shiftDown, double x, double y) {
         if (!isFocused()) {
-            stroke = THIN_LINE;
+            stroke = Stroke.SOLID_THIN;
         }
         redraw();
     }
@@ -122,12 +120,12 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
     @Override
     protected void onBlur() {
         strokeColor = Color.BLACK;
-        stroke = THIN_LINE;
+        stroke = Stroke.SOLID_THIN;
         super.onBlur();
     }
 
     @Override
-    protected <T> void drawComponent(Renderer<T> renderer, GraphicsBuffer<T> canvas) {
+    protected void drawComponent(Renderer renderer, GraphicsBuffer canvas) {
         canvas.setFont(font);
         canvas.setFill(Color.BLACK);
         canvas.fillText(rawValue.toString(), getX() + paddingX, paddingY + getY() + getTextBaselineOffset(renderer, font));
@@ -139,19 +137,19 @@ public class TextInput<E> extends Component implements InputComponent<E>, Valida
     }
 
     @Override
-    protected void onKeyPress(boolean ctrlDown, boolean shiftDown, int keyCode) {
+    protected void onKeyPress(boolean ctrlDown, boolean shiftDown, int keyCode, char character) {
         rawValue.append(KeyEvent.getKeyText(keyCode));
         markDrawAsOldQuietly();
-        super.onKeyPress(ctrlDown, shiftDown, keyCode);
+        super.onKeyPress(ctrlDown, shiftDown, keyCode, character);
     }
 
     @Override
-    protected void onKeyRelease(boolean ctrlDown, boolean shiftDown, int keyCode) {
+    protected void onKeyRelease(boolean ctrlDown, boolean shiftDown, int keyCode, char character) {
         //    super.onKeyRelease(ctrlDown, shiftDown, keyCode);
     }
 
     @Override
-    protected void onKeyType(boolean ctrlDown, boolean shiftDown, int keyCode) {
+    protected void onKeyType(boolean ctrlDown, boolean shiftDown, int keyCode, char character) {
         //  super.onKeyType(ctrlDown, shiftDown, keyCode);
 
     }

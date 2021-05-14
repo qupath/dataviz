@@ -9,6 +9,7 @@ import net.mahdilamb.dataviz.utils.Numbers;
 import net.mahdilamb.dataviz.utils.Variant;
 
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
@@ -25,13 +26,13 @@ import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
  */
 class SVGExporter extends FigureExporter {
 
-    static final class SVGWriter<T> implements GraphicsContext<T> {
+    static final class SVGWriter implements GraphicsContext {
         boolean done = false;
         String header;
         final StringBuilder out = new StringBuilder();
         final StringBuilder indent = new StringBuilder("\t");
         SVGDefinitions defs;
-        final Renderer<T> renderer;
+        final Renderer renderer;
         private final File output;
 
         boolean isClipped = false;
@@ -44,7 +45,7 @@ class SVGExporter extends FigureExporter {
         boolean compressed;
         double globalAlpha = 1;
 
-        SVGWriter(File output, Renderer<T> renderer, boolean compressed) {
+        SVGWriter(File output, Renderer renderer, boolean compressed) {
             this.compressed = compressed;
             this.renderer = renderer;
             this.output = output;
@@ -52,13 +53,13 @@ class SVGExporter extends FigureExporter {
 
         }
 
-        SVGWriter(File output, Renderer<T> renderer) {
+        SVGWriter(File output, Renderer renderer) {
             this(output, renderer, false);
 
         }
 
         @Override
-        public Renderer<T> getRenderer() {
+        public Renderer getRenderer() {
             return renderer;
         }
 
@@ -106,30 +107,30 @@ class SVGExporter extends FigureExporter {
 
         @Override
         public void strokePolygon(double[] xPoints, double[] yPoints, int numPoints) {
-            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, stroke, null, strokeColor));
+            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, stroke, null, strokeColor, globalAlpha));
         }
 
 
         @Override
         public void strokePolyline(double[] xPoints, double[] yPoints, int numPoints) {
-            out.append(polylineToString(xPoints, yPoints, numPoints, defs, indent, stroke, strokeColor));
+            out.append(polylineToString(xPoints, yPoints, numPoints, defs, indent, stroke, strokeColor, globalAlpha));
 
         }
 
         @Override
         public void fillPolygon(double[] xPoints, double[] yPoints, int numPoints) {
-            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, null, fill, null));
+            out.append(polygonToString(xPoints, yPoints, numPoints, defs, indent, null, fill, null, globalAlpha));
 
         }
 
         @Override
         public void fillText(String text, double x, double y) {
-            out.append(textToString(text, x, y, font, defs, indent, null, fill, null));
+            out.append(textToString(text, x, y, font, defs, indent, null, fill, null, globalAlpha));
         }
 
         @Override
         public void fillText(String text, double x, double y, double rotationDegrees, double pivotX, double pivotY) {
-            out.append(rotatedTextToString(text, x, y, rotationDegrees, pivotX, pivotY, font, defs, indent, null, fill, null));
+            out.append(rotatedTextToString(text, x, y, rotationDegrees, pivotX, pivotY, font, defs, indent, null, fill, null, globalAlpha));
 
         }
 
@@ -156,13 +157,13 @@ class SVGExporter extends FigureExporter {
         }
 
         @Override
-        public void drawImage(T o, double x, double y) {
-            out.append(imageToString(imageToBytes(o, renderer), x, y, getImageWidth(o, renderer), getImageHeight(o, renderer), indent));
+        public void drawImage(BufferedImage o, double x, double y) {
+            out.append(imageToString(imageToBytes(o), x, y, o.getWidth(), o.getHeight(), indent));
         }
 
         @Override
         public void setGlobalAlpha(double alpha) {
-            System.err.println("Modifying global alpha is currently not supported");//TODO
+            this.globalAlpha = alpha;
         }
 
         @Override
@@ -202,57 +203,57 @@ class SVGExporter extends FigureExporter {
 
         @Override
         public void fill() {
-            out.append(pathToString(pathD.toString(), defs, indent, null, fill, null));
+            out.append(pathToString(pathD.toString(), defs, indent, null, fill, null, globalAlpha));
 
         }
 
         @Override
         public void stroke() {
-            out.append(pathToString(pathD.toString(), defs, indent, stroke, null, strokeColor));
+            out.append(pathToString(pathD.toString(), defs, indent, stroke, null, strokeColor, globalAlpha));
 
         }
 
         @Override
         public void strokeRect(double x, double y, double width, double height) {
-            out.append(rectangleToString(x, y, width, height, defs, indent, stroke, null, strokeColor));
+            out.append(rectangleToString(x, y, width, height, defs, indent, stroke, null, strokeColor, globalAlpha));
         }
 
         @Override
         public void fillRect(double x, double y, double width, double height) {
-            out.append(rectangleToString(x, y, width, height, defs, indent, null, fill, null));
+            out.append(rectangleToString(x, y, width, height, defs, indent, null, fill, null, globalAlpha));
         }
 
         @Override
         public void strokeRoundRect(double x, double y, double width, double height, double arcWidth, double arcHeight) {
-            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, stroke, null, strokeColor));
+            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, stroke, null, strokeColor, globalAlpha));
         }
 
         @Override
         public void fillRoundRect(double x, double y, double width, double height, double arcWidth, double arcHeight) {
-            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, null, fill, null));
+            out.append(roundedRectangleToString(x, y, width, height, arcWidth, arcHeight, defs, indent, null, fill, null, globalAlpha));
         }
 
         @Override
         public void strokeOval(double x, double y, double width, double height) {
             if (width == height) {
-                out.append(circleToString(x, y, width * .5, defs, indent, stroke, null, strokeColor));
+                out.append(circleToString(x, y, width * .5, defs, indent, stroke, null, strokeColor, globalAlpha));
             } else {
-                out.append(ellipseToString(x, y, width, height, defs, indent, stroke, null, strokeColor));
+                out.append(ellipseToString(x, y, width, height, defs, indent, stroke, null, strokeColor, globalAlpha));
             }
         }
 
         @Override
         public void fillOval(double x, double y, double width, double height) {
             if (width == height) {
-                out.append(circleToString(x, y, width * .5, defs, indent, null, fill, null));
+                out.append(circleToString(x, y, width * .5, defs, indent, null, fill, null, globalAlpha));
             } else {
-                out.append(ellipseToString(x, y, width, height, defs, indent, null, fill, null));
+                out.append(ellipseToString(x, y, width, height, defs, indent, null, fill, null, globalAlpha));
             }
         }
 
         @Override
         public void strokeLine(double x0, double y0, double x1, double y1) {
-            out.append(lineToString(x0, y0, x1, y1, defs, indent, stroke, strokeColor));
+            out.append(lineToString(x0, y0, x1, y1, defs, indent, stroke, strokeColor, globalAlpha));
         }
 
         @Override
@@ -338,7 +339,7 @@ class SVGExporter extends FigureExporter {
          * @return the id of the definition
          */
         private String add(final String prefix, final String type, final String content, final String attributes) {
-            if (buffer.isEmpty()) {
+            if (buffer.length() == 0) {
                 buffer.append("\t<defs>\n");
             }
             final String prefixId = putPrefix(prefix);
@@ -379,7 +380,7 @@ class SVGExporter extends FigureExporter {
          * @param gradient the gradient to add
          * @return the id of the gradient
          */
-        final String addGradient(final Gradient gradient) {
+        final String addGradient(final Gradient gradient, double alpha) {
             return add(gradient, () -> {
                 final StringBuilder stops = new StringBuilder();
                 for (final Map.Entry<Float, Color> entry : gradient.getColorMap().entrySet()) {
@@ -387,7 +388,7 @@ class SVGExporter extends FigureExporter {
                             "\t\t\t<stop offset=\"%s\" stop-color=\"%s\"%s />%n",
                             convertToString(entry.getKey()),
                             convertToString(entry.getValue()),
-                            entry.getValue().getAlpha() == 255 ? EMPTY_STRING : String.format(" stop-opacity=\"%s\"", convertToString(entry.getValue().getAlpha() / 255f))
+                            entry.getValue().getAlpha() == 255 ? EMPTY_STRING : String.format(" stop-opacity=\"%s\"", convertToString(entry.getValue().getAlpha()*alpha / 255f))
                     ));
                 }
                 if (gradient.getType() == Gradient.GradientType.LINEAR) {
@@ -424,7 +425,7 @@ class SVGExporter extends FigureExporter {
          * @return the SVG definitions as a string
          */
         final String get() {
-            if (buffer.isEmpty()) {
+            if (buffer.length() == 0) {
                 return buffer.toString();
             }
             if (isClosed) {

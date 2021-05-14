@@ -17,6 +17,6 @@ public class LineDemos {
     }
 
     public static void main(String[] args) {
-        colorBy();
+        basicLine();
     }
 }
