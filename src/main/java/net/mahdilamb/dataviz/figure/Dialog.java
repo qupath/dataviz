@@ -7,7 +7,7 @@ import java.awt.*;
 
 public class Dialog extends AbstractPopout<Form> {
 
-
+boolean blocking;
     public Dialog(double x, double y, Color background, Color outline, Side side, Form content, boolean showArrow) {
         super(x, y, background, outline, side, content, showArrow);
     }
@@ -45,10 +45,29 @@ public class Dialog extends AbstractPopout<Form> {
     }
 
     @Override
-    protected Component getComponentAt(double x, double y) {
-        if (content.containsPoint(x, y)) {
-            return content;
-        }
-        return super.getComponentAt(x, y);
+    protected void onMouseClick(boolean ctrlDown, boolean shiftDown, double x, double y) {
+        AbstractComponent.print(content.containsPoint(x, y), getComponentAt(x, y));
+
+        super.onMouseClick(ctrlDown, shiftDown, x, y);
     }
+
+
+    @Override
+    public boolean containsPoint(double x, double y) {
+        return content.containsPoint(x, y);
+    }
+
+    @Override
+    void setBoundsFromMinAndMax(double contentX, double contentY, double contentWidth, double contentHeight, double triHeight) {
+        setBoundsFromExtent(0, 0, getContext().getRenderer().getFigure().getWidth(), getContext().getRenderer().getFigure().getHeight());
+    }
+
+    @Override
+    void drawOverlay(Renderer renderer, GraphicsBuffer canvas) {
+        if (blocking){
+            canvas.setFill(new Color(0, 0, 0, 24));
+            canvas.fillRect(getX(), getY(), getWidth(), getHeight());
+        }
+    }
+
 }

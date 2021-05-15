@@ -41,8 +41,10 @@ public class HoverSandbox {
                     }
                     super.onMouseExit(false, false, -1, -1);
                 });
-
-
+                hover.setOnMouseClick(() -> {
+                    getDialog().setVisible(hover.getValue());
+                    dialog.requestFocus();
+                });
             }
             return hover;
         }
@@ -53,8 +55,7 @@ public class HoverSandbox {
                 form.add("text", new TextInput<>());
                 dialog = new Dialog(hover.getX() + hover.getWidth() * .5, hover.getY() + hover.getHeight(), Color.DARK_GRAY, Color.WHITE, Side.BOTTOM, form, true);
                 assignParent(this, dialog);
-
-
+                addToOverlay(dialog);
             }
             return dialog;
         }
@@ -63,13 +64,6 @@ public class HoverSandbox {
         protected void onMouseEnter(boolean ctrlDown, boolean shiftDown, double x, double y) {
             if (hover == null) {
                 addToOverlay(getHoverButton());
-                hover.setOnMouseClick(() -> {
-                    if (dialog == null) {
-                        addToOverlay(getDialog());
-                    }
-                    dialog.setVisible(hover.getValue());
-                    dialog.requestFocus();
-                });
 
             }
             hover.setVisible(true);

@@ -224,7 +224,7 @@ public abstract class AbstractComponent {
      * @param y the y position
      * @return whether this component contains the given point
      */
-    public final boolean containsPoint(double x, double y) {
+    public boolean containsPoint(double x, double y) {
         return x >= posX && y >= posY
                 && x <= (posX + sizeX) && y <= (posY + sizeY);
     }

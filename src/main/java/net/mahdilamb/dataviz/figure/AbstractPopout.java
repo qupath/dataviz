@@ -117,7 +117,15 @@ abstract class AbstractPopout<T> extends Component {
         contentX = clipX(renderer, contentX, width + triHeight);
         contentY = clipY(renderer, contentY, height + triHeight);
         layoutContent(renderer, contentX + paddingX, contentY + paddingY, contentX + getContentWidth(renderer), contentY + getContentHeight(renderer));
-        setBoundsFromExtent(contentX - triHeight, contentY - triHeight, contentX + width + (side == Side.RIGHT ? triHeight : 0), contentY + height + (side == Side.BOTTOM ? triHeight : 0));
+        setBoundsFromMinAndMax(contentX, contentY, width, height, triHeight);
+
+    }
+
+    void setBoundsFromMinAndMax(double contentX, double contentY, double contentWidth, double contentHeight, double triHeight) {
+        setBoundsFromExtent(contentX - triHeight, contentY - triHeight, contentX + contentWidth + (side == Side.RIGHT ? triHeight : 0), contentY + contentHeight + (side == Side.BOTTOM ? triHeight : 0));
+    }
+
+    void drawOverlay(Renderer renderer, GraphicsBuffer canvas) {
     }
 
     @Override
@@ -125,6 +133,7 @@ abstract class AbstractPopout<T> extends Component {
         if (content == null) {
             return;
         }
+        drawOverlay(renderer,canvas);
         double right = contentX + width;
         double bottom = contentY + height;
         double triHeight = triWidth / 2;

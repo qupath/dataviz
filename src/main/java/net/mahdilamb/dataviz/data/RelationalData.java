@@ -1,6 +1,7 @@
 package net.mahdilamb.dataviz.data;
 
 import net.mahdilamb.dataframe.DataFrame;
+import net.mahdilamb.dataframe.DataType;
 import net.mahdilamb.dataframe.DoubleSeries;
 import net.mahdilamb.dataframe.Series;
 import net.mahdilamb.dataframe.utils.IntArrayList;
@@ -30,10 +31,14 @@ public abstract class RelationalData<PD extends RelationalData<PD>> extends Plot
 
     protected RelationalData(final DataFrame dataFrame, final String xAxis, final String yAxis) {
         super(dataFrame);
+
         x = dataFrame.getDoubleSeries(xAxis);
         y = dataFrame.getDoubleSeries(yAxis);
         getLayout().getXAxis().setTitle(xAxis);
         getLayout().getYAxis().setTitle(yAxis);
+        if (dataFrame.getType(xAxis) == DataType.LONG) {
+            getLayout().getXAxis().setFormat("%.0f");
+        }
         init();
 
     }

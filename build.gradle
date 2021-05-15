@@ -12,15 +12,20 @@ plugins {
     id("maven")
     id("signing")
 }
+/**
+ * Set the java version. Version 8 and upwards should worked. Has been tested with Java 8 and 11
+ */
+def javaVersion = JavaVersion.VERSION_11
 apply plugin: "com.bmuschko.nexus"
 java {
-    modularity.inferModulePath = true
+    modularity.inferModulePath = javaVersion >= JavaVersion.VERSION_1_9
 }
 compileJava {
-    //will work with Java 1.8, but this is required as there is a module-info.java
-    sourceCompatibility = JavaVersion.VERSION_11
-    targetCompatibility = JavaVersion.VERSION_11
-
+    sourceCompatibility = javaVersion
+    targetCompatibility = javaVersion
+    if (javaVersion < JavaVersion.VERSION_1_9) {
+        excludes += ['**/module-info.java']
+    }
 }
 group 'net.mahdilamb'
 version '0.1.4-SNAPSHOT'

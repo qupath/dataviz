@@ -15,6 +15,8 @@ import static net.mahdilamb.dataviz.utils.StringUtils.EMPTY_STRING;
 
 public abstract class PlotAxis<PL extends PlotLayout<PL>> extends Component {
 
+
+
     public static final class ColumnHeadings extends PlotAxis<XYLayout> {
 
         @Override

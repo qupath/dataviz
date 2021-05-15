@@ -359,7 +359,7 @@ public class RTree<T extends Node2D> {
      */
     @SuppressWarnings("unchecked")
     public Iterable<T> leaves() {
-        return () -> new Iterator<>() {
+        return () -> new Iterator<T>() {
             private final Stack<Node2D> stack = new Stack<>();
 
             {

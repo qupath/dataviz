@@ -95,4 +95,9 @@ abstract class XYAxis extends PlotAxis<XYLayout> {
         final int dp = Double.toString(majorTickSpacing).indexOf('.');
         return Double.parseDouble(String.format("%." + dp + "f", value));
     }
+
+    public void setFormat(String s) {
+        this.format = s;
+        redraw();
+    }
 }
